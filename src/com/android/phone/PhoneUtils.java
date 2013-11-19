@@ -68,6 +68,7 @@ import com.android.internal.telephony.cdma.CdmaConnection;
 import com.android.internal.telephony.sip.SipPhone;
 import com.android.phone.CallGatewayManager.RawGatewayInfo;
 import com.google.android.collect.Maps;
+import com.android.phone.ims.ImsSharedPreferences;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -127,6 +128,17 @@ public class PhoneUtils {
 
     /** Noise suppression status as selected by user */
     private static boolean sIsNoiseSuppressionEnabled = true;
+
+    /**
+     * Constants for IMS Service Status - the status of an Ims Service can be
+     * the following 1. Disabled - for example, the user can disable IMS Voice
+     * in UI 2. Enabled 3. Partially Disabled - for example, the user can use
+     * IMS for emergency calls only 4. Not Supported - IMS software not present
+     */
+    public static final int IMS_SRV_STATUS_DISABLED = 0;
+    public static final int IMS_SRV_STATUS_ENABLED = 1;
+    public static final int IMS_SRV_STATUS_PARTIALLY_DISABLED = 2;
+    public static final int IMS_SRV_STATUS_NOT_SUPPORTED = 3;
 
     /**
      * Handler that tracks the connections and updates the value of the
@@ -552,7 +564,8 @@ public class PhoneUtils {
      */
     /* package */ static boolean answerAndEndActive(CallManager cm, Call ringing) {
         if (DBG) log("answerAndEndActive()...");
-
+        Phone ringingPhone = ringing.getPhone();
+        Phone activePhone = cm.getActiveFgCall().getPhone();
         // Unlike the answerCall() method, we *don't* need to stop the
         // ringer or change audio modes here since the user is already
         // in-call, which means that the audio mode is already set
@@ -570,8 +583,10 @@ public class PhoneUtils {
         // since hangupActiveCall() also accepts the ringing call
         // check if the ringing call was already answered or not
         // only answer it when the call still is ringing
-        if (ringing.isRinging()) {
-            return answerCall(ringing);
+        if (ringingPhone != activePhone) {
+            if (ringing.isRinging()) {
+                return answerCall(ringing);
+            }
         }
 
         return true;
@@ -2861,10 +2876,36 @@ public class PhoneUtils {
     }
 
     /**
-     * Returns true if Android supports VoLTE/VT calls on IMS
+     * Returns true if callType is supported on IMS, when unknown is used
+     * returns true only when atleast one of voice or video is supported.
      */
     public static boolean isCallOnImsEnabled() {
-        return CallManager.isCallOnImsEnabled();
+        return isCallOnImsEnabled(Phone.CALL_TYPE_UNKNOWN);
+    }
+
+    /**
+     * Returns true if callType is supported on IMS, when unknown is used
+     * returns true only when atleast one of voice or video is supported.
+     */
+    public static boolean isCallOnImsEnabled(int callType) {
+        ImsSharedPreferences pref = new ImsSharedPreferences(PhoneGlobals.getInstance());
+        boolean isEnabled = false;
+        boolean isVoiceSupported = pref.getImsSrvStatus(Phone.CALL_TYPE_VOICE) !=
+                IMS_SRV_STATUS_NOT_SUPPORTED;
+        boolean isVideoSupported = pref.getImsSrvStatus(Phone.CALL_TYPE_VT) !=
+                IMS_SRV_STATUS_NOT_SUPPORTED;
+        switch (callType) {
+            case Phone.CALL_TYPE_UNKNOWN:
+                isEnabled = isVoiceSupported | isVideoSupported;
+                break;
+            case Phone.CALL_TYPE_VT:
+                isEnabled = isVideoSupported;
+                break;
+            case Phone.CALL_TYPE_VOICE:
+                isEnabled = isVoiceSupported;
+                break;
+        }
+        return isEnabled;
     }
 
     /**
