@@ -53,6 +53,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.android.internal.telephony.Call;
+import com.android.internal.telephony.CallDetails;
 import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.CallStateException;
 import com.android.internal.telephony.CallerInfo;
@@ -243,7 +244,20 @@ public class PhoneUtils {
      * @see #answerAndEndActive(CallManager, Call)
      */
     /* package */ static boolean answerCall(Call ringingCall) {
-        log("answerCall(" + ringingCall + ")...");
+        return answerCall(ringingCall, Phone.CALL_TYPE_UNKNOWN);
+    }
+
+    /**
+     * Answer the currently-ringing call.
+     *
+     * @return true if we answered the call, or false if there wasn't
+     *         actually a ringing incoming call, or some other error occurred.
+     *
+     * @see #answerAndEndHolding(CallManager, Call)
+     * @see #answerAndEndActive(CallManager, Call)
+     */
+    /* package */ static boolean answerCall(Call ringingCall, int answerCallType) {
+        log("answerCall(" + ringingCall + ")..." + "calltype:" + answerCallType);
         final PhoneGlobals app = PhoneGlobals.getInstance();
         final CallNotifier notifier = app.notifier;
 
@@ -300,7 +314,7 @@ public class PhoneUtils {
                 final boolean isRealIncomingCall = isRealIncomingCall(ringingCall.getState());
 
                 //if (DBG) log("sPhone.acceptCall");
-                app.mCM.acceptCall(ringingCall);
+                app.mCM.acceptCall(ringingCall, answerCallType);
                 answered = true;
 
                 handleWaitingCallOnLchSub(phone.getSubscription(), true);
@@ -348,6 +362,52 @@ public class PhoneUtils {
         }
         return answered;
     }
+
+    public static void modifyCallInitiate(Connection conn, int newCallType, String[] newExtras) {
+        Phone phone = conn.getCall().getPhone();
+        Message msg = null;// TODO : Need to write generic error
+                                    // message to UI
+        if (phone != null && phone.getPhoneType() == PhoneConstants.PHONE_TYPE_IMS) {
+            Log.d(LOG_TAG, "modifyCallInitiate");
+            try {
+                phone.changeConnectionType(msg, conn,
+                        newCallType, null);
+            } catch (CallStateException e) {
+                Log.e(LOG_TAG, "Exception in modifyCallInitiate" + e);
+            }
+        }
+    }
+
+    public static void modifyCallConfirm(boolean responseType, Connection conn,
+            String[] newExtras) {
+        Phone phone = conn.getCall().getPhone();
+        if (phone != null && phone.getPhoneType() == PhoneConstants.PHONE_TYPE_IMS) {
+            Log.d(LOG_TAG, "modifyCallConfirm");
+            try {
+                if (responseType) {
+                    phone.acceptConnectionTypeChange(conn, null);
+                } else {
+                    phone.rejectConnectionTypeChange(conn);
+                }
+            } catch (CallStateException e) {
+                Log.e(LOG_TAG, "Exception in modifyCallConfirm" + e);
+            }
+        }
+    }
+
+    public static boolean isVTModifyAllowed(Connection conn) {
+        boolean ret = false;
+        Phone phone = conn.getCall().getPhone();
+        if (phone != null && phone.getPhoneType() == PhoneConstants.PHONE_TYPE_IMS) {
+            try {
+                ret = phone.isVTModifyAllowed();
+            } catch (CallStateException e) {
+                Log.e("PhoneUtils", "Exception in isVTModifyAllowed" + e);
+            }
+        }
+        return ret;
+    }
+
 
     /**
      * Hangs up all active calls.
@@ -2945,6 +3005,33 @@ public class PhoneUtils {
             log("IMS Converted intent: "+ intent + "extras" + intent.getExtras());
         }
         return;
+    }
+
+    public static void addParticipant(String dialString, int clir, int callType, String[] extras) {
+        final PhoneGlobals app = PhoneGlobals.getInstance();
+        Phone phone = getImsPhone(app.getCallManager());
+        if (phone != null) {
+            Log.d(LOG_TAG, "addParticipant");
+            try {
+                phone.addParticipant(dialString, clir, callType, extras);
+            } catch (CallStateException e) {
+                Log.e("PhoneUtils", "Exception in addParticipant" + e);
+            }
+        }
+    }
+
+    public static void hangupWithReason(int callId, String userUri,
+            boolean mpty, int failCause, String errorInfo) {
+        final PhoneGlobals app = PhoneGlobals.getInstance();
+        Phone phone = getImsPhone(app.getCallManager());
+        if (phone != null) {
+            Log.d(LOG_TAG, "hangupWithReason");
+            try {
+                phone.hangupWithReason(callId, userUri, mpty, failCause, errorInfo);
+            } catch (CallStateException e) {
+                Log.e("PhoneUtils", "Exception in hangupWithReason" + e);
+            }
+        }
     }
 
     private static void log(String msg) {
