@@ -847,6 +847,7 @@
     <string name="number">Number</string>
     <!-- "Edit FDN Contact" screen: Button label for "save" action -->
     <string name="save">Save</string>
+    <string name="fdn_empty_number">FDN not updated: number cannot be empty.</string>
     <!-- Title of "Edit FDN Contact" screen for a new contact -->
     <string name="add_fdn_contact">Add fixed dialing number</string>
     <!-- "Edit FDN Contact" screen: status message displayed in a popup (toast) -->
