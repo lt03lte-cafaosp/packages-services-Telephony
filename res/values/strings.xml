@@ -1816,6 +1816,7 @@
     <string name="exportAllcontatsFailed"> Failed to export all contacts to SIM !!!</string>
     <string name="exportAllcontatsNoContacts"> No Contacts found to export to SIM !!!</string>
     <string name="cursorError"> Cursor is not having proper data !!! </string>
+    <string name="invalid_username_or_hostname">Invalid username or host parameters</string>
     <!-- Set Subscription screen: set subscription option name -->
     <string name="set_subscription">Select subscriptions</string>
     <!-- Set Subscription screen: label Card 1 -->
