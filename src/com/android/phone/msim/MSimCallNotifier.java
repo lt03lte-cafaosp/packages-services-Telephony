@@ -363,6 +363,7 @@ public class MSimCallNotifier extends CallNotifier {
         int subscription = pb.getSubscription();
 
         PhoneConstants.State state = mCM.getState(subscription);
+        mLastPhoneState = state;
         if (VDBG) log("onPhoneStateChanged: state = " + state +
                 " subscription = " + subscription);
 
@@ -522,6 +523,8 @@ public class MSimCallNotifier extends CallNotifier {
         } else {
             Log.w(LOG_TAG, "onDisconnect: null connection");
         }
+
+        showCallDuration(c);
 
         int autoretrySetting = 0;
         if ((c != null) && (c.getCall().getPhone().getPhoneType() ==
