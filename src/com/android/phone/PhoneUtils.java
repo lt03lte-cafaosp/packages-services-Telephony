@@ -3141,6 +3141,13 @@ public class PhoneUtils {
     }
 
     /**
+     * Returns true if Android supports Csvt calls
+     */
+    public static boolean isCallOnCsvtEnabled() {
+        return CallManager.isCallOnCsvtEnabled();
+    }
+
+    /**
      * If the intent is not  already the IMS intent, conert the intent to the
      * IMS intent
      */
@@ -3393,6 +3400,17 @@ public class PhoneUtils {
         return otherSub;
     }
 
+    public static boolean isCsvtCallActive() {
+        boolean isActive = false;
+        try {
+            isActive =  PhoneGlobals.mCsvtService != null &&
+                      ! PhoneGlobals.mCsvtService.isIdle();
+        } catch (RemoteException e) {
+            Log.e(LOG_TAG, "Failed to retrieve Csvt call state. " + e);
+        }
+        return isActive;
+    }
+
     public static void handleWaitingCallOnLchSub(int activeSub, boolean isAccepted) {
         CallManager cm = PhoneGlobals.getInstance().mCM;
         boolean lchStatus = cm.getLocalCallHoldStatus(activeSub);
@@ -3426,5 +3444,39 @@ public class PhoneUtils {
             nextSub = MSimConstants.SUB1;
         }
         return nextSub;
+    }
+
+    /**
+     * Check whether any VT is present.
+     * @return If present, return true. If not, return false.
+     */
+    public static boolean isImsVtCallPresent() {
+        boolean isVideoCallActive = false;
+        Phone phone = getImsPhone(PhoneGlobals.getInstance().mCM);
+        if (phone != null) {
+            isVideoCallActive = isImsVideoCall(phone.getForegroundCall()) ||
+                    isImsVideoCall(phone.getBackgroundCall()) ||
+                    isImsVideoCall(phone.getRingingCall());
+        }
+        if (DBG) log("isImsVtCallPresent: " + isVideoCallActive);
+        return isVideoCallActive;
+    }
+
+    /**
+     * Check whether a VT is allowed or not.
+     * @return If not allowed true, If allowed, return false.
+     */
+    public static boolean isImsVtCallNotAllowed(int callType) {
+        boolean isNotAllowed = false;
+        if (callType == Phone.CALL_TYPE_VT || callType == Phone.CALL_TYPE_VT_RX
+                || callType == Phone.CALL_TYPE_VT_TX) {
+            Phone phone = getImsPhone(PhoneGlobals.getInstance().mCM);
+            isNotAllowed = android.provider.Settings.Secure.getInt(
+                    phone.getContext().getContentResolver(),
+                    android.provider.Settings.Secure.PREFERRED_TTY_MODE,
+                    Phone.TTY_MODE_OFF) != Phone.TTY_MODE_OFF;
+        }
+        if (DBG) log("isImsVtCallNotAllowed: " + isNotAllowed);
+        return isNotAllowed;
     }
 }
