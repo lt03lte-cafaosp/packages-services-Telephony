@@ -92,6 +92,7 @@ public class NotificationMgr {
     static final int CALL_FORWARD_NOTIFICATION = 6;
     static final int DATA_DISCONNECTED_ROAMING_NOTIFICATION = 7;
     static final int SELECTED_OPERATOR_FAIL_NOTIFICATION = 8;
+    static final int HEADSET_PLUGIN_NOTIFICATION = 9;
 
     /** The singleton NotificationMgr instance. */
     protected static NotificationMgr sInstance;
@@ -993,6 +994,33 @@ public class NotificationMgr {
 
         mToast = Toast.makeText(mContext, msg, Toast.LENGTH_LONG);
         mToast.show();
+    }
+
+    /* package */ void showHeadSetPlugin() {
+        if (DBG) log("showHeadSetPlugin()...");
+
+        String titleText = mContext.getString(
+                R.string.headset_plugin_view_title);
+        String expandedText = mContext.getString(
+                R.string.headset_plugin_view_text);
+
+        Notification notification = new Notification();
+        notification.icon = android.R.drawable.stat_sys_headset;
+        notification.flags |= Notification.FLAG_NO_CLEAR;
+        notification.tickerText = titleText;
+
+        // create the target network operators settings intent
+        Intent intent = new Intent("android.intent.action.NO_ACTION");
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        PendingIntent pi = PendingIntent.getActivity(mContext, 0, intent, 0);
+
+        notification.setLatestEventInfo(mContext, titleText, expandedText, pi);
+        mNotificationManager.notify(HEADSET_PLUGIN_NOTIFICATION, notification);
+    }
+
+    /* package */ void cancelHeadSetPlugin() {
+        if (DBG) log("cancelHeadSetPlugin()...");
+        mNotificationManager.cancel(HEADSET_PLUGIN_NOTIFICATION);
     }
 
     private void log(String msg) {
