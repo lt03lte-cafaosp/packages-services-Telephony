@@ -37,11 +37,11 @@
         android:title="@string/cdma_lte_data_service">
     </PreferenceScreen>
 
-    <CheckBoxPreference
+    <!--CheckBoxPreference
         android:key="button_data_enabled_key"
         android:title="@string/data_enabled"
         android:persistent="false"
-        android:summary="@string/data_enable_summary"/>
+        android:summary="@string/data_enable_summary"/-->
 
     <CheckBoxPreference
         android:key="button_roaming_key"
