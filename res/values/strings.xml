@@ -1235,6 +1235,8 @@
     <!-- Title for the dialog used to display CDMA DisplayInfo -->
     <string name="network_message">Network message</string>
 
+    <string name="network_forbidden">(Forbidden)</string>
+
     <!-- Shown in "Managed Roaming" dialog when registration is denied with rejCode 10. -->
     <string name="managed_roaming_title">Managed Roaming</string>
     <string name="managed_roaming_title_sub1">Managed Roaming (SUB1)</string>

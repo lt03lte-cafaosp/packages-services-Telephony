@@ -468,6 +468,7 @@
     <item msgid="2883365539347850535">"长"</item>
   </string-array>
     <string name="network_message" msgid="4483886461245213802">"网络讯息"</string>
+    <string name="network_forbidden">(禁用)</string>
     <string name="ota_title_activate" msgid="8616918561356194398">"激活您的手机"</string>
     <string name="ota_touch_activate" msgid="6553212803262586244">"需要拨打特别号码才能激活您的手机服务。\n\n在按下“激活”后，按照语音提示激活您的手机。"</string>
     <string name="ota_hfa_activation_title" msgid="2234246934160473981">"正在激活…"</string>
