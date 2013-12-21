@@ -625,6 +625,7 @@
     <string name="voicemail_notification_ringtone_title" msgid="2609519527849101590">"提示音"</string>
     <string name="default_notification_description" msgid="78174796906240970">"默认提示音 (<xliff:g id="DEFAULT_SOUND_TITLE">%1$s</xliff:g>)"</string>
     <string name="ringtone_title" msgid="6374978286202084684">"手机铃声"</string>
+    <string name="invalid_username_or_hostname">"用户名或服务器参数设置无效"</string>
     <string name="vibrate_on_ring_title" msgid="9197564612065258960">"响铃时振动"</string>
     <string name="dtmf_tone_enable_title" msgid="827601042915852989">"拨号键盘触摸音效"</string>
     <string name="dial_pad_autocomplete" msgid="494525952035761075">"拨号键盘自动补全"</string>

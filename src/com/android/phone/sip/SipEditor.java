@@ -368,7 +368,7 @@ public class SipEditor extends PreferenceActivity
             // do finish() in replaceProfile() in a background thread
         } catch (Exception e) {
             Log.w(TAG, "Can not create new SipProfile", e);
-            showAlert(e);
+            showAlert(getString(R.string.invalid_username_or_hostname));
         }
     }
 
