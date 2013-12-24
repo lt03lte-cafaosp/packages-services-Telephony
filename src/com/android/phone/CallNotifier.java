@@ -46,6 +46,7 @@ import android.net.Uri;
 import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.os.SystemVibrator;
 import android.os.Vibrator;
@@ -175,6 +176,7 @@ public class CallNotifier extends Handler
     protected final BluetoothManager mBluetoothManager;
 
     protected PhoneConstants.State mLastPhoneState = PhoneConstants.State.IDLE;
+    protected Call.State mLastCallState = Call.State.IDLE;
 
     /**
      * Initialize the singleton CallNotifier instance.
@@ -713,6 +715,7 @@ public class CallNotifier extends Handler
                 .enableNotificationAlerts(state == PhoneConstants.State.IDLE);
 
         Phone fgPhone = mCM.getFgPhone();
+        vibrateAfterCallConnected(fgPhone);
         if (fgPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
             if ((fgPhone.getForegroundCall().getState() == Call.State.ACTIVE)
                     && ((mPreviousCdmaCallState == Call.State.DIALING)
@@ -804,6 +807,20 @@ public class CallNotifier extends Handler
                 }
             }
         }
+    }
+
+    protected void vibrateAfterCallConnected(Phone phone) {
+        if ((phone.getForegroundCall().getState() == Call.State.ACTIVE)
+                && (mLastCallState == Call.State.DIALING || mLastCallState == Call.State.ALERTING)
+                && Settings.System.getInt(mApplication.getContentResolver(),
+                        Constants.SETTINGS_VIBRATE_WHEN_ACCEPTED, 1) == 1) {
+            Vibrator mSystemVibrator = new SystemVibrator();
+            int nVibratorLength = 100;
+            mSystemVibrator.vibrate(nVibratorLength);
+            SystemClock.sleep(nVibratorLength);
+            mSystemVibrator.cancel();
+        }
+        mLastCallState = phone.getForegroundCall().getState();
     }
 
     void updateCallNotifierRegistrationsAfterRadioTechnologyChange() {
