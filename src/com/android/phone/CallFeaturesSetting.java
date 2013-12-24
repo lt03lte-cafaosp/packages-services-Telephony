@@ -185,6 +185,7 @@ public class CallFeaturesSetting extends PreferenceActivity
     private static final String BUTTON_TTY_KEY         = "button_tty_mode_key";
     private static final String BUTTON_HAC_KEY         = "button_hac_key";
     private static final String BUTTON_PROXIMITY_KEY   = "button_proximity_key";
+    private static final String SHOW_DURATION_KEY      = "duration_enable_key";
 
     private static final String BUTTON_GSM_UMTS_OPTIONS = "button_gsm_more_expand_key";
     private static final String BUTTON_CDMA_OPTIONS = "button_cdma_more_expand_key";
@@ -286,6 +287,7 @@ public class CallFeaturesSetting extends PreferenceActivity
     private CheckBoxPreference mVoicemailNotificationVibrate;
     private SipSharedPreferences mSipSharedPreferences;
     private CheckBoxPreference mButtonProximity;
+    private CheckBoxPreference mShowDurationCheckBox;
 
     private class VoiceMailProvider {
         public VoiceMailProvider(String name, Intent intent) {
@@ -566,6 +568,12 @@ public class CallFeaturesSetting extends PreferenceActivity
             int index = mButtonDTMF.findIndexOfValue((String) objValue);
             Settings.System.putInt(mPhone.getContext().getContentResolver(),
                     Settings.System.DTMF_TONE_TYPE_WHEN_DIALING, index);
+        } else if (preference == mShowDurationCheckBox) {
+            boolean checked = (Boolean) objValue;
+            Settings.System.putInt(mPhone.getContext().getContentResolver(),
+                    Constants.SETTINGS_SHOW_CALL_DURATION, checked ? 1 : 0);
+            mShowDurationCheckBox.setSummary(checked ? R.string.duration_enable_summary
+                    : R.string.duration_disable_summary);
         } else if (preference == mButtonTTY) {
             handleTTYChange(preference, objValue);
         } else if (preference == mButtonProximity) {
@@ -1557,6 +1565,7 @@ public class CallFeaturesSetting extends PreferenceActivity
         mButtonTTY = (ListPreference) findPreference(BUTTON_TTY_KEY);
         mVoicemailProviders = (ListPreference) findPreference(BUTTON_VOICEMAIL_PROVIDER_KEY);
         mButtonProximity = (CheckBoxPreference) findPreference(BUTTON_PROXIMITY_KEY);
+        mShowDurationCheckBox = (CheckBoxPreference) findPreference(SHOW_DURATION_KEY);
         if (mVoicemailProviders != null) {
             mVoicemailProviders.setOnPreferenceChangeListener(this);
             mVoicemailSettings = (PreferenceScreen)findPreference(BUTTON_VOICEMAIL_SETTING_KEY);
@@ -1595,6 +1604,10 @@ public class CallFeaturesSetting extends PreferenceActivity
 
         if (mButtonProximity != null) {
             mButtonProximity.setOnPreferenceChangeListener(this);
+        }
+
+        if (mShowDurationCheckBox != null) {
+            mShowDurationCheckBox.setOnPreferenceChangeListener(this);
         }
 
         if (mButtonAutoRetry != null) {
@@ -1855,6 +1868,15 @@ public class CallFeaturesSetting extends PreferenceActivity
             mButtonProximity.setSummary(checked ? R.string.proximity_on_summary
                     : R.string.proximity_off_summary);
         }
+
+        if (mShowDurationCheckBox != null) {
+            boolean checked = Settings.System.getInt(getContentResolver(),
+                    Constants.SETTINGS_SHOW_CALL_DURATION, 1) == 1;
+            mShowDurationCheckBox.setChecked(checked);
+            mShowDurationCheckBox.setSummary(checked ? R.string.duration_enable_summary
+                    : R.string.duration_disable_summary);
+        }
+
         lookupRingtoneName();
     }
 
