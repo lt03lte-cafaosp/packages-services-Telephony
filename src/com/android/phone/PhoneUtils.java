@@ -1251,6 +1251,7 @@ public class PhoneUtils {
                         WindowManager.LayoutParams.FLAG_DIM_BEHIND);
 
                 newDialog.show();
+                app.setUSSDResponseDialog(newDialog);
             } else {
                 if (DBG) log("USSD code has requested user input. Constructing input dialog.");
 
