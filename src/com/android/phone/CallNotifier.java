@@ -25,6 +25,7 @@ import com.android.internal.telephony.CallModify;
 import com.android.internal.telephony.CallerInfo;
 import com.android.internal.telephony.CallerInfoAsyncQuery;
 import com.android.internal.telephony.Connection;
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneBase;
@@ -40,11 +41,13 @@ import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothHeadset;
 import android.bluetooth.BluetoothProfile;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.net.Uri;
 import android.os.AsyncResult;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
@@ -156,6 +159,11 @@ public class CallNotifier extends Handler
     // The tone volume relative to other sounds in the stream SignalInfo
     private static final int TONE_RELATIVE_VOLUME_SIGNALINFO = 80;
 
+    private static final Uri FIREWALL_PROVIDER_URI = Uri
+            .parse("content://com.android.firewall");
+    private static final String EXTRA_NUMBER = "phonenumber";
+    private static final String IS_FORBIDDEN = "isForbidden";
+
     protected Call.State mPreviousCdmaCallState;
     protected boolean mVoicePrivacyState = false;
     protected boolean mIsCdmaRedialCall = false;
@@ -256,6 +264,30 @@ public class CallNotifier extends Handler
         switch (msg.what) {
             case CallStateMonitor.PHONE_NEW_RINGING_CONNECTION:
                 log("RINGING... (new)");
+
+                // Add to check the firewall when firewall provider is built.
+                final ContentResolver cr = mApplication.getContentResolver();
+                if (cr.acquireProvider(FIREWALL_PROVIDER_URI) != null) {
+                    AsyncResult r = (AsyncResult) msg.obj;
+                    Connection c = (Connection) r.result;
+                    if (c != null && c.isRinging() && c.getCall() != null) {
+                        Phone phone = c.getCall().getPhone();
+                        String number = c.getAddress();
+                        int subscription = phone.getSubscription();
+
+                        Bundle extras = new Bundle();
+                        extras.putInt(MSimConstants.SUBSCRIPTION_KEY, subscription);
+                        extras.putString(EXTRA_NUMBER, number);
+                        extras = cr.call(FIREWALL_PROVIDER_URI, IS_FORBIDDEN, null, extras);
+                        if (extras != null) {
+                            boolean isForbidden= extras.getBoolean(IS_FORBIDDEN);
+                            if (isForbidden) {
+                                PhoneUtils.hangupRingingCall(c.getCall());
+                                return;
+                            }
+                        }
+                    }
+                }
                 onNewRingingConnection((AsyncResult) msg.obj);
                 mSilentRingerRequested = false;
                 break;
