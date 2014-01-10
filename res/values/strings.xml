@@ -1951,4 +1951,9 @@
     <string name="emergency_call_number">Emergency Call Number</string>
     <string name="emergency_number_exist">Emergency Number has existed !</string>
     <string name="emergency_number_save_error">Emergency Number is too long !</string>
+    <string name="ipcall">IP call setting</string>
+    <string name="ipcall_sub_title">IP call setting</string>
+    <string name="ipcall_sub_summery">Edit the IP prefix for IP call</string>
+    <string name="ipcall_dialog_title">IP call setting</string>
+    <string name="ipcall_dialog_edit_hint">Please input the IP prefix</string>
 </resources>
