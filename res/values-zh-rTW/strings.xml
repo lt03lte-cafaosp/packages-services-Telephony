@@ -639,4 +639,5 @@
     <string name="card_title_forwarded_MTcall">"被轉來電"</string>
     <string name="headset_plugin_view_text">耳機已插入到手機</string>
     <string name="headset_plugin_view_title">耳機插入</string>
+    <string name="speed_dial_setting">"快速撥號設置"</string>
 </resources>
