@@ -148,4 +148,6 @@
     <!-- whether disable data of sub2 -->
     <bool name="disable_data_sub2">false</bool>
 
+    <!-- whether disable CDMA subscription settings -->
+    <bool name="disable_cdma_subscription">false</bool>
 </resources>
