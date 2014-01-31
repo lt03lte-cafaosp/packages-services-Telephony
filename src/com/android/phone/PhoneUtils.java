@@ -65,6 +65,7 @@ import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.TelephonyCapabilities;
 import com.android.internal.telephony.TelephonyProperties;
+import com.android.internal.util.Objects;
 import com.android.internal.telephony.cdma.CdmaConnection;
 import com.android.internal.telephony.sip.SipPhone;
 import com.android.phone.CallGatewayManager.RawGatewayInfo;
@@ -237,6 +238,25 @@ public class PhoneUtils {
                         cn = cnlist.next();
                         if (!fgConnections.contains(cn) && !bgConnections.contains(cn)) {
                             if (DBG) log("connection '" + cn + "' not accounted for, removing.");
+                            for (Connection fgcn : fgConnections) {
+                                if (Objects.equal(cn.getAddress(), fgcn.getAddress())) {
+                                    Boolean bMute = sConnectionMuteTable.get(cn);
+                                    log("updating fg conn '" + fgcn +"' wth mute value: " + bMute +
+                                            " address: " + fgcn.getAddress());
+                                    sConnectionMuteTable.put(fgcn, bMute);
+                                    break;
+                                }
+                            }
+
+                            for (Connection bgcn : bgConnections) {
+                                if (Objects.equal(cn.getAddress(), bgcn.getAddress())) {
+                                    Boolean bMute = sConnectionMuteTable.get(cn);
+                                    log("updating bg conn '" + bgcn + "' wth mute value: " + bMute +
+                                            " address: " + bgcn.getAddress());
+                                    sConnectionMuteTable.put(bgcn, bMute);
+                                    break;
+                                }
+                            }
                             cnlist.remove();
                         }
                     }
@@ -2616,6 +2636,22 @@ public class PhoneUtils {
         }
     }
 
+    /**
+     * returns true , If Call is on IMS and its service is enabled other case
+     * return false
+     * @param cm
+     * @return
+     */
+    static boolean canAddParticipant(CallManager cm) {
+        boolean ret = false;
+        Phone phone = cm.getActiveFgCall().getPhone();
+        int phoneType = phone.getPhoneType();
+        if (phoneType == PhoneConstants.PHONE_TYPE_IMS) {
+            ret = true;
+        }
+        return ret;
+    }
+
     static boolean okToAddCall(CallManager cm, int subscription) {
         if (!isCallOnImsEnabled()) {
             Phone phone = cm.getActiveFgCall(subscription).getPhone();
@@ -3444,5 +3480,39 @@ public class PhoneUtils {
             nextSub = MSimConstants.SUB1;
         }
         return nextSub;
+    }
+
+    /**
+     * Check whether any VT is present.
+     * @return If present, return true. If not, return false.
+     */
+    public static boolean isImsVtCallPresent() {
+        boolean isVideoCallActive = false;
+        Phone phone = getImsPhone(PhoneGlobals.getInstance().mCM);
+        if (phone != null) {
+            isVideoCallActive = isImsVideoCall(phone.getForegroundCall()) ||
+                    isImsVideoCall(phone.getBackgroundCall()) ||
+                    isImsVideoCall(phone.getRingingCall());
+        }
+        if (DBG) log("isImsVtCallPresent: " + isVideoCallActive);
+        return isVideoCallActive;
+    }
+
+    /**
+     * Check whether a VT is allowed or not.
+     * @return If not allowed true, If allowed, return false.
+     */
+    public static boolean isImsVtCallNotAllowed(int callType) {
+        boolean isNotAllowed = false;
+        if (callType == Phone.CALL_TYPE_VT || callType == Phone.CALL_TYPE_VT_RX
+                || callType == Phone.CALL_TYPE_VT_TX) {
+            Phone phone = getImsPhone(PhoneGlobals.getInstance().mCM);
+            isNotAllowed = android.provider.Settings.Secure.getInt(
+                    phone.getContext().getContentResolver(),
+                    android.provider.Settings.Secure.PREFERRED_TTY_MODE,
+                    Phone.TTY_MODE_OFF) != Phone.TTY_MODE_OFF;
+        }
+        if (DBG) log("isImsVtCallNotAllowed: " + isNotAllowed);
+        return isNotAllowed;
     }
 }
