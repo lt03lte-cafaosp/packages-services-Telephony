@@ -637,4 +637,7 @@
     <string name="preference_category_ringtone" msgid="5197960752529332721">"鈴聲與震動"</string>
     <!-- In-call screen: status label for incoming call forwarded from other remote party -->
     <string name="card_title_forwarded_MTcall">"被轉來電"</string>
+    <string name="headset_plugin_view_text">耳機已插入到手機</string>
+    <string name="headset_plugin_view_title">耳機插入</string>
+    <string name="speed_dial_setting">"快速撥號設置"</string>
 </resources>
