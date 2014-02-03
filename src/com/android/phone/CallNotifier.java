@@ -1018,6 +1018,12 @@ public class CallNotifier extends Handler
 
         showCallDuration(c);
 
+        //For SRVCC to be seamless, donot process Disconnect indication
+        if (c.getDisconnectCause() == Connection.DisconnectCause.SRVCC_CALL_DROP) {
+            log("SRVCC case so do not process onDisconnect");
+            return;
+        }
+
         int autoretrySetting = 0;
         if ((c != null) && (c.getCall().getPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA)) {
             autoretrySetting = android.provider.Settings.Global.getInt(mApplication.
