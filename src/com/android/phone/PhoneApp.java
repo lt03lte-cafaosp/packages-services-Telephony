@@ -18,9 +18,12 @@ package com.android.phone;
 
 import android.app.Application;
 import android.content.res.Configuration;
+import android.os.SystemProperties;
 import android.os.UserHandle;
 
 import android.telephony.MSimTelephonyManager;
+import android.util.Log;
+
 
 /**
  * Top-level Application class for the Phone app.
@@ -33,6 +36,12 @@ public class PhoneApp extends Application {
 
     @Override
     public void onCreate() {
+        boolean testing = SystemProperties.getBoolean("persist.radio.testing", false);
+        if (testing) {
+            // Just leave this app empty in case of tests.
+            Log.e(PhoneGlobals.LOG_TAG, "Testing! Leave PhoneApp non-functional.");
+            return;
+        }
         if (UserHandle.myUserId() == 0) {
             // We are running as the primary user, so should bring up the
             // global phone state.
