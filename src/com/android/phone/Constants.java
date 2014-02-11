@@ -160,4 +160,10 @@ public class Constants {
     public static final String SETTINGS_VIBRATE_WHEN_ACCEPTED = "vibrate_on_accepted";
 
     public static final String SETTINGS_IP_PREFIX = "ip_call_prefix_sub";
+    // network mode
+    public static final int NETWORK_MODE_DEFAULT = 0;
+    public static final int NETWORK_MODE_HIDE = 1;
+    public static final int NETWORK_MODE_CMCC = 2;
+    public static final int NETWORK_MODE_TDCDMA = 3;
+    public static final int NETWORK_MODE_LTE = 4;
 }
