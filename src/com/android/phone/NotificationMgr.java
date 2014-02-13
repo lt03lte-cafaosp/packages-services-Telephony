@@ -93,6 +93,7 @@ public class NotificationMgr {
     static final int DATA_DISCONNECTED_ROAMING_NOTIFICATION = 7;
     static final int SELECTED_OPERATOR_FAIL_NOTIFICATION = 8;
     static final int HEADSET_PLUGIN_NOTIFICATION = 9;
+    static final int MISSED_VIDEOCALL_NOTIFICATION = 100;
 
     /** The singleton NotificationMgr instance. */
     protected static NotificationMgr sInstance;
@@ -113,6 +114,9 @@ public class NotificationMgr {
     // used to track the missed call counter, default to 0.
     private int mNumberMissedCalls = 0;
 
+    // used to track the missed video call counter, default to 0.
+    private int mNumberMissedVideoCalls = 0;
+
     // used to track the notification of selected network unavailable
     private boolean mSelectedUnavailableNotify = false;
 
@@ -125,6 +129,9 @@ public class NotificationMgr {
     private QueryHandler mQueryHandler = null;
     private static final int CALL_LOG_TOKEN = -1;
     private static final int CONTACT_TOKEN = -2;
+
+    /** Call log type for missed CSVT calls. */
+    protected static final int MISSED_CSVT_TYPE = 7;
 
     /**
      * Private constructor (this is a singleton).
@@ -269,9 +276,20 @@ public class NotificationMgr {
         mQueryHandler = new QueryHandler(mContext.getContentResolver());
 
         // setup query spec, look for all Missed calls that are new.
-        StringBuilder where = new StringBuilder("type=");
-        where.append(Calls.MISSED_TYPE);
-        where.append(" AND new=1");
+        StringBuilder where = null;
+        if (PhoneUtils.isCallOnCsvtEnabled()) {
+            where = new StringBuilder("(type=");
+            where.append(Calls.MISSED_TYPE);
+            where.append(" OR ");
+            where.append("type=");
+            where.append(MISSED_CSVT_TYPE);
+            where.append(")");
+            where.append(" AND new=1");
+        } else {
+            where = new StringBuilder("type=");
+            where.append(Calls.MISSED_TYPE);
+            where.append(" AND new=1");
+        }
 
         // start the query
         if (DBG) log("- start call log query...");
@@ -399,8 +417,12 @@ public class NotificationMgr {
                             }
                             // We couldn't find person Uri, so we're sure we cannot obtain a photo.
                             // Call notifyMissedCall() right now.
-                            notifyMissedCall(n.name, n.number, n.presentation, n.type, null, null,
+                            if (String.valueOf(MISSED_CSVT_TYPE).equals(n.type)) {
+                                notifyMissedVideoCall(n.name, n.number, n.type, n.date);
+                            } else {
+                                notifyMissedCall(n.name, n.number, n.presentation, n.type, null, null,
                                     n.date);
+                            }
                         }
 
                         if (DBG) log("closing contact cursor.");
@@ -416,7 +438,12 @@ public class NotificationMgr {
                 int token, Drawable photo, Bitmap photoIcon, Object cookie) {
             if (DBG) log("Finished loading image: " + photo);
             NotificationInfo n = (NotificationInfo) cookie;
-            notifyMissedCall(n.name, n.number, n.presentation, n.type, photo, photoIcon, n.date);
+            if (String.valueOf(MISSED_CSVT_TYPE).equals(n.type)) {
+                notifyMissedVideoCall(n.name, n.number, n.type, n.date);
+            } else {
+                notifyMissedCall(n.name, n.number, n.presentation, n.type, 
+                    photo, photoIcon, n.date);
+            }
         }
 
         /**
@@ -587,7 +614,71 @@ public class NotificationMgr {
     void cancelMissedCallNotification() {
         // reset the number of missed calls to 0.
         mNumberMissedCalls = 0;
+        mNumberMissedVideoCalls = 0;
         mNotificationManager.cancel(MISSED_CALL_NOTIFICATION);
+        mNotificationManager.cancel(MISSED_VIDEOCALL_NOTIFICATION);
+    }
+
+    /**
+     * Displays a notification about a missed video call.
+     */
+    void notifyMissedVideoCall(String name, String number, String label, long date) {
+        // When the user clicks this notification, we go to the call log.
+        final Intent callLogIntent = PhoneGlobals.createCallLogIntent();
+
+        // title resource id
+        int titleResId;
+        // the text in the notification's line 1 and 2.
+        String expandedText, callName;
+
+        // increment number of missed calls.
+        mNumberMissedVideoCalls++;
+
+        // get the name for the ticker text
+        // i.e. "Missed call from <caller name or number>"
+        if (name != null && TextUtils.isGraphic(name)) {
+            callName = name;
+        } else if (!TextUtils.isEmpty(number)){
+            callName = number;
+        } else {
+            // use "unknown" if the caller is unidentifiable.
+            callName = mContext.getString(R.string.unknown);
+        }
+
+        // display the first line of the notification:
+        // 1 missed call: call name
+        // more than 1 missed call: <number of calls> + "missed calls"
+        if (mNumberMissedVideoCalls == 1) {
+            titleResId = R.string.notification_missedVideoCallTitle;
+            expandedText = callName;
+        } else {
+            titleResId = R.string.notification_missedVideoCallsTitle;
+            expandedText = mContext.getString(R.string.notification_missedCallsMsg,
+                    mNumberMissedVideoCalls);
+        }
+
+        // make the notification
+        Notification note = new Notification(
+                android.R.drawable.stat_notify_missed_call,
+                mContext.getString(R.string.notification_missedVideoCallTicker, callName),
+                date
+                );
+        note.setLatestEventInfo(mContext, mContext.getText(titleResId), expandedText,
+                PendingIntent.getActivity(mContext, 0, callLogIntent, 0));
+        note.flags |= Notification.FLAG_AUTO_CANCEL;
+        // This intent will be called when the notification is dismissed.
+        // It will take care of clearing the list of missed calls.
+        note.deleteIntent = createClearMissedVideoCallsIntent();
+
+        configureLedNotification(note);
+        mNotificationManager.notify(MISSED_VIDEOCALL_NOTIFICATION, note);
+    }
+
+    /** Returns an intent to be invoked when the missed call notification is cleared. */
+    private PendingIntent createClearMissedVideoCallsIntent() {
+        Intent intent = new Intent(mContext, ClearMissedCallsService.class);
+        intent.setAction(ClearMissedCallsService.ACTION_CLEAR_MISSED_CALLS);
+        return PendingIntent.getService(mContext, 0, intent, 0);
     }
 
     private void notifySpeakerphone() {

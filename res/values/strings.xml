@@ -1038,6 +1038,18 @@
          number during emergency callback mode (ECM) [CHAR LIMIT=30] -->
     <string name="card_title_my_phone_number">My number is <xliff:g id="my_phone_number">%s</xliff:g></string>
 
+    <!-- Notification strings for video call -->
+    <string name="notification_missedVideoCallTitle">Missed video call</string>
+    <string name="notification_missedVideoCallsTitle">Missed video calls</string>
+    <string name="notification_missedVideoCallsMsg">
+        <xliff:g id="num_missed_calls">%1$s</xliff:g>
+        Missed video calls
+    </string>
+    <string name="notification_missedVideoCallTicker">
+        Missed video call from
+        <xliff:g id="missed_call_from">%1$s</xliff:g>
+    </string>
+
     <!-- Notification strings -->
     <!-- The "label" of the in-call Notification for a dialing call, used
          as the format string for a Chronometer widget. [CHAR LIMIT=60] -->
