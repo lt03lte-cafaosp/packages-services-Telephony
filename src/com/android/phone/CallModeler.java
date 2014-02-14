@@ -161,7 +161,15 @@ public class CallModeler extends Handler {
                     onPhoneStateChanged(null);
                 }
                 break;
-
+            case CallStateMonitor.PHONE_SUPP_SERVICE_FAILED:
+                AsyncResult r = (AsyncResult) msg.obj;
+                Phone.SuppService service = (Phone.SuppService) r.result;
+                int val = service.ordinal();
+                if (DBG) Log.d(TAG, "SUPP_SERVICE_FAILED..." +service);
+                for (int i = 0; i < mListeners.size(); i++) {
+                    mListeners.get(i).onSuppServiceFailed(val);
+                }
+                break;
             default:
                 break;
         }
@@ -1077,6 +1085,7 @@ public class CallModeler extends Handler {
                 char c);
         void onActiveSubChanged(int activeSub);
         void onModifyCall(Call call);
+        void onSuppServiceFailed(int service);
     }
 
     /**
