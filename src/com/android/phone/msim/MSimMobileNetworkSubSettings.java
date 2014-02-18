@@ -238,6 +238,34 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
                 BUTTON_PREFERED_NETWORK_MODE);
 
+        int networkFeature = this.getResources().getInteger(R.integer.network_feature);
+        switch (networkFeature) {
+            case Constants.NETWORK_MODE_HIDE:
+                prefSet.removePreference(mButtonPreferredNetworkMode);
+                break;
+            case Constants.NETWORK_MODE_CMCC:
+                mButtonPreferredNetworkMode
+                        .setDialogTitle(R.string.preferred_network_mode_dialogtitle_cmcc);
+                mButtonPreferredNetworkMode.setEntries(R.array.preferred_network_mode_choices_cmcc);
+                mButtonPreferredNetworkMode
+                        .setEntryValues(R.array.preferred_network_mode_values_cmcc);
+                break;
+            case Constants.NETWORK_MODE_TDCDMA:
+                mButtonPreferredNetworkMode
+                        .setEntries(R.array.preferred_network_mode_choices_tdscdma);
+                mButtonPreferredNetworkMode
+                        .setEntryValues(R.array.preferred_network_mode_values_tdscdma);
+                break;
+            case Constants.NETWORK_MODE_LTE:
+                mButtonPreferredNetworkMode.setEntries(R.array.preferred_network_mode_choices_lte);
+                mButtonPreferredNetworkMode
+                        .setEntryValues(R.array.preferred_network_mode_values_lte);
+                break;
+            case Constants.NETWORK_MODE_DEFAULT:
+            default:
+                break;
+        }
+
         boolean isLteOnCdma = mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE;
         if (getResources().getBoolean(R.bool.world_phone) == true) {
             // set the listener for the mButtonPreferredNetworkMode list preference so we can issue
@@ -494,6 +522,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     }
 
     private void UpdatePreferredNetworkModeSummary(int NetworkMode) {
+        int networkFeature = this.getResources().getInteger(R.integer.network_feature);
         switch(NetworkMode) {
             case Phone.NT_MODE_WCDMA_PREF:
                 mButtonPreferredNetworkMode.setSummary(
@@ -577,16 +606,26 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                         R.string.preferred_network_mode_td_scdma_gsm_lte_summary);
                 break;
             case Phone.NT_MODE_TD_SCDMA_GSM_WCDMA:
-                mButtonPreferredNetworkMode.setSummary(
-                        R.string.preferred_network_mode_td_scdma_gsm_wcdma_summary);
+                if (networkFeature == Constants.NETWORK_MODE_CMCC) {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_3g_2g_auto_summary);
+                } else {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_td_scdma_gsm_wcdma_summary);
+                }
                 break;
             case Phone.NT_MODE_TD_SCDMA_WCDMA_LTE:
                 mButtonPreferredNetworkMode.setSummary(
                         R.string.preferred_network_mode_td_scdma_wcdma_lte_summary);
                 break;
             case Phone.NT_MODE_TD_SCDMA_GSM_WCDMA_LTE:
-                mButtonPreferredNetworkMode.setSummary(
-                        R.string.preferred_network_mode_td_scdma_gsm_wcdma_lte_summary);
+                if (networkFeature == Constants.NETWORK_MODE_CMCC) {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_4g_3g_2g_auto_summary);
+                } else {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_td_scdma_gsm_wcdma_lte_summary);
+                }
                 break;
             case Phone.NT_MODE_TD_SCDMA_CDMA_EVDO_GSM_WCDMA:
                 mButtonPreferredNetworkMode.setSummary(
