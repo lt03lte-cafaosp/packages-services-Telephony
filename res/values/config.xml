@@ -152,4 +152,6 @@
     <bool name="disable_cdma_subscription">false</bool>
     <!-- Show different network mod list -->
     <integer name="network_feature">0</integer>
+    <!-- whether hide roaming settings -->
+    <bool name="hide_roaming">false</bool>
 </resources>

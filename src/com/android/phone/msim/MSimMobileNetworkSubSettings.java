@@ -332,15 +332,23 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         mButtonDataRoam = (CheckBoxPreference) prefSet.findPreference(BUTTON_ROAMING_KEY);
         mLteDataServicePref = prefSet.findPreference(BUTTON_CDMA_LTE_DATA_SERVICE_KEY);
 
-        boolean isSimLteOnCdma = mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE;
-
         final boolean missingDataServiceUrl = TextUtils.isEmpty(
                 android.provider.Settings.Global.getString(getContentResolver(),
                 android.provider.Settings.Global.SETUP_PREPAID_DATA_SERVICE_URL));
-        if (!isSimLteOnCdma || missingDataServiceUrl) {
+        if (!isLteOnCdma || missingDataServiceUrl) {
             prefSet.removePreference(mLteDataServicePref);
         } else {
             android.util.Log.d(LOG_TAG, "keep ltePref");
+        }
+
+        if (this.getResources().getBoolean(R.bool.hide_roaming)) {
+            if (!isLteOnCdma || missingDataServiceUrl) {
+                //none left so remove this category
+                prefSet.removePreference(pcDataSettings);
+                prefSet.removePreference(mButtonDataRoam);
+            } else {
+                prefSet.removePreference(mButtonDataRoam);
+            }
         }
     }
 
