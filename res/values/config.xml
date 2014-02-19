@@ -150,4 +150,6 @@
 
     <!-- whether disable CDMA subscription settings -->
     <bool name="disable_cdma_subscription">false</bool>
+    <!-- Show different network mod list -->
+    <integer name="network_feature">0</integer>
 </resources>
