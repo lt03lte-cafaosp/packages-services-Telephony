@@ -420,6 +420,11 @@ public class BluetoothManager implements CallModeler.Listener {
     }
 
     @Override
+    public void onSuppServiceFailed(int service) {
+        // no-op
+    }
+
+    @Override
     public void onUpdate(List<Call> calls) {
         updateBluetoothIndication();
     }
