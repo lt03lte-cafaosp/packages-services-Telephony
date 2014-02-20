@@ -233,6 +233,8 @@ public class MobileNetworkSettings extends PreferenceActivity
         PreferenceScreen prefSet = getPreferenceScreen();
 
         mButtonDataEnabled = (CheckBoxPreference) prefSet.findPreference(BUTTON_DATA_ENABLED_KEY);
+        //Move data enable button to setting root screen
+        prefSet.removePreference(mButtonDataEnabled);
         mButtonDataRoam = (CheckBoxPreference) prefSet.findPreference(BUTTON_ROAMING_KEY);
         mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
                 BUTTON_PREFERED_NETWORK_MODE);
@@ -371,6 +373,10 @@ public class MobileNetworkSettings extends PreferenceActivity
         if (actionBar != null) {
             // android.R.id.home will be triggered in onOptionsItemSelected()
             actionBar.setDisplayHomeAsUpEnabled(true);
+        }
+
+        if (this.getResources().getBoolean(R.bool.hide_roaming)) {
+            prefSet.removePreference(mButtonDataRoam);
         }
     }
 

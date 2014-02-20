@@ -60,6 +60,7 @@
     <string name="voicemail_abbreviated" msgid="2215592488517217448">"语音信箱："</string>
     <string name="networks" msgid="8873030692174541976">"网络运营商"</string>
     <string name="call_settings" msgid="6112441768261754562">"通话设置"</string>
+    <string name="callind_multi_sim">"通话设置"</string>
     <string name="additional_gsm_call_settings" msgid="1391795981938800617">"其他设置"</string>
     <string name="sum_gsm_call_settings" msgid="4076647190996778012">"其他仅适用于 GSM 通话的设置"</string>
     <string name="additional_cdma_call_settings" msgid="8628958775721886909">"其他 CDMA 通话设置"</string>
@@ -188,6 +189,7 @@
     <string name="roaming_warning" msgid="7820963598559553967">"是否要允许移动数据网络漫游？这可能产生大量漫游费！"</string>
     <string name="gsm_umts_options" msgid="6538311689850981686">"GSM/UMTS 选项"</string>
     <string name="cdma_options" msgid="4016822858172249884">"CDMA 选项"</string>
+    <string name="title_data_settings">数据设置</string>
     <string name="throttle_data_usage" msgid="3715677828160555808">"流量使用情况"</string>
     <string name="throttle_current_usage" msgid="8762280193043815361">"当前时段使用的数据"</string>
     <string name="throttle_time_frame" msgid="1915198770363734685">"数据使用时段"</string>

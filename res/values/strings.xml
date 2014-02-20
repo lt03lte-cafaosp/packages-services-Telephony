@@ -809,7 +809,7 @@
     <!-- Call Independent services screen title-->
     <string name="call_ind_services">Call Independent Services</string>
     <!-- button name for launching sub1, sub2 screen for Multi Sim Functionality-->
-    <string name="callind_multi_sim">SUBS Settings</string>
+    <string name="callind_multi_sim">Call settings</string>
     <!-- button name for direct launch of Call Feature screen for Single Sim Functionality -->
     <string name="callind">Call Feature Settings</string>
 
