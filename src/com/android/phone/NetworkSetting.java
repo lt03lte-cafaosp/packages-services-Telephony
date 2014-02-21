@@ -93,6 +93,9 @@ public class NetworkSetting extends PreferenceActivity
     private HashMap<Preference, OperatorInfo> mNetworkMap;
 
     private ConnectivityManager mCm;
+    //map of RAT type values to user understandable strings
+    private HashMap<String, String> mRatMap;
+
     Phone mPhone;
     protected boolean mIsForeground = false;
     private boolean mNetworkSearchDataDisconnecting = false;
@@ -331,6 +334,9 @@ public class NetworkSetting extends PreferenceActivity
         mNetworkList = (PreferenceGroup) getPreferenceScreen().findPreference(LIST_NETWORKS_KEY);
         mNetworkMap = new HashMap<Preference, OperatorInfo>();
         mCm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        mRatMap = new HashMap<String, String>();
+        initRatMap();
+
         mSearchButton = getPreferenceScreen().findPreference(BUTTON_SRCH_NETWRKS_KEY);
         mAutoSelect = getPreferenceScreen().findPreference(BUTTON_AUTO_SELECT_KEY);
 
@@ -590,6 +596,9 @@ public class NetworkSetting extends PreferenceActivity
         if (ni.getState() == OperatorInfo.State.FORBIDDEN) {
             title += getString(R.string.network_forbidden);
         }
+        if (!ni.getRadioTech().equals(""))
+            title += " " + mRatMap.get(ni.getRadioTech());
+
         return title;
     }
 
@@ -608,6 +617,27 @@ public class NetworkSetting extends PreferenceActivity
 
         Message msg = mHandler.obtainMessage(EVENT_AUTO_SELECT_DONE);
         mPhone.setNetworkSelectionModeAutomatic(msg);
+    }
+
+    private void initRatMap() {
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_UNKNOWN), "Unknown");
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_GPRS), "2G");
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_EDGE), "2G");
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_UMTS), "3G");
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_IS95A), "2G");
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_IS95B), "2G");
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_1xRTT), "2G");
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_EVDO_0), "3G");
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_EVDO_A), "3G");
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_HSDPA), "3G");
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_HSUPA), "3G");
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_HSPA), "3G");
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_EVDO_B), "3G");
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_EHRPD), "3G");
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_LTE), "4G");
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_HSPAP), "3G");
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_GSM), "2G");
+        mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_TD_SCDMA), "3G");
     }
 
     private void log(String msg) {
