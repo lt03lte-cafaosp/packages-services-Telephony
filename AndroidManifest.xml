@@ -726,5 +726,15 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name="CdmaCallForwardOptions"
+            android:configChanges="orientation|keyboardHidden"
+            android:label="@string/labelCF" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+
     </application>
 </manifest>

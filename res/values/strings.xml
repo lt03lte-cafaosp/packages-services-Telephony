@@ -2009,4 +2009,8 @@
     <string name="headset_plugin_view_text">Headset is plugged in.</string>
     <string name="headset_plugin_view_title">Headset</string>
     <string name="speed_dial_setting">Speed dial settings</string>
+    <string name="CFActivate">Activate</string>
+    <string name="CFDeactivate">Deactivate</string>
+    <string name="null_phone_number">Phone number cannot be null !</string>
+    <string name="labelCFDeactAll">Deactivate All</string>
 </resources>
