@@ -380,7 +380,6 @@
     <string name="search_networks">Search networks</string>
     <!-- Available networks screen, toast when an error is encountered when searching for networks -->
     <string name="network_query_error">Error while searching for networks.</string>
-    <string name="disconnect_data_confirm">This needs to disconnect data service temporarily. Are you sure?</string>
     <!-- Available networks screen, toast when registering on a specific network -->
     <string name="register_on_network">Registering on <xliff:g id="network">%s</xliff:g>\u2026</string>
     <!-- Available networks screen, toast when SIM card isn't allowed on a network -->
