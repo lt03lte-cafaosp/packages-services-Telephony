@@ -380,7 +380,6 @@
     <string name="search_networks">Search networks</string>
     <!-- Available networks screen, toast when an error is encountered when searching for networks -->
     <string name="network_query_error">Error while searching for networks.</string>
-    <string name="disconnect_data_confirm">This needs to disconnect data service temporarily. Are you sure?</string>
     <!-- Available networks screen, toast when registering on a specific network -->
     <string name="register_on_network">Registering on <xliff:g id="network">%s</xliff:g>\u2026</string>
     <!-- Available networks screen, toast when SIM card isn't allowed on a network -->
@@ -2009,4 +2008,16 @@
     <string name="headset_plugin_view_text">Headset is plugged in.</string>
     <string name="headset_plugin_view_title">Headset</string>
     <string name="speed_dial_setting">Speed dial settings</string>
+    <string name="CFActivate">Activate</string>
+    <string name="CFDeactivate">Deactivate</string>
+    <string name="null_phone_number">Phone number cannot be null !</string>
+    <string name="labelCFDeactAll">Deactivate All</string>
+
+    <!-- UPLMN Prefer -->
+    <string name="uplmn_list_setting_title">Preferred networks</string>
+    <string name="network_id">Network ID</string>
+    <string name="dialog_network_priority_title">Priority</string>
+    <string name="uplmn_list_setting_add_plmn">New PLMN</string>
+    <string name="gsm_umts_network_preferences_title">Network Mode</string>
+    <string name="gsm_umts_network_preferences_dialogtitle">Network Mode</string>
 </resources>
