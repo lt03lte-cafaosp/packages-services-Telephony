@@ -146,6 +146,15 @@ public class CallModeler extends Handler {
             case CallStateMonitor.PHONE_ACTIVE_SUBSCRIPTION_CHANGE:
                 onActiveSubChanged((AsyncResult) msg.obj);
                 break;
+            case CallStateMonitor.PHONE_SUPP_SERVICE_FAILED:
+                AsyncResult r = (AsyncResult) msg.obj;
+                Phone.SuppService service = (Phone.SuppService) r.result;
+                int val = service.ordinal();
+                if (DBG) Log.d(TAG, "SUPP_SERVICE_FAILED..." +service);
+                for (int i = 0; i < mListeners.size(); i++) {
+                    mListeners.get(i).onSuppServiceFailed(val);
+                }
+                break;
             default:
                 break;
         }
@@ -468,17 +477,13 @@ public class CallModeler extends Handler {
             }
 
             if (mConfCallMap.containsKey(orphanedConnection)) {
-                final Call call = mCallMap.get(orphanedConnection);
+                final Call call = mConfCallMap.get(orphanedConnection);
                 call.setState(Call.State.IDLE);
                 out.add(call);
 
                 mConfCallMap.remove(orphanedConnection);
             }
         }
-
-        //Cleanup local connections/Calls which are not present in CallManager.
-        cleanupOrphanCalls(mCallMap, telephonyCalls, out);
-        cleanupOrphanCalls(mConfCallMap, telephonyCalls, out);
     }
 
     /**
@@ -969,6 +974,8 @@ public class CallModeler extends Handler {
                         Call.DisconnectCause.DIAL_MODIFIED_TO_DIAL)
                 .put(Connection.DisconnectCause.SRVCC_CALL_DROP,
                         Call.DisconnectCause.SRVCC_CALL_DROP)
+                .put(Connection.DisconnectCause.ANSWERED_ELSEWHERE,
+                        Call.DisconnectCause.ANSWERED_ELSEWHERE)
                 .put(Connection.DisconnectCause.CALL_FAIL_MISC,
                         Call.DisconnectCause.CALL_FAIL_MISC)
                 .build();
@@ -1041,44 +1048,6 @@ public class CallModeler extends Handler {
         }
     }
 
-
-    /**
-     * Sometimes (like in case of radio tech change during emergency call)
-     * Connection objects below CallManager, gets disposed and recreated
-     * without a DISCONNECT event reaching CallManager and upper layers.
-     * CallManager retrieves the current calls/connections from active phones
-     * after radio tech change.
-     * Cleanup local connections/Calls in TeleService which are not present
-     * in CallManager.
-     */
-    private void cleanupOrphanCalls(HashMap<Connection, Call> callMap,
-            final List<com.android.internal.telephony.Call> telephonyCalls,
-            List<Call> out) {
-        List<Connection> orphanConns = new ArrayList<Connection>();
-        for (Connection conn: callMap.keySet()) {
-            boolean found = false;
-            for (com.android.internal.telephony.Call telephonyCall : telephonyCalls) {
-                if (telephonyCall.hasConnection(conn)) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                orphanConns.add(conn);
-            }
-        }
-
-        for (Connection conn: orphanConns) {
-            Call call = getCallFromMap(callMap, conn, false);
-            if (call != null) {
-                Log.i(TAG, "Cleaning up an orphan call: " + call);
-                callMap.remove(conn);
-                call.setState(State.IDLE);
-                if (out != null) out.add(call);
-            }
-        }
-    }
-
     /**
      * Listener interface for changes to Calls.
      */
@@ -1090,6 +1059,7 @@ public class CallModeler extends Handler {
                 char c);
         void onActiveSubChanged(int activeSub);
         void onModifyCall(Call call);
+        void onSuppServiceFailed(int service);
     }
 
     /**
