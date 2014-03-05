@@ -184,7 +184,6 @@ public class CallNotifier extends Handler
 
     protected final BluetoothManager mBluetoothManager;
 
-    protected PhoneConstants.State mLastPhoneState = PhoneConstants.State.IDLE;
     protected Call.State mLastCallState = Call.State.IDLE;
 
     /**
@@ -758,7 +757,6 @@ public class CallNotifier extends Handler
             log("onPhoneStateChanged: CSVT is active");
             return;
         }
-        mLastPhoneState = state;
         if (VDBG) log("onPhoneStateChanged: state = " + state);
 
         // Turn status bar notifications on or off depending upon the state
@@ -992,12 +990,28 @@ public class CallNotifier extends Handler
         onCustomRingQueryComplete(c);
     }
 
-    protected void showCallDuration(Connection connection) {
-        int showCallDurationSetting = Settings.System.getInt(mApplication.getContentResolver(),
-                Constants.SETTINGS_SHOW_CALL_DURATION, 1);
-        if (mLastPhoneState == PhoneConstants.State.OFFHOOK && connection != null
-                && showCallDurationSetting == 1) {
-            mApplication.showCallDuration(connection.getDurationMillis());
+    protected void showCallDurationIfNeed(Connection c) {
+        if (c == null) {
+            log("not need show duration, connection is null");
+            return;
+        }
+
+        Connection.DisconnectCause cause = c.getDisconnectCause();
+        if (cause == Connection.DisconnectCause.INCOMING_MISSED
+                || cause == Connection.DisconnectCause.CALL_BARRED
+                || cause == Connection.DisconnectCause.FDN_BLOCKED
+                || cause == Connection.DisconnectCause.CS_RESTRICTED
+                || cause == Connection.DisconnectCause.CS_RESTRICTED_EMERGENCY
+                || cause == Connection.DisconnectCause.CS_RESTRICTED_NORMAL
+                || cause == Connection.DisconnectCause.DIAL_MODIFIED_TO_USSD
+                || cause == Connection.DisconnectCause.DIAL_MODIFIED_TO_SS
+                || cause == Connection.DisconnectCause.DIAL_MODIFIED_TO_DIAL) {
+            log("not need show duration, caused by " + cause);
+        } else if (Settings.System.getInt(mApplication.getContentResolver(),
+                Constants.SETTINGS_SHOW_CALL_DURATION, 1) != 1) {
+            log("not need show duration, setting is disabled ");
+        } else {
+            mApplication.showCallDuration(c.getDurationMillis());
         }
     }
 
@@ -1016,7 +1030,7 @@ public class CallNotifier extends Handler
             Log.w(LOG_TAG, "onDisconnect: null connection");
         }
 
-        showCallDuration(c);
+        showCallDurationIfNeed(c);
 
         //For SRVCC to be seamless, donot process Disconnect indication
         if (c.getDisconnectCause() == Connection.DisconnectCause.SRVCC_CALL_DROP) {
