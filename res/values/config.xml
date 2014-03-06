@@ -143,4 +143,7 @@
     <string name="carrier_settings_menu" translatable="false"></string>
     <!-- DTMF key to be used for LCH hold tone -->
     <string name="Lch_dtmf_key" translatable="false">D</string>
+
+    <!-- Disable data before manual PLMN scan if true-->
+    <bool name="config_disable_data_manual_plmn">false</bool>
 </resources>
