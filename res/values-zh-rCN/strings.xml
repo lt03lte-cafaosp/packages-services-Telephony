@@ -125,7 +125,6 @@
     <string name="mobile_networks" msgid="5540397602919106177">"移动网络设置"</string>
     <string name="label_available" msgid="1181658289009300430">"可用网络"</string>
     <string name="load_networks_progress" msgid="5230707536168902952">"正在搜索..."</string>
-    <string name="disconnect_data_confirm">"这个动作会暂时关闭数据连接。您确定要这样么？"</string>
     <string name="empty_networks_list" msgid="4249426905018815316">"未找到网络。"</string>
     <string name="search_networks" msgid="1601136049300882441">"搜索网络"</string>
     <string name="network_query_error" msgid="6828516148953325006">"搜索网络时出错。"</string>
@@ -713,4 +712,12 @@
     <string name="CFDeactivate">禁用</string>
     <string name="null_phone_number">输入的电话号码不能为空!</string>
     <string name="labelCFDeactAll">全部禁用</string>
+
+    <!-- UPLMN Prefer -->
+    <string name="uplmn_list_setting_title">偏好设置</string>
+    <string name="network_id">网络 ID</string>
+    <string name="dialog_network_priority_title">优先级</string>
+    <string name="uplmn_list_setting_add_plmn">新增 PLMN</string>
+    <string name="gsm_umts_network_preferences_title">网络模式</string>
+    <string name="gsm_umts_network_preferences_dialogtitle">网络模式</string>
 </resources>

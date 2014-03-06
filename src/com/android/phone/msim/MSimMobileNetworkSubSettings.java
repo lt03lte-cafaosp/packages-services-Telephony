@@ -21,9 +21,11 @@ package com.android.phone;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.AsyncResult;
@@ -38,6 +40,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceScreen;
 import android.provider.Settings.SettingNotFoundException;
+import android.provider.Settings;
 import android.telephony.MSimTelephonyManager;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
@@ -212,6 +215,16 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         }
     }
 
+    /**
+     * Receiver for ACTION_AIRPLANE_MODE_CHANGED and ACTION_SIM_STATE_CHANGED.
+     */
+    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            setScreenState();
+        }
+    };
+
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -223,6 +236,12 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         log("Settings onCreate subscription =" + mSubscription);
         mPhone = app.getPhone(mSubscription);
         mHandler = new MyHandler();
+
+        //Register for intent broadcasts
+        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED);
+        intentFilter.addAction(TelephonyIntents.ACTION_SIM_STATE_CHANGED);
+
+        registerReceiver(mReceiver, intentFilter);
 
         //get UI object references
         PreferenceScreen prefSet = getPreferenceScreen();
@@ -356,9 +375,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     protected void onResume() {
         super.onResume();
 
-        // upon resumption from the sub-activity, make sure we re-enable the
-        // preferences.
-        getPreferenceScreen().setEnabled(true);
+        setScreenState();
 
         // Set UI state in onResume because a user could go home, launch some
         // app to change this setting's backend, and re-launch this settings app
@@ -371,6 +388,11 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                     MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
         }
         if (mGsmUmtsOptions != null) mGsmUmtsOptions.enableScreen();
+    }
+
+    private void setScreenState() {
+        int simState = MSimTelephonyManager.getDefault().getSimState(mSubscription);
+        getPreferenceScreen().setEnabled(simState != TelephonyManager.SIM_STATE_ABSENT);
     }
 
     @Override

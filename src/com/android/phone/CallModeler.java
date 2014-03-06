@@ -587,7 +587,7 @@ public class CallModeler extends Handler {
             call.getCallDetails().setConfUriList(confList);
         }
 
-        call.getCallDetails().setMpty(connection.getCall().isMultiparty());
+        call.getCallDetails().setMpty(PhoneUtils.isConferenceCall(connection.getCall()));
     }
 
     /**
