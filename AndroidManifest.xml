@@ -46,6 +46,9 @@
     <permission
         android:name="com.qti.permission.DIAG"
         android:protectionLevel="signatureOrSystem" />
+    <permission
+        android:name="com.qti.permission.IMS"
+        android:protectionLevel="signatureOrSystem" />
 
     <uses-permission android:name="android.permission.BIND_CALL_SERVICE" />
     <uses-permission android:name="android.permission.BROADCAST_STICKY" />
@@ -726,5 +729,29 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name="CdmaCallForwardOptions"
+            android:configChanges="orientation|keyboardHidden"
+            android:label="@string/labelCF" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name="UserPLMNListPreference"
+            android:configChanges="orientation|screenSize|keyboardHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name="UPLMNEditor"
+            android:configChanges="orientation|screenSize|keyboardHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+
     </application>
 </manifest>

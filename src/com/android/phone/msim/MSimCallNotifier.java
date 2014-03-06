@@ -371,7 +371,6 @@ public class MSimCallNotifier extends CallNotifier {
             log("onPhoneStateChanged: CSVT is active");
             return;
         }
-        mLastPhoneState = state;
         if (VDBG) log("onPhoneStateChanged: state = " + state +
                 " subscription = " + subscription);
 
@@ -527,7 +526,7 @@ public class MSimCallNotifier extends CallNotifier {
             Log.w(LOG_TAG, "onDisconnect: null connection");
         }
 
-        showCallDuration(c);
+        showCallDurationIfNeed(c);
 
         int autoretrySetting = 0;
         if ((c != null) && (c.getCall().getPhone().getPhoneType() ==
@@ -592,10 +591,9 @@ public class MSimCallNotifier extends CallNotifier {
             final Connection.DisconnectCause cause = c.getDisconnectCause();
             final boolean isEmergencyNumber =
                     PhoneNumberUtils.isLocalEmergencyNumber(number, mApplication);
-            // For DSDA, if emergency call failure is received with cause codes
+            // If emergency call failure is received with cause codes
             // EMERGENCY_TEMP_FAILURE & EMERGENCY_PERM_FAILURE, then redial on other sub.
-            if ((MSimTelephonyManager.getDefault().getMultiSimConfiguration() ==
-                    MSimTelephonyManager.MultiSimVariants.DSDA) && isEmergencyNumber &&
+            if (isEmergencyNumber &&
                     (cause == Connection.DisconnectCause.EMERGENCY_TEMP_FAILURE
                     || cause == Connection.DisconnectCause.EMERGENCY_PERM_FAILURE)) {
                 int subToCall = PhoneUtils.getNextSubscriptionId(phone.getSubscription());
@@ -846,7 +844,8 @@ public class MSimCallNotifier extends CallNotifier {
                     startMSimInCallTones();
                 }
             }
-        } else {
+        } else if (mCM.getLocalCallHoldStatus(activeSub) == false) {
+            // if the sub is not in Lch state, then stop playing the tones
             stopMSimInCallTones();
         }
     }
