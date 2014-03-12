@@ -119,6 +119,10 @@ public class DTMFTonePlayer implements CallModeler.Listener {
     }
 
     @Override
+    public void onSuppServiceFailed(int service) {
+    }
+
+    @Override
     public void onUpdate(List<Call> calls) {
         logD("Call updated");
         checkCallState();
