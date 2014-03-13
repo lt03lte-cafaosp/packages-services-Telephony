@@ -866,7 +866,12 @@ public class PhoneUtils {
         boolean initiallyIdle = false;
         if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
             for (int i = 0; i < MSimTelephonyManager.getDefault().getPhoneCount(); i++) {
-                initiallyIdle = initiallyIdle || (app.mCM.getState(i) == PhoneConstants.State.IDLE);
+                if (app.mCM.getState(i) == PhoneConstants.State.IDLE) {
+                    initiallyIdle = true;
+                } else {
+                    initiallyIdle = false;
+                    break;
+                }
             }
         } else {
             initiallyIdle = app.mCM.getState() == PhoneConstants.State.IDLE;
