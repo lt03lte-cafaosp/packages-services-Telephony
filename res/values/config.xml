@@ -141,4 +141,6 @@
     <!-- carrier settings menu -->
     <string name="carrier_settings" translatable="false"></string>
     <string name="carrier_settings_menu" translatable="false"></string>
+    <!-- DTMF key to be used for LCH hold tone -->
+    <string name="Lch_dtmf_key" translatable="false">D</string>
 </resources>
