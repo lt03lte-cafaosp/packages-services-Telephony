@@ -35,8 +35,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.MSimTelephonyManager;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.view.View;
@@ -72,6 +74,10 @@ public class MSimDialerActivity extends Activity {
 
     public static final String PHONE_SUBSCRIPTION = "Subscription";
     public static final int INVALID_SUB = 99;
+
+    public static final String[] MULTI_SIM_NAME = {
+        "perferred_name_sub1", "perferred_name_sub2"
+    };
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -204,7 +210,6 @@ public class MSimDialerActivity extends Activity {
 
         Button[] callButton = new Button[mPhoneCount];
         int[] callMark = {R.id.callmark1, R.id.callmark2, R.id.callmark3};
-        int[] subString = {R.string.sub_1, R.string.sub_2, R.string.sub_3};
         int index = 0;
         SubscriptionManager subManager = SubscriptionManager.getInstance();
 
@@ -217,7 +222,9 @@ public class MSimDialerActivity extends Activity {
 
         for (index = 0; index < mPhoneCount; index++) {
             callButton[index] =  (Button) layout.findViewById(callMark[index]);
-            callButton[index].setText(subString[index]);
+            String simName = Settings.System.getString(mContext.getContentResolver(),
+                    MULTI_SIM_NAME[index]);
+            callButton[index].setText(simName);
             callButton[index].setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     mAlertDialog.dismiss();

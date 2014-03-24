@@ -1949,7 +1949,7 @@
 
     <string name="title_dialog_duration">Duration</string>
     <string name="duration_format">
-        <xliff:g id="minutes" example="42">%s</xliff:g> mins<xliff:g id="seconds" example="28">%s</xliff:g> secs
+        <xliff:g id="minutes" example="42">%s</xliff:g> mins <xliff:g id="seconds" example="28">%s</xliff:g> secs
     </string>
     <string name="preferred_duration_title">Display duration</string>
     <string name="duration_enable_summary">Display duration is ON</string>
