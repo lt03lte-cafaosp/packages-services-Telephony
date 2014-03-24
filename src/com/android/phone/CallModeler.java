@@ -622,6 +622,7 @@ public class CallModeler extends Handler {
         dest.setCallDomain(src.call_domain);
         dest.setExtras(src.extras);
         dest.setErrorInfo(errorInfo);
+        dest.setVideoPauseState(src.getVideoPauseState());
     }
 
     /**
