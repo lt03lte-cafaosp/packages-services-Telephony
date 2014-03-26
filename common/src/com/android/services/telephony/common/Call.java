@@ -293,6 +293,7 @@ public final class Call implements Parcelable {
     private void copyDetails(CallDetails src, CallDetails dest) {
         dest.setCallType(src.getCallType());
         dest.setCallDomain(src.getCallDomain());
+        dest.setCallSubState(src.getCallSubState());
         dest.setExtras(src.getExtras());
         dest.setErrorInfo(src.getErrorInfo());
         dest.setConfUriList(src.getConfParticipantList());
