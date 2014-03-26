@@ -625,6 +625,7 @@ public class CallModeler extends Handler {
             com.android.services.telephony.common.CallDetails dest, String errorInfo) {
         dest.setCallType(src.call_type);
         dest.setCallDomain(src.call_domain);
+        dest.setCallSubState(src.callsubstate);
         dest.setExtras(src.extras);
         dest.setErrorInfo(errorInfo);
         dest.setVideoPauseState(src.getVideoPauseState());
