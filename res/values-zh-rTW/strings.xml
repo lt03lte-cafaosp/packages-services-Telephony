@@ -641,4 +641,7 @@
     <string name="headset_plugin_view_text">耳機已插入到手機</string>
     <string name="headset_plugin_view_title">耳機插入</string>
     <string name="speed_dial_setting">"快速撥號設置"</string>
+    <string name="sub_1">"卡槽1"</string>
+    <string name="sub_2">"卡槽2"</string>
+    <string name="sub_3">"卡槽3"</string>
 </resources>
