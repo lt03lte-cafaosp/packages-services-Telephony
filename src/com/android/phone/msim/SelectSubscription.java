@@ -34,6 +34,7 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
+import android.provider.Settings;
 import android.telephony.MSimTelephonyManager;
 import android.util.Log;
 import android.widget.TabHost;
@@ -51,7 +52,7 @@ public class SelectSubscription extends  TabActivity {
     public static final String PACKAGE = "PACKAGE";
     public static final String TARGET_CLASS = "TARGET_CLASS";
 
-    private String[] tabLabel = {"SUB 1", "SUB 2", "SUB 3"};
+    private static int[] subString = {R.string.sub_1, R.string.sub_2, R.string.sub_3};
 
     private TabSpec subscriptionPref;
 
@@ -80,8 +81,9 @@ public class SelectSubscription extends  TabActivity {
 
         for (int i = 0; i < numPhones; i++) {
             log("Creating SelectSub activity = " + i);
-            subscriptionPref = tabHost.newTabSpec(tabLabel[i]);
-            subscriptionPref.setIndicator(tabLabel[i]);
+            String tabLabel = getString(subString[i]);
+            subscriptionPref = tabHost.newTabSpec(tabLabel);
+            subscriptionPref.setIndicator(tabLabel);
             intent = new Intent().setClassName(pkg, targetClass)
                     .setAction(intent.getAction()).putExtra(SUBSCRIPTION_KEY, i);
             subscriptionPref.setContent(intent);

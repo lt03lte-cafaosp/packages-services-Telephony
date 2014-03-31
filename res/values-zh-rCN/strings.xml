@@ -638,6 +638,9 @@
     <string name="dtmf_tone_enable_title" msgid="827601042915852989">"拨号键盘触摸音效"</string>
     <string name="dial_pad_autocomplete" msgid="494525952035761075">"拨号键盘自动补全"</string>
     <string name="preference_category_ringtone" msgid="5197960752529332721">"铃声和振动"</string>
+    <string name="sub_1">"卡 1"</string>
+    <string name="sub_2">"卡 2"</string>
+    <string name="sub_3">"卡 3"</string>
 
     <!-- airplane mode prompt dialog -->
     <string name="title_sim_prompt_dlg">飞行模式</string>
