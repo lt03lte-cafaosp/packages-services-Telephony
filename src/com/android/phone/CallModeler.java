@@ -735,6 +735,7 @@ public class CallModeler extends Handler {
      */
     private int getCapabilitiesFor(Connection connection, Call call, boolean isForConference) {
         final boolean callIsActive = (call.getState() == Call.State.ACTIVE);
+        final boolean callIsBackground = (call.getState() == Call.State.ONHOLD);
         final Phone phone = connection.getCall().getPhone();
 
         boolean canAddCall = false;
@@ -772,7 +773,7 @@ public class CallModeler extends Handler {
             }
             canAddCall = PhoneUtils.okToAddCall(mCallManager, subscription);
         }
-        if (callIsActive) {
+        if (callIsActive || callIsBackground) {
             canModifyCall = PhoneUtils.isVTModifyAllowed(connection);
         }
         canAddParticipant = PhoneUtils.canAddParticipant(mCallManager) && canAddCall;
