@@ -368,7 +368,11 @@ public class CallModeler extends Handler {
             mCallMap.remove(conn);
         }
 
-        mCallManager.clearDisconnected();
+        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+            mCallManager.clearDisconnected(call.getSubscription());
+        } else {
+            mCallManager.clearDisconnected();
+        }
         PhoneGlobals.getInstance().updateWakeState();
     }
 
