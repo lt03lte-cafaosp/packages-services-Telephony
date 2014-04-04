@@ -47,11 +47,13 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.TelephonyProperties;
+import com.android.phone.R;
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 
@@ -83,6 +85,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     private static final String BUTTON_PREFERED_NETWORK_MODE = "preferred_network_mode_key";
     private static final String BUTTON_MANAGE_SUB_KEY = "button_settings_manage_sub";
     private static final String BUTTON_CDMA_LTE_DATA_SERVICE_KEY = "cdma_lte_data_service_key";
+    private static final String BUTTON_UPLMN_KEY = "button_uplmn_key";
     private static final String BUTTON_CARRIER_SETTINGS_KEY = "carrier_settings_key";
 
     static final int preferredNetworkMode = Phone.PREFERRED_NT_MODE;
@@ -283,6 +286,14 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             case Constants.NETWORK_MODE_DEFAULT:
             default:
                 break;
+        }
+
+        Preference mUPLMNPref = prefSet.findPreference(BUTTON_UPLMN_KEY);
+        if (!getResources().getBoolean(R.bool.config_uplmn_for_cta_test)) {
+            prefSet.removePreference(mUPLMNPref);
+            mUPLMNPref = null;
+        } else {
+            mUPLMNPref.getIntent().putExtra(MSimConstants.SUBSCRIPTION_KEY, mSubscription);
         }
 
         boolean isLteOnCdma = mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE;
