@@ -128,9 +128,11 @@ class CallCommandService extends ICallCommandService.Stub {
         try {
             int callId = Call.INVALID_CALL_ID;
             String phoneNumber = "";
+            int subscription = 0;
             if (call != null) {
                 callId = call.getCallId();
                 phoneNumber = call.getNumber();
+                subscription = call.getSubscription();
             }
             CallResult result = mCallModeler.getCallWithId(callId);
 
@@ -142,7 +144,8 @@ class CallCommandService extends ICallCommandService.Stub {
             }
 
             if (rejectWithMessage && !phoneNumber.isEmpty()) {
-                RejectWithTextMessageManager.rejectCallWithMessage(phoneNumber, message);
+                RejectWithTextMessageManager.rejectCallWithMessage(phoneNumber, message,
+                        subscription);
             }
         } catch (Exception e) {
             Log.e(TAG, "Error during rejectCall().", e);
