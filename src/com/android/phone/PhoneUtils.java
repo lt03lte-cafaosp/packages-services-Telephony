@@ -2123,6 +2123,13 @@ public class PhoneUtils {
         }
     }
 
+    static void muteOnNewCall(boolean muted) {
+        CallManager cm = PhoneGlobals.getInstance().mCM;
+        if (cm.hasActiveFgCall()) {
+            setMuteInternal(cm.getActiveFgCall().getPhone(), muted);
+        }
+    }
+
     /**
      *
      * Mute / umute the foreground phone, which has the current foreground call
