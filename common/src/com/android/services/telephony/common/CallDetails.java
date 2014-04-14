@@ -151,11 +151,23 @@ public class CallDetails implements Parcelable {
                                                                * disabled
                                                                */
 
+    public static final int CALL_SUBSTATE_UNDEFINED = 0; /*
+                                                          * Default case, substate
+                                                          * information not received
+                                                          * from lower layers
+                                                          */
+
+    public static final int CALL_SUBSTATE_CONNECTED_SUSPENDED = 1; /*
+                                                                    * Indicates that call is
+                                                                    * connected but suspended
+                                                                    */
+
     public static final String EXTRAS_IS_CONFERENCE_URI = "isConferenceUri";
     public static final String EXTRAS_PARENT_CALL_ID = "parentCallId";
 
     private int mCallType;
     private int mCallDomain;
+    private int mCallSubState = CALL_SUBSTATE_UNDEFINED;
     private String[] mExtras;
     private String mErrorInfo;
     private String[] mConfParList;
@@ -194,6 +206,7 @@ public class CallDetails implements Parcelable {
         if (srcCall != null) {
             mCallType = srcCall.mCallType;
             mCallDomain = srcCall.mCallDomain;
+            mCallSubState = srcCall.mCallSubState;
             mExtras = srcCall.mExtras;
         }
     }
@@ -219,6 +232,18 @@ public class CallDetails implements Parcelable {
 
     public void setCallDomain(int callDomain) {
         this.mCallDomain = callDomain;
+    }
+
+    public int getCallSubState() {
+        return mCallSubState;
+    }
+
+    public void setCallSubState(int callsubstate) {
+        switch (callsubstate) {
+            case CALL_SUBSTATE_UNDEFINED:
+            case CALL_SUBSTATE_CONNECTED_SUSPENDED:
+                this.mCallSubState = callsubstate;
+        }
     }
 
     public int getCallType() {
@@ -280,6 +305,7 @@ public class CallDetails implements Parcelable {
     public void writeToParcel(Parcel dest, int flag) {
         dest.writeInt(mCallType);
         dest.writeInt(mCallDomain);
+        dest.writeInt(mCallSubState);
         dest.writeStringArray(mExtras);
         dest.writeString(mErrorInfo);
         dest.writeStringArray(mConfParList);
@@ -289,6 +315,7 @@ public class CallDetails implements Parcelable {
     public void readFromParcel(Parcel in) {
         mCallType = in.readInt();
         mCallDomain = in.readInt();
+        mCallSubState = in.readInt();
         mExtras = in.readStringArray();
         mErrorInfo = in.readString();
         mConfParList = in.readStringArray();
@@ -352,6 +379,7 @@ public class CallDetails implements Parcelable {
 
         return (" calltype" + mCallType
                 + " domain" + mCallDomain
+                + " callsubstate " + mCallSubState
                 + " erroinfo" + mErrorInfo
                 + " mConfParList" + uri
                 + " multiparty" + mIsMpty
