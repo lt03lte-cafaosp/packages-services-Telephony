@@ -720,7 +720,7 @@ public class BluetoothPhoneService extends Service {
                     if (ringingCall.isRinging()) {
                         // Hangup the active call and then answer call waiting call.
                         if (VDBG) log("CHLD:1 Callwaiting Answer call");
-                        PhoneUtils.hangupRingingAndActive(phone);
+                        PhoneUtils.answerAndEndActive(PhoneGlobals.getInstance().mCM, ringingCall);
                     } else {
                         // If there is no Call waiting then just hangup
                         // the active call. In CDMA this mean that the complete
