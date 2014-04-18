@@ -652,6 +652,10 @@
     <string name="sub_2">"卡 2"</string>
     <string name="sub_3">"卡 3"</string>
 
+    <!-- Set Subscription screen: Message shown in error dialog -->
+    <string name="new_cards_available">"手机中插入的新卡，请配置SIM 卡"</string>
+    <string name="config_sub_title">"配置SIM 卡"</string>
+
     <!-- airplane mode prompt dialog -->
     <string name="title_sim_prompt_dlg">飞行模式</string>
     <string name="msg_sim_prompt_dlg">飞行模式已开启，你想关闭飞行模式吗？</string>
