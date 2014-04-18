@@ -488,6 +488,15 @@
     <string name="network_forbidden">(禁用)</string>
     <string name="ota_title_activate" msgid="8616918561356194398">"激活您的手机"</string>
     <string name="ota_touch_activate" msgid="6553212803262586244">"需要拨打特别号码才能激活您的手机服务。\n\n在按下“激活”后，按照语音提示激活您的手机。"</string>
+    <!-- Shown in "Managed Roaming" dialog when registration is denied with rejCode 10. -->
+    <string name="managed_roaming_title">"漫游托管"</string>
+    <string name="managed_roaming_title_sub1">"漫游托管（卡1）"</string>
+    <string name="managed_roaming_title_sub2">"漫游托管（卡2）"</string>
+    <string name="managed_roaming_title_sub3">"漫游托管（卡3）"</string>
+    <string name="managed_roaming_dialog_content">"网络服务受限，确认搜索网络？"</string>
+    <string name="managed_roaming_dialog_ok_button">"是"</string>
+    <string name="managed_roaming_dialog_cancel_button">"否"</string>
+
     <string name="ota_hfa_activation_title" msgid="2234246934160473981">"正在激活…"</string>
     <string name="ota_hfa_activation_dialog_message" msgid="8092479227918463415">"手机正在激活您的移动数据网络服务。\n\n此过程最多5分钟就能完成。"</string>
     <string name="ota_skip_activation_dialog_title" msgid="2943366608272261306">"略过激活步骤？"</string>
