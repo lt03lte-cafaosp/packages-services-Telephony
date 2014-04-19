@@ -161,6 +161,15 @@ public class CallDetails implements Parcelable {
                                                                     * Indicates that call is
                                                                     * connected but suspended
                                                                     */
+    public static final int VIDEO_PAUSE_STATE_PAUSED = 1; /*
+                                                           * Indicates that
+                                                           * video is paused;
+                                                           */
+
+    public static final int VIDEO_PAUSE_STATE_RESUMED = 2; /*
+                                                            * Indicates that
+                                                            * video is resumed;
+                                                            */
 
     public static final String EXTRAS_IS_CONFERENCE_URI = "isConferenceUri";
     public static final String EXTRAS_PARENT_CALL_ID = "parentCallId";
@@ -172,6 +181,7 @@ public class CallDetails implements Parcelable {
     private String mErrorInfo;
     private String[] mConfParList;
     private boolean mIsMpty;
+    private int mVideoPauseState = VIDEO_PAUSE_STATE_RESUMED;
     private static String LOG_TAG = "CallDetails";
 
     public CallDetails() {
@@ -302,6 +312,19 @@ public class CallDetails implements Parcelable {
         return mConfParList;
     }
 
+    public void setVideoPauseState(int videoPauseState) {
+        // Validate and set the new video pause state.
+        switch (videoPauseState) {
+            case VIDEO_PAUSE_STATE_RESUMED:
+            case VIDEO_PAUSE_STATE_PAUSED:
+                mVideoPauseState = videoPauseState;
+        }
+    }
+
+    public int getVideoPauseState() {
+        return mVideoPauseState;
+    }
+
     public void writeToParcel(Parcel dest, int flag) {
         dest.writeInt(mCallType);
         dest.writeInt(mCallDomain);
@@ -310,6 +333,7 @@ public class CallDetails implements Parcelable {
         dest.writeString(mErrorInfo);
         dest.writeStringArray(mConfParList);
         dest.writeByte((byte) (mIsMpty ? 1 : 0));
+        dest.writeInt(mVideoPauseState);
     }
 
     public void readFromParcel(Parcel in) {
@@ -320,6 +344,7 @@ public class CallDetails implements Parcelable {
         mErrorInfo = in.readString();
         mConfParList = in.readStringArray();
         mIsMpty = in.readByte() != 0;
+        mVideoPauseState = in.readInt();
     }
 
     public static String[] getExtrasFromMap(Map<String, String> newExtras) {
@@ -383,6 +408,7 @@ public class CallDetails implements Parcelable {
                 + " erroinfo" + mErrorInfo
                 + " mConfParList" + uri
                 + " multiparty" + mIsMpty
+                + " videoPauseState" + mVideoPauseState
                 + " " + extrasResult);
     }
 }
