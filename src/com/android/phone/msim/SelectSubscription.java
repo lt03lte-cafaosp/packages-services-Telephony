@@ -90,6 +90,11 @@ public class SelectSubscription extends  TabActivity {
             tabHost.addTab(subscriptionPref);
         }
         tabHost.setCurrentTab(getIntent().getIntExtra(SUBSCRIPTION_KEY, DEFAULT_SUBSCRIPTION));
+
+        if ("com.android.phone.MSimMobileNetworkSubSettings".equals(targetClass)) {
+            // Update title for mobile networks settings.
+            setTitle(getResources().getText(R.string.mobile_networks));
+        }
     }
 
     @Override
