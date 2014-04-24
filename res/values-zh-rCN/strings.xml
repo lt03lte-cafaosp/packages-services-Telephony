@@ -164,6 +164,19 @@
     <string name="preferred_network_mode_td_scdma_gsm_wcdma_lte_summary">"首选网络模式：TD-SCDMA/GSM/WCDMA/LTE"</string>
     <string name="preferred_network_mode_td_scdma_lte_cdma_evdo_gsm_wcdma_summary">"首选网络模式：TD-SCDMA/LTE/CDMA/EvDo/GSM/WCDMA"</string>
     <string name="preferred_network_mode_td_scdma_cdma_evdo_gsm_wcdma_summary">"首选网络模式：TD-SCDMA/CDMA/EvDo/GSM/WCDMA"</string>
+
+    <string name="preferred_network_mode_dialogtitle_cmcc">"网络模式"</string>
+    <!-- Mobile network settings, summary for preferred network mode 4G/3G/2G [CHAR LIMIT=100] -->
+    <string name="preferred_network_mode_4g_3g_2g_auto_summary">"4G/3G/2G (自动选择)"</string>
+    <!-- Mobile network settings, summary for preferred network mode 3G/2G [CHAR LIMIT=100] -->
+    <string name="preferred_network_mode_3g_2g_auto_summary">"3G/2G (自动选择)"</string>
+
+    <string name="preferred_network_mode_lte">"LTE"</string>
+    <string name="preferred_network_mode_4g_3g_2g_auto">"4G/3G/2G (自动选择)"</string>
+    <string name="preferred_network_mode_3g_2g_auto">"3G/2G (自动选择)"</string>
+    <string name="preferred_network_mode_tdscdma_only">"仅 TD-SCDMA"</string>
+    <string name="preferred_network_mode_gsm_only">"仅 GSM"</string>
+
   <string-array name="preferred_network_mode_choices">
     <item>TD-SCDMA/LTE/GSM/WCDMA/CDMA/EVDO </item>
     <item>TD-SCDMA/GSM/WCDMA/CDMA/EVDO </item>
@@ -488,6 +501,15 @@
     <string name="network_forbidden">(禁用)</string>
     <string name="ota_title_activate" msgid="8616918561356194398">"激活您的手机"</string>
     <string name="ota_touch_activate" msgid="6553212803262586244">"需要拨打特别号码才能激活您的手机服务。\n\n在按下“激活”后，按照语音提示激活您的手机。"</string>
+    <!-- Shown in "Managed Roaming" dialog when registration is denied with rejCode 10. -->
+    <string name="managed_roaming_title">"漫游托管"</string>
+    <string name="managed_roaming_title_sub1">"漫游托管（卡1）"</string>
+    <string name="managed_roaming_title_sub2">"漫游托管（卡2）"</string>
+    <string name="managed_roaming_title_sub3">"漫游托管（卡3）"</string>
+    <string name="managed_roaming_dialog_content">"网络服务受限，确认搜索网络？"</string>
+    <string name="managed_roaming_dialog_ok_button">"是"</string>
+    <string name="managed_roaming_dialog_cancel_button">"否"</string>
+
     <string name="ota_hfa_activation_title" msgid="2234246934160473981">"正在激活…"</string>
     <string name="ota_hfa_activation_dialog_message" msgid="8092479227918463415">"手机正在激活您的移动数据网络服务。\n\n此过程最多5分钟就能完成。"</string>
     <string name="ota_skip_activation_dialog_title" msgid="2943366608272261306">"略过激活步骤？"</string>
@@ -651,6 +673,10 @@
     <string name="sub_1">"卡 1"</string>
     <string name="sub_2">"卡 2"</string>
     <string name="sub_3">"卡 3"</string>
+
+    <!-- Set Subscription screen: Message shown in error dialog -->
+    <string name="new_cards_available">"手机中插入的新卡，请配置SIM 卡"</string>
+    <string name="config_sub_title">"配置SIM 卡"</string>
 
     <!-- airplane mode prompt dialog -->
     <string name="title_sim_prompt_dlg">飞行模式</string>
