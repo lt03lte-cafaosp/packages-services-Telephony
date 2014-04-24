@@ -305,21 +305,23 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             //Get the networkMode from Settings.System and displays it
             int settingsNetworkMode = getPreferredNetworkMode();
             mButtonPreferredNetworkMode.setValue(Integer.toString(settingsNetworkMode));
-            mCdmaOptions = new CdmaOptions(this, prefSet, mPhone, mSubscription);
+            mCdmaOptions = new CdmaOptions(this, prefSet, mPhone);
             mGsmUmtsOptions = new GsmUmtsOptions(this, prefSet, mSubscription);
         } else {
             if (!isLteOnCdma) {
                 prefSet.removePreference(mButtonPreferredNetworkMode);
-            } else {
-                mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
-
-                int settingsNetworkMode = getPreferredNetworkMode();
-                mButtonPreferredNetworkMode.setValue(Integer
-                        .toString(settingsNetworkMode));
             }
             int phoneType = mPhone.getPhoneType();
             if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
-                mCdmaOptions = new CdmaOptions(this, prefSet, mPhone, mSubscription);
+                mCdmaOptions = new CdmaOptions(this, prefSet, mPhone);
+                if (isLteOnCdma) {
+                    mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
+
+                    int settingsNetworkMode = getPreferredNetworkMode();
+                    mButtonPreferredNetworkMode.setValue(
+                            Integer.toString(settingsNetworkMode));
+                }
+
             } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
                 mGsmUmtsOptions = new GsmUmtsOptions(this, prefSet, mSubscription);
             } else {
