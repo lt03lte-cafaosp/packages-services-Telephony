@@ -2026,4 +2026,6 @@
     <string name="uplmn_list_setting_add_plmn">New PLMN</string>
     <string name="gsm_umts_network_preferences_title">Network Mode</string>
     <string name="gsm_umts_network_preferences_dialogtitle">Network Mode</string>
+    <!-- Manual PLMN scan data disconnect dialog text -->
+    <string name="disconnect_data_confirm">This needs to disconnect data service temporarily. Are you sure?</string>
 </resources>
