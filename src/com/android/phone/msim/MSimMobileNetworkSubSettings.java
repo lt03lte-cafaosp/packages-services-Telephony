@@ -570,6 +570,9 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             case Phone.NT_MODE_GSM_ONLY:
                 mButtonPreferredNetworkMode.setSummary(
                         R.string.preferred_network_mode_gsm_only_summary);
+                if (networkFeature == Constants.NETWORK_MODE_CMCC) {
+                    mButtonPreferredNetworkMode.setEnabled(false);
+                }
                 break;
             case Phone.NT_MODE_WCDMA_ONLY:
                 mButtonPreferredNetworkMode.setSummary(
