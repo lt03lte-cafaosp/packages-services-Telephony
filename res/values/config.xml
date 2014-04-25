@@ -164,4 +164,6 @@
 
     <!-- whether show emergency call list -->
     <bool name="show_emergency_call_list">false</bool>
+    <!-- Disable data before manual PLMN scan if true-->
+    <bool name="config_disable_data_manual_plmn">false</bool>
 </resources>
