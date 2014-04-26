@@ -124,6 +124,8 @@ public class NotificationMgr {
     private QueryHandler mQueryHandler = null;
     private static final int CALL_LOG_TOKEN = -1;
     private static final int CONTACT_TOKEN = -2;
+    // -1 derived from TelephonyCapabilities.supportsVoiceMessageCount()
+    private static final int DEFAULT_VM_COUNT = -1;
 
     /**
      * Private constructor (this is a singleton).
@@ -768,10 +770,13 @@ public class NotificationMgr {
                 }
             }
 
-            if (TelephonyCapabilities.supportsVoiceMessageCount(mPhone)) {
-                int vmCount = mPhone.getVoiceMessageCount();
-                String titleFormat = mContext.getString(R.string.notification_voicemail_title_count);
+            int vmCount = PhoneUtils.getVoiceMessageCount();
+
+            if (vmCount != DEFAULT_VM_COUNT) {
+                String titleFormat = mContext.getString(
+                        R.string.notification_voicemail_title_count);
                 notificationTitle = String.format(titleFormat, vmCount);
+                Log.d(LOG_TAG,"updatemwi vmCount = " + vmCount);
             }
 
             String notificationText;
