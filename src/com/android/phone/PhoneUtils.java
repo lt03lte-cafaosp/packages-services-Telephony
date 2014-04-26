@@ -3552,4 +3552,32 @@ public class PhoneUtils {
         if (DBG) log("isImsVtCallNotAllowed: " + isNotAllowed);
         return isNotAllowed;
     }
+
+    /**
+     * Check which phone to pick for getting voiceMessageCount
+     * and return the corresponding phone's voice message count
+     * If IMS phone return count as -1, query default phone's count.
+     * @return Voice Message Count
+     */
+    public static int getVoiceMessageCount() {
+        Phone phone = null;
+        // -1 derived from TelephonyCapabilities.supportsVoiceMessageCount()
+        int vmCount = -1;
+        // If IMS is enabled, query on IMS phone
+        // If count is -1 on IMS, implies
+        // i) MWI indication has not been received by apps or
+        // ii) MWI is not supported on IMS
+        // In both the cases, fall back to default phone
+        if (isCallOnImsEnabled()) {
+            phone = getImsPhone(PhoneGlobals.getInstance().mCM);
+            vmCount = phone.getVoiceMessageCount();
+        }
+
+        if (vmCount == -1) {
+            phone = PhoneGlobals.getInstance().phone;
+            vmCount = phone.getVoiceMessageCount();
+        }
+        return vmCount;
+    }
+
 }
