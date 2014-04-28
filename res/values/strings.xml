@@ -1669,6 +1669,10 @@
     <!-- Slightly more verbose title of settings screen for managing the
          "Respond via SMS" feature. [CHAR LIMIT=30] -->
     <string name="respond_via_sms_setting_title_2">Edit quick responses</string>
+
+    <!-- Prompt toast message string for the "Respond via SMS" feature. [CHAR LIMIT=40] -->
+    <string name="respond_via_sms_cannot_be_empty">Quick response cannot be empty</string>
+
     <!-- Settings summary string for the "Respond via SMS" feature. [CHAR LIMIT=40] -->
     <string name="respond_via_sms_setting_summary"></string>
     <!-- Dialog title when changing a string for the "Respond via SMS" feature. [CHAR LIMIT=30] -->
