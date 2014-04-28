@@ -57,6 +57,8 @@ import android.os.SystemProperties;
 import android.os.UpdateLock;
 import android.os.UserHandle;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
+import android.provider.Settings.SettingNotFoundException;
 import android.provider.Settings.System;
 import android.telephony.MSimTelephonyManager;
 import android.telephony.ServiceState;
@@ -74,6 +76,7 @@ import com.android.internal.telephony.MmiCode;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneFactory;
+import com.android.internal.telephony.RILConstants;
 import com.android.internal.telephony.TelephonyCapabilities;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.cdma.TtyIntent;
@@ -82,6 +85,8 @@ import com.android.phone.OtaUtils.CdmaOtaScreenState;
 import com.android.phone.WiredHeadsetManager.WiredHeadsetListener;
 import com.android.server.sip.SipService;
 import com.android.services.telephony.common.AudioMode;
+import com.qualcomm.qcrilhook.QcRilHook;
+import com.qualcomm.qcrilhook.QcRilHookCallback;
 
 import org.codeaurora.ims.IImsService;
 import org.codeaurora.ims.IImsServiceListener;
@@ -90,6 +95,8 @@ import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
 import org.codeaurora.ims.csvt.CallForwardInfoP;
 import org.codeaurora.ims.csvt.ICsvtService;
 import org.codeaurora.ims.csvt.ICsvtServiceListener;
+
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 /**
@@ -408,9 +415,105 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
         }
     };
 
+    public Object mPhoneServiceClient;
+    public QcRilHook mQcrilHook;
+
+    protected QcRilHookCallback mQcRilHookCallback = new QcRilHookCallback() {
+        @Override
+        public void onQcRilHookReady() {
+            restoreAcqIfNeed();
+        }
+    };
+
     public PhoneGlobals(Context context) {
         super(context);
+        loadPhoneClient(null);
         sMe = this;
+    }
+
+    public boolean loadPhoneClient(Message Calback) {
+        Throwable exception = null;
+        try {
+            Class<?> PhoneServiceClient = Class
+                    .forName("com.qualcomm.qti.phonefeature.PhoneServiceClient");
+            mPhoneServiceClient = PhoneServiceClient.getDeclaredConstructor(Context.class,
+                    Message.class).newInstance(this, Calback);
+        } catch (ClassNotFoundException e) {
+            exception = e;
+        } catch (NoSuchMethodException e) {
+            exception = e;
+        } catch (IllegalAccessException e) {
+            exception = e;
+        } catch (IllegalArgumentException e) {
+            exception = e;
+        } catch (InvocationTargetException e) {
+            exception = e;
+        } catch (InstantiationException e) {
+            exception = e;
+        }
+        if (exception != null) {
+            Log.e(LOG_TAG, "failed to load phone client!", exception);
+            return false;
+        } else {
+            Log.d(LOG_TAG, "load phone client successfully!");
+            return true;
+        }
+    }
+
+    public boolean setPrefNetwork(int sub, int network, Message callback) {
+        Throwable exception = null;
+        try {
+            Class<?> PhoneServiceClient = Class
+                    .forName("com.qualcomm.qti.phonefeature.PhoneServiceClient");
+            PhoneServiceClient.getDeclaredMethod("setPreferredNetwork", int.class, int.class,
+                    boolean.class, Message.class).invoke(mPhoneServiceClient, sub, network, false,
+                    callback);
+        } catch (ClassNotFoundException e) {
+            exception = e;
+        } catch (NoSuchMethodException e) {
+            exception = e;
+        } catch (IllegalAccessException e) {
+            exception = e;
+        } catch (IllegalArgumentException e) {
+            exception = e;
+        } catch (InvocationTargetException e) {
+            exception = e;
+        }
+        if (exception != null) {
+            Log.e(LOG_TAG, "failed to set pref network by phone client!", exception);
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    protected void restoreAcqIfNeed() {
+        try {
+            final int prefNetwork = Settings.Global.getInt(getContentResolver(),
+                    Settings.Global.PREFERRED_NETWORK_MODE);
+            final int acq = Settings.Global.getInt(getContentResolver(), Constants.SETTINGS_ACQ, 1);
+            Log.d(LOG_TAG, "restore acq, preferred: " + prefNetwork + ", acq: " + acq);
+            if (prefNetwork == RILConstants.NETWORK_MODE_TD_SCDMA_GSM_WCDMA_LTE && acq != 0) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        boolean success = mQcrilHook.qcRilSetPreferredNetworkAcqOrder(acq, 0);
+                        Log.d(LOG_TAG, "restore acq, success: " + success);
+                        if (success) {
+                            if (mPhoneServiceClient != null) {
+                                setPrefNetwork(0, prefNetwork, null);
+                            } else {
+                                phone.setPreferredNetworkType(prefNetwork, null);
+                            }
+                        } else {
+                            Settings.Global.putInt(getContentResolver(), Constants.SETTINGS_ACQ, 0);
+                        }
+                    }
+                });
+            }
+        } catch (SettingNotFoundException e) {
+            Log.d(LOG_TAG, "failed to restore acq", e);
+        }
     }
 
     public void onCreate() {
@@ -645,6 +748,8 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
                                       CallFeaturesSetting.HAC_VAL_ON :
                                       CallFeaturesSetting.HAC_VAL_OFF);
         }
+
+        mQcrilHook = new QcRilHook(this, mQcRilHookCallback);
    }
 
     public void createImsService() {
@@ -792,7 +897,7 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
     /**
      * Returns the singleton instance of the PhoneApp.
      */
-    static PhoneGlobals getInstance() {
+    public static PhoneGlobals getInstance() {
         if (sMe == null) {
             throw new IllegalStateException("No PhoneGlobals here!");
         }
