@@ -371,4 +371,18 @@ class CallCommandService extends ICallCommandService.Stub {
             Log.e(TAG, "Error during setActiveSubRetainLch.", e);
         }
     }
+
+    public long getCallDuration(int callId) {
+        long duration = 0;
+
+        try {
+            CallResult result = mCallModeler.getCallWithId(callId);
+            if (result != null) {
+                duration = result.getConnection().getDurationMillis();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error during getCallDuration().", e);
+        }
+        return duration;
+    }
 }
