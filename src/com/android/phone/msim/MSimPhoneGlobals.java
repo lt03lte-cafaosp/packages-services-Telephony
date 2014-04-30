@@ -41,6 +41,8 @@ import android.os.ServiceManager;
 import android.os.SystemProperties;
 import android.os.UpdateLock;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
+import android.provider.Settings.SettingNotFoundException;
 import android.provider.Settings.System;
 import android.telephony.ServiceState;
 import android.util.Log;
@@ -53,16 +55,19 @@ import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.IccCard;
 import com.android.internal.telephony.MmiCode;
 import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.RILConstants;
 import com.android.internal.telephony.TelephonyCapabilities;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.IccCardConstants;
 import com.android.internal.telephony.cdma.TtyIntent;
+import com.android.phone.Constants;
 import com.android.phone.common.CallLogAsync;
 import com.android.phone.OtaUtils.CdmaOtaScreenState;
 import com.android.internal.telephony.PhoneConstants;
 import com.codeaurora.telephony.msim.MSimPhoneFactory;
 import com.codeaurora.telephony.msim.SubscriptionManager;
 import com.codeaurora.telephony.msim.MSimTelephonyIntents;
+import com.qualcomm.qcrilhook.QcRilHook;
 
 import java.util.ArrayList;
 
@@ -111,6 +116,54 @@ public class MSimPhoneGlobals extends PhoneGlobals {
     MSimPhoneGlobals(Context context) {
         super(context);
         Log.d(LOG_TAG,"MSPhoneApp creation"+this);
+    }
+
+    protected void restoreAcqIfNeed() {
+        for (int index = 0; index < MSimTelephonyManager.getDefault().getPhoneCount(); index++) {
+            restoreAcqIfNeed(index);
+        }
+    }
+
+    protected void restoreAcqIfNeed(final int sub) {
+        //default is 4G
+        int acqSettings = 1;
+        try {
+            acqSettings = MSimTelephonyManager.getIntAtIndex(getContentResolver(),
+                    Constants.SETTINGS_ACQ, sub);
+        } catch (SettingNotFoundException e) {
+            acqSettings = 1;
+            Log.d(LOG_TAG, "failed to restore acq in sub" + sub
+                    + "set it as 4G preferred by default", e);
+        }
+
+        try {
+            final int prefNetwork = MSimTelephonyManager.getIntAtIndex(getContentResolver(),
+                    Settings.Global.PREFERRED_NETWORK_MODE, sub);
+            final int acq = acqSettings;
+            Log.d(LOG_TAG, "restore acq in sub" + sub + ", preferred: " + prefNetwork + ", acq: "
+                    + acq);
+            if (prefNetwork == RILConstants.NETWORK_MODE_TD_SCDMA_GSM_WCDMA_LTE && acq != 0) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        boolean success = mQcrilHook.qcRilSetPreferredNetworkAcqOrder(acq, sub);
+                        Log.d(LOG_TAG, "restore acq, success: " + success);
+                        if (success) {
+                            if (mPhoneServiceClient != null) {
+                                setPrefNetwork(sub, prefNetwork, null);
+                            } else {
+                                getPhone(sub).setPreferredNetworkType(prefNetwork, null);
+                            }
+                        } else {
+                            MSimTelephonyManager.putIntAtIndex(getContentResolver(),
+                                    Constants.SETTINGS_ACQ, sub, 0);
+                        }
+                    }
+                });
+            }
+        } catch (SettingNotFoundException e) {
+            Log.d(LOG_TAG, "failed to restore network mode in sub" + sub, e);
+        }
     }
 
     public void onCreate() {
@@ -371,6 +424,7 @@ public class MSimPhoneGlobals extends PhoneGlobals {
                                       CallFeaturesSetting.HAC_VAL_OFF);
         }
 
+        mQcrilHook = new QcRilHook(this, mQcRilHookCallback);
     }
 
     /**

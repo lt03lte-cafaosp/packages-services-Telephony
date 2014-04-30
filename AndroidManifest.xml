@@ -103,6 +103,7 @@
     <uses-permission android:name="android.permission.CONNECTIVITY_INTERNAL" />
     <uses-permission android:name="android.permission.SET_PREFERRED_APPLICATIONS" />
     <uses-permission android:name="com.android.firewall.READ_GRAVITY" />
+    <uses-permission android:name="com.qualcomm.permission.USE_QCRIL_MSG_TUNNEL" />
 
     <!-- This tells the activity manager to not delay any of our activity
          start requests, even if they happen immediately after the user
@@ -126,6 +127,10 @@
                       android:exported="true"
                       android:readPermission="android.permission.READ_CONTACTS"
                       android:writePermission="android.permission.WRITE_CONTACTS" />
+
+            <uses-library android:name="com.qualcomm.qti.phonefeature"
+                android:required="false" />
+            <uses-library android:name="com.qualcomm.qcrilhook" />
 
         <!-- Dialer UI that only allows emergency calls -->
         <activity android:name="EmergencyDialer"
