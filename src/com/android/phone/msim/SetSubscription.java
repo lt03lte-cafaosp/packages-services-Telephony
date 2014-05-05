@@ -192,6 +192,9 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
 
     protected void onDestroy () {
         super.onDestroy();
+        if (mAlertDialog != null) {
+            mAlertDialog.dismiss();
+        }
         mCardSubscriptionManager.unRegisterForSimStateChanged(mHandler);
         mSubscriptionManager.unRegisterForSetSubscriptionCompleted(mHandler);
         unregisterReceiver(mReceiver);

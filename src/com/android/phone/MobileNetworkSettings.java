@@ -244,7 +244,8 @@ public class MobileNetworkSettings extends PreferenceActivity
 
         mLteDataServicePref = prefSet.findPreference(BUTTON_CDMA_LTE_DATA_SERVICE_KEY);
 
-        int networkFeature = this.getResources().getInteger(R.integer.network_feature);
+        int networkFeature = SystemProperties.getInt("persist.radio.network_feature",
+                Constants.NETWORK_MODE_DEFAULT);
         switch (networkFeature) {
             case Constants.NETWORK_MODE_HIDE:
                 prefSet.removePreference(mButtonPreferredNetworkMode);
@@ -674,7 +675,8 @@ public class MobileNetworkSettings extends PreferenceActivity
     }
 
     private void UpdatePreferredNetworkModeSummary(int NetworkMode) {
-        int networkFeature = this.getResources().getInteger(R.integer.network_feature);
+        int networkFeature = SystemProperties.getInt("persist.radio.network_feature",
+                Constants.NETWORK_MODE_DEFAULT);
         switch(NetworkMode) {
             case Phone.NT_MODE_WCDMA_PREF:
                 mButtonPreferredNetworkMode.setSummary(
