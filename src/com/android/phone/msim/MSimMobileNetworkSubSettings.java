@@ -386,8 +386,8 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     private int getAcqValue() {
         int acq = 0;
         try {
-            acq = Settings.Global.getInt(getContentResolver(),
-                    Constants.SETTINGS_ACQ);
+            acq = MSimTelephonyManager.getIntAtIndex(getContentResolver(), Constants.SETTINGS_ACQ,
+                    mSubscription);
         } catch (SettingNotFoundException e) {
             Log.d(LOG_TAG, "failed to get acq", e);
         }
@@ -501,8 +501,8 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    boolean success = MSimPhoneGlobals.getInstance().mQcrilHook
-                            .qcRilSetPreferredNetworkAcqOrder(acq, mSubscription);
+                    boolean success = PhoneGlobals.getInstance().mQcrilHook != null
+                            && PhoneGlobals.getInstance().setPrefNetworkAcq(acq, mSubscription);
                     Log.d(LOG_TAG, "restore acq, success: " + success);
                     if (success) {
                         if (MSimPhoneGlobals.getInstance().mPhoneServiceClient != null) {
@@ -640,8 +640,9 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                 setPreferredNetworkMode(Integer.valueOf(strValue).intValue());
                 //only these cases need set acq
                 if (isContainAcq) {
-                    Settings.Global.putInt(getContentResolver(),
-                            Constants.SETTINGS_ACQ, Integer.valueOf(strAcq).intValue());
+                    MSimTelephonyManager.putIntAtIndex(getContentResolver(),
+                            Constants.SETTINGS_ACQ, mSubscription, Integer.valueOf(strAcq)
+                                    .intValue());
                 }
             } else {
                 mPhone.getPreferredNetworkType(obtainMessage(MESSAGE_GET_PREFERRED_NETWORK_TYPE));
@@ -670,8 +671,10 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             case Phone.NT_MODE_GSM_ONLY:
                 mButtonPreferredNetworkMode.setSummary(
                         R.string.preferred_network_mode_gsm_only_summary);
-                if (networkFeature == Constants.NETWORK_MODE_CMCC
-                        || networkFeature == Constants.NETWORK_MODE_LTE) {
+                if ((networkFeature == Constants.NETWORK_MODE_CMCC
+                        || networkFeature == Constants.NETWORK_MODE_LTE)
+                        && (PhoneGlobals.getInstance().mPhoneServiceClient == null || PhoneGlobals
+                                .getInstance().getPreferredLetSub() != mSubscription)) {
                     mButtonPreferredNetworkMode.setEnabled(false);
                 }
                 break;

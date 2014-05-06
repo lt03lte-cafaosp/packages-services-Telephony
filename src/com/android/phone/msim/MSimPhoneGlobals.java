@@ -67,7 +67,6 @@ import com.android.internal.telephony.PhoneConstants;
 import com.codeaurora.telephony.msim.MSimPhoneFactory;
 import com.codeaurora.telephony.msim.SubscriptionManager;
 import com.codeaurora.telephony.msim.MSimTelephonyIntents;
-import com.qualcomm.qcrilhook.QcRilHook;
 
 import java.util.ArrayList;
 
@@ -125,15 +124,14 @@ public class MSimPhoneGlobals extends PhoneGlobals {
     }
 
     protected void restoreAcqIfNeed(final int sub) {
-        //default is 4G
+        // default is 4G
         int acqSettings = 1;
         try {
             acqSettings = MSimTelephonyManager.getIntAtIndex(getContentResolver(),
                     Constants.SETTINGS_ACQ, sub);
         } catch (SettingNotFoundException e) {
-            acqSettings = 1;
-            Log.d(LOG_TAG, "failed to restore acq in sub" + sub
-                    + "set it as 4G preferred by default", e);
+            MSimTelephonyManager
+                    .putIntAtIndex(getContentResolver(), Constants.SETTINGS_ACQ, sub, 1);
         }
 
         try {
@@ -146,7 +144,7 @@ public class MSimPhoneGlobals extends PhoneGlobals {
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        boolean success = mQcrilHook.qcRilSetPreferredNetworkAcqOrder(acq, sub);
+                        boolean success = setPrefNetworkAcq(acq, sub);
                         Log.d(LOG_TAG, "restore acq, success: " + success);
                         if (success) {
                             if (mPhoneServiceClient != null) {
@@ -424,7 +422,9 @@ public class MSimPhoneGlobals extends PhoneGlobals {
                                       CallFeaturesSetting.HAC_VAL_OFF);
         }
 
-        mQcrilHook = new QcRilHook(this, mQcRilHookCallback);
+        if (mQcrilHook != null) {
+            restoreAcqIfNeed();
+        }
     }
 
     /**
