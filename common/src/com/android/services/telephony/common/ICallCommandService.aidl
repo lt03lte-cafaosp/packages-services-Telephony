@@ -137,9 +137,4 @@ interface ICallCommandService {
      * However retains the LCH state of the subscription.
      */
     void setActiveSubRetainLch(int subscriptionId);
-
-    /**
-     * Get the current call duration.
-     */
-    long getCallDuration(int callId);
 }
