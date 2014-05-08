@@ -124,15 +124,14 @@ public class MSimPhoneGlobals extends PhoneGlobals {
     }
 
     protected void restoreAcqIfNeed(final int sub) {
-        //default is 4G
+        // default is 4G
         int acqSettings = 1;
         try {
             acqSettings = MSimTelephonyManager.getIntAtIndex(getContentResolver(),
                     Constants.SETTINGS_ACQ, sub);
         } catch (SettingNotFoundException e) {
-            acqSettings = 1;
-            Log.d(LOG_TAG, "failed to restore acq in sub" + sub
-                    + "set it as 4G preferred by default", e);
+            MSimTelephonyManager
+                    .putIntAtIndex(getContentResolver(), Constants.SETTINGS_ACQ, sub, 1);
         }
 
         try {

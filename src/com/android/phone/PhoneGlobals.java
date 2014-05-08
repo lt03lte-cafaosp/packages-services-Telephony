@@ -413,23 +413,30 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
         }
     };
 
-    public Object mPhoneServiceClient;
-    public Object mQcrilHook;
+    public final Object mPhoneServiceClient;
+    public final Object mQcrilHook;
 
     public PhoneGlobals(Context context) {
         super(context);
-        loadPhoneClient(null);
-        loadQcrilHook();
+        mQcrilHook = loadClassObj("com.qualcomm.qcrilhook.QcRilHook", new Class<?>[] {
+            Context.class
+        }, new Object[] {
+            this
+        });
+        mPhoneServiceClient = loadClassObj("com.qualcomm.qti.phonefeature.PhoneServiceClient",
+                new Class<?>[] {
+                        Context.class, Message.class
+                }, new Object[] {
+                        this, null
+                });
         sMe = this;
     }
 
-    public boolean loadPhoneClient(Message Calback) {
+    public static Object loadClassObj(String className, Class<?>[] paramClasses, Object[] params) {
         Throwable exception = null;
         try {
-            Class<?> PhoneServiceClient = Class
-                    .forName("com.qualcomm.qti.phonefeature.PhoneServiceClient");
-            mPhoneServiceClient = PhoneServiceClient.getDeclaredConstructor(Context.class,
-                    Message.class).newInstance(this, Calback);
+            Class<?> targetClass = Class.forName(className);
+            return targetClass.getDeclaredConstructor(paramClasses).newInstance(params);
         } catch (ClassNotFoundException e) {
             exception = e;
         } catch (NoSuchMethodException e) {
@@ -444,19 +451,17 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
             exception = e;
         }
         if (exception != null) {
-            Log.e(LOG_TAG, "failed to load phone client!", exception);
-            return false;
-        } else {
-            Log.d(LOG_TAG, "load phone client successfully!");
-            return true;
+            Log.e(LOG_TAG, "failed to load class obj!", exception);
         }
+        return null;
     }
 
-    public boolean loadQcrilHook() {
+    public static Object invokeMethod(String className, String methodName, Object instance,
+            Class<?>[] paramClasses, Object[] params) {
         Throwable exception = null;
         try {
-            Class<?> QcRilHook = Class.forName("com.qualcomm.qcrilhook.QcRilHook");
-            mQcrilHook = QcRilHook.getDeclaredConstructor(Context.class).newInstance(this);
+            Class<?> targetClass = Class.forName(className);
+            return targetClass.getDeclaredMethod(methodName, paramClasses).invoke(instance, params);
         } catch (ClassNotFoundException e) {
             exception = e;
         } catch (NoSuchMethodException e) {
@@ -467,75 +472,58 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
             exception = e;
         } catch (InvocationTargetException e) {
             exception = e;
-        } catch (InstantiationException e) {
-            exception = e;
         }
         if (exception != null) {
-            Log.e(LOG_TAG, "failed to load qcril hook!", exception);
-            return false;
-        } else {
-            Log.d(LOG_TAG, "load qcril hook successfully!");
-            return true;
+            Log.e(LOG_TAG, "failed to invoke method!", exception);
         }
+        return null;
     }
 
     public boolean setPrefNetworkAcq(int acq, int sub) {
-        Throwable exception = null;
-        try {
-            Class<?> QcRilHook = Class.forName("com.qualcomm.qcrilhook.QcRilHook");
-            return (Boolean) QcRilHook.getDeclaredMethod("qcRilSetPreferredNetworkAcqOrder",
-                    int.class, int.class).invoke(mQcrilHook, acq, sub);
-        } catch (ClassNotFoundException e) {
-            exception = e;
-        } catch (NoSuchMethodException e) {
-            exception = e;
-        } catch (IllegalAccessException e) {
-            exception = e;
-        } catch (IllegalArgumentException e) {
-            exception = e;
-        } catch (InvocationTargetException e) {
-            exception = e;
-        }
-        if (exception != null) {
-            Log.e(LOG_TAG, "failed to set pref network acq by qcril hook!", exception);
-            return false;
+        Object result = invokeMethod("com.qualcomm.qcrilhook.QcRilHook",
+                "qcRilSetPreferredNetworkAcqOrder", mQcrilHook, new Class<?>[] {
+                        int.class, int.class
+                }, new Object[] {
+                        acq, sub
+                });
+        if (result != null) {
+            return (Boolean) result;
         } else {
-            return true;
+            return false;
         }
     }
 
-    public boolean setPrefNetwork(int sub, int network, Message callback) {
-        Throwable exception = null;
-        try {
-            Class<?> PhoneServiceClient = Class
-                    .forName("com.qualcomm.qti.phonefeature.PhoneServiceClient");
-            PhoneServiceClient.getDeclaredMethod("setPreferredNetwork", int.class, int.class,
-                    boolean.class, Message.class).invoke(mPhoneServiceClient, sub, network, false,
-                    callback);
-        } catch (ClassNotFoundException e) {
-            exception = e;
-        } catch (NoSuchMethodException e) {
-            exception = e;
-        } catch (IllegalAccessException e) {
-            exception = e;
-        } catch (IllegalArgumentException e) {
-            exception = e;
-        } catch (InvocationTargetException e) {
-            exception = e;
-        }
-        if (exception != null) {
-            Log.e(LOG_TAG, "failed to set pref network by phone client!", exception);
-            return false;
+    public void setPrefNetwork(int sub, int network, Message callback) {
+        invokeMethod("com.qualcomm.qti.phonefeature.PhoneServiceClient", "setPreferredNetwork",
+                mPhoneServiceClient, new Class<?>[] {
+                        int.class, int.class, boolean.class, Message.class
+                }, new Object[] {
+                        sub, network, false, callback
+                });
+    }
+
+    public int getPreferredLetSub() {
+        Object result = invokeMethod("com.qualcomm.qti.phonefeature.PhoneServiceClient",
+                "getPreferredLteSub", mPhoneServiceClient, null, null);
+        if (result != null) {
+            return (Integer) result;
         } else {
-            return true;
+            return -1;
         }
     }
 
     protected void restoreAcqIfNeed() {
+        // default is 4G
+        int acqSettings = 1;
+        try {
+            acqSettings = Settings.Global.getInt(getContentResolver(), Constants.SETTINGS_ACQ);
+        } catch (SettingNotFoundException e) {
+            Settings.Global.putInt(getContentResolver(), Constants.SETTINGS_ACQ, 1);
+        }
         try {
             final int prefNetwork = Settings.Global.getInt(getContentResolver(),
                     Settings.Global.PREFERRED_NETWORK_MODE);
-            final int acq = Settings.Global.getInt(getContentResolver(), Constants.SETTINGS_ACQ, 1);
+            final int acq = acqSettings;
             Log.d(LOG_TAG, "restore acq, preferred: " + prefNetwork + ", acq: " + acq);
             if (prefNetwork == RILConstants.NETWORK_MODE_TD_SCDMA_GSM_WCDMA_LTE && acq != 0) {
                 mHandler.post(new Runnable() {
