@@ -164,6 +164,7 @@ public class CallNotifier extends Handler
             .parse("content://com.android.firewall");
     private static final String EXTRA_NUMBER = "phonenumber";
     private static final String IS_FORBIDDEN = "isForbidden";
+    private boolean isForbidden = false;
 
     protected Call.State mPreviousCdmaCallState;
     protected boolean mVoicePrivacyState = false;
@@ -265,6 +266,7 @@ public class CallNotifier extends Handler
             case CallStateMonitor.PHONE_NEW_RINGING_CONNECTION:
                 log("RINGING... (new)");
 
+                isForbidden = false;
                 // Add to check the firewall when firewall provider is built.
                 final ContentResolver cr = mApplication.getContentResolver();
                 if (cr.acquireProvider(FIREWALL_PROVIDER_URI) != null) {
@@ -280,7 +282,7 @@ public class CallNotifier extends Handler
                         extras.putString(EXTRA_NUMBER, number);
                         extras = cr.call(FIREWALL_PROVIDER_URI, IS_FORBIDDEN, null, extras);
                         if (extras != null) {
-                            boolean isForbidden= extras.getBoolean(IS_FORBIDDEN);
+                            isForbidden= extras.getBoolean(IS_FORBIDDEN);
                             if (isForbidden) {
                                 PhoneUtils.hangupRingingCall(c.getCall());
                                 return;
@@ -1018,6 +1020,8 @@ public class CallNotifier extends Handler
         } else if (Settings.System.getInt(mApplication.getContentResolver(),
                 Constants.SETTINGS_SHOW_CALL_DURATION, 1) != 1) {
             log("not need show duration, setting is disabled ");
+        } else if (isForbidden) {
+            log("not need show duration, firewall intercept the incoming call ");
         } else {
             mApplication.showCallDuration(c.getDurationMillis());
         }
