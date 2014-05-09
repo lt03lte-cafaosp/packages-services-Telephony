@@ -349,6 +349,7 @@ public class CallModeler extends Handler {
         Log.i(TAG, "onDisconnect");
         final Call call = getCallFromMap(mCallMap, conn, false);
 
+        int sub = conn.getCall().getPhone().getSubscription();
         if (call != null) {
             final boolean wasConferenced = call.getState() == State.CONFERENCED;
 
@@ -368,8 +369,8 @@ public class CallModeler extends Handler {
             mCallMap.remove(conn);
         }
 
-        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
-            mCallManager.clearDisconnected(call.getSubscription());
+        if (MSimTelephonyManager.getDefault().isMultiSimEnabled() && (call != null)) {
+            mCallManager.clearDisconnected(sub);
         } else {
             mCallManager.clearDisconnected();
         }
