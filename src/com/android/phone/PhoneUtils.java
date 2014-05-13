@@ -2123,6 +2123,13 @@ public class PhoneUtils {
         }
     }
 
+    static void muteOnNewCall(boolean muted) {
+        CallManager cm = PhoneGlobals.getInstance().mCM;
+        if (cm.hasActiveFgCall()) {
+            setMuteInternal(cm.getActiveFgCall().getPhone(), muted);
+        }
+    }
+
     /**
      *
      * Mute / umute the foreground phone, which has the current foreground call
@@ -2174,6 +2181,32 @@ public class PhoneUtils {
         // all the connections on conference calls.
         if (cm.hasActiveBgCall()) {
             for (Connection cn : cm.getFirstActiveBgCall().getConnections()) {
+                if (sConnectionMuteTable.get(cn) == null) {
+                    if (DBG) log("problem retrieving mute value for this connection.");
+                }
+                sConnectionMuteTable.put(cn, Boolean.valueOf(muted));
+            }
+        }
+    }
+
+    public static void updateMuteState(int sub, boolean muted) {
+        CallManager cm = PhoneGlobals.getInstance().mCM;
+
+        Phone phone = PhoneGlobals.getInstance().getPhone(sub);
+
+        // update the foreground connections to match.  This includes
+        // all the connections on conference calls.
+        for (Connection cn : phone.getForegroundCall().getConnections()) {
+            if (sConnectionMuteTable.get(cn) == null) {
+                if (DBG) log("problem retrieving mute value for this connection.");
+            }
+            sConnectionMuteTable.put(cn, Boolean.valueOf(muted));
+        }
+
+        // update the background connections to match.  This includes
+        // all the connections on conference calls.
+        if (cm.hasActiveBgCall(sub)) {
+            for (Connection cn : cm.getFirstActiveBgCall(sub).getConnections()) {
                 if (sConnectionMuteTable.get(cn) == null) {
                     if (DBG) log("problem retrieving mute value for this connection.");
                 }
