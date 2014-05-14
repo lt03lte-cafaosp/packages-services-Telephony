@@ -128,7 +128,7 @@
                       android:readPermission="android.permission.READ_CONTACTS"
                       android:writePermission="android.permission.WRITE_CONTACTS" />
 
-            <uses-library android:name="com.qualcomm.qti.phonefeature"
+            <uses-library android:name="com.qualcomm.qti.phoneclient"
                 android:required="false" />
             <uses-library android:name="com.qualcomm.qcrilhook"
                 android:required="false" />
