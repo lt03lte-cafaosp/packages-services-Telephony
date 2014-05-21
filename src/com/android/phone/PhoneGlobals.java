@@ -139,6 +139,7 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
     private static final int EVENT_TTY_MODE_SET = 16;
     protected static final int EVENT_START_SIP_SERVICE = 17;
     protected static final int EVENT_QUERY_SERVICE_STATUS = 18;
+    protected static final int EVENT_PHONE_SERVICE_BIND = 19;
 
     // The MMI codes are also used by the InCallScreen.
     public static final int MMI_INITIATE = 51;
@@ -409,12 +410,18 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
                         Log.e(LOG_TAG, msg.what + " failed " + ar.exception.toString());
                     }
                     break;
+                case EVENT_PHONE_SERVICE_BIND:
+                    mPhoneServiceClient = invokeMethod(
+                            "com.qualcomm.qti.phonefeature.PhoneServiceClient",
+                            "getServiceBinder", mProxy, null, null);
+                    break;
             }
         }
     };
 
-    public final Object mPhoneServiceClient;
     public final Object mQcrilHook;
+    public Object mPhoneServiceClient;
+    private Object mProxy;
 
     public PhoneGlobals(Context context) {
         super(context);
@@ -423,13 +430,16 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
         }, new Object[] {
             this
         });
-        mPhoneServiceClient = loadClassObj("com.qualcomm.qti.phonefeature.PhoneServiceClient",
+        sMe = this;
+    }
+
+    public void loadPhoneServiceBinder() {
+        mProxy = loadClassObj("com.qualcomm.qti.phonefeature.PhoneServiceClient",
                 new Class<?>[] {
                         Context.class, Message.class
                 }, new Object[] {
-                        this, null
+                        this, mHandler.obtainMessage(EVENT_PHONE_SERVICE_BIND)
                 });
-        sMe = this;
     }
 
     public static Object loadClassObj(String className, Class<?>[] paramClasses, Object[] params) {
@@ -494,16 +504,16 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
     }
 
     public void setPrefNetwork(int sub, int network, Message callback) {
-        invokeMethod("com.qualcomm.qti.phonefeature.PhoneServiceClient", "setPreferredNetwork",
+        invokeMethod("com.qualcomm.qti.phonefeature.IServiceBinder", "setPreferredNetwork",
                 mPhoneServiceClient, new Class<?>[] {
-                        int.class, int.class, boolean.class, Message.class
+                        int.class, int.class, Message.class
                 }, new Object[] {
-                        sub, network, false, callback
+                        sub, network, callback
                 });
     }
 
-    public int getPreferredLetSub() {
-        Object result = invokeMethod("com.qualcomm.qti.phonefeature.PhoneServiceClient",
+    public int getPreferredLTESub() {
+        Object result = invokeMethod("com.qualcomm.qti.phonefeature.IServiceBinder",
                 "getPreferredLteSub", mPhoneServiceClient, null, null);
         if (result != null) {
             return (Integer) result;
@@ -781,6 +791,7 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
                                       CallFeaturesSetting.HAC_VAL_OFF);
         }
 
+        loadPhoneServiceBinder();
         if (mQcrilHook != null) {
             restoreAcqIfNeed();
         }
