@@ -683,7 +683,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                 if ((networkFeature == Constants.NETWORK_MODE_CMCC
                         || networkFeature == Constants.NETWORK_MODE_LTE)
                         && (PhoneGlobals.getInstance().mPhoneServiceClient == null || PhoneGlobals
-                                .getInstance().getPreferredLetSub() != mSubscription)) {
+                                .getInstance().getPreferredLTESub() != mSubscription)) {
                     mButtonPreferredNetworkMode.setEnabled(false);
                 }
                 break;
