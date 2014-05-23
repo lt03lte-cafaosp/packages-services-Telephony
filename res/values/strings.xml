@@ -397,9 +397,9 @@
     <!-- Available networks screen, setting summary text -->
     <string name="sum_select_automatically">Automatically choose preferred network</string>
     <string name="register_automatically">Automatic registration\u2026</string>
-    <string name="preferred_network_mode_title">Preferred network type</string>
+    <string name="preferred_network_mode_title">Network Mode</string>
     <string name="preferred_network_mode_summary">Change the network operating mode</string>
-    <string name="preferred_network_mode_dialogtitle">Preferred network type</string>
+    <string name="preferred_network_mode_dialogtitle">Network Mode</string>
     <!-- Mobile network settings, summary for preferred network mode WCDMA preferred[CHAR LIMIT=100] -->
     <string name="preferred_network_mode_wcdma_perf_summary">Preferred network mode: WCDMA preferred</string>
     <!-- Mobile network settings, summary for preferred network mode GSM [CHAR LIMIT=100] -->
@@ -1910,11 +1910,11 @@
     <!-- Set Subscription screen: Message shown in error dialog -->
     <string name="set_subscription_error_atleast_one">Select atleast one subscription</string>
     <!-- Set Subscription screen: label sub 1 -->
-    <string name="sub_1">SUB 1</string>
+    <string name="sub_1">SIM 1</string>
     <!-- Set Subscription screen: label sub 2 -->
-    <string name="sub_2">SUB 2</string>
+    <string name="sub_2">SIM 2</string>
     <!-- Set Subscription screen: label sub 3 -->
-    <string name="sub_3">SUB 3</string>
+    <string name="sub_3">SIM 3</string>
     <!-- Set Subscription screen: Progress message -->
     <string name="set_uicc_subscription_progress">Set subscription in progress...</string>
     <!-- Set Subscription screen: Set subscriptio success -->
