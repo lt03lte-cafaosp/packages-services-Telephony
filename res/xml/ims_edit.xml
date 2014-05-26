@@ -33,8 +33,8 @@
     <ListPreference
         android:key="@string/call_type"
         android:title="@string/mo_call_type_title"
-        android:entries="@array/ims_call_types"
-        android:entryValues="@array/ims_call_types"
+        android:entries="@array/ims_call_types_choices"
+        android:entryValues="@array/ims_call_types_values"
         android:summary="@string/default_call_type"
         android:persistent="false"
         android:dialogTitle="@string/mo_call_type_title"/>

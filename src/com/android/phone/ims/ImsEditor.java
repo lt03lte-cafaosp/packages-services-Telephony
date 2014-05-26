@@ -332,13 +332,13 @@ public class ImsEditor extends PreferenceActivity
     }
 
     private String convertCallTypeToStr(int callType) {
-        String callTypeStr = IMS_CALL_TYPE_CS;
+        String callTypeStr = getResources().getString(R.string.default_call_type);
         switch (callType) {
             case Phone.CALL_TYPE_VOICE:
-                callTypeStr = IMS_CALL_TYPE_VOICE;
+                callTypeStr = getResources().getString(R.string.ims_call_type_voice);
                 break;
             case Phone.CALL_TYPE_VT:
-                callTypeStr = IMS_CALL_TYPE_VIDEO;
+                callTypeStr = getResources().getString(R.string.ims_call_type_video);
                 break;
         }
         return callTypeStr;
@@ -377,26 +377,26 @@ public class ImsEditor extends PreferenceActivity
 
         /* Update List Preference for MO Call Type */
         if (voiceSupp && vtSupp) {
-            mCallTypePref.setEntries(R.array.ims_call_types);
-            mCallTypePref.setEntryValues(R.array.ims_call_types);
+            mCallTypePref.setEntries(R.array.ims_call_types_choices);
+            mCallTypePref.setEntryValues(R.array.ims_call_types_values);
             mSharedPreferences.setCallTypeSelectable(true);
         } else if (voiceSupp) {
-            mCallTypePref.setEntries(R.array.ims_voice_cs_call_types);
-            mCallTypePref.setEntryValues(R.array.ims_voice_cs_call_types);
+            mCallTypePref.setEntries(R.array.ims_voice_cs_call_types_choices);
+            mCallTypePref.setEntryValues(R.array.ims_voice_cs_call_types_values);
             if (mSharedPreferences.getCallType() == Phone.CALL_TYPE_VT) {
                 mSharedPreferences.setCallType(Phone.CALL_TYPE_VOICE);
             }
             mSharedPreferences.setCallTypeSelectable(true);
         } else if (vtSupp) {
-            mCallTypePref.setEntries(R.array.ims_video_cs_call_types);
-            mCallTypePref.setEntryValues(R.array.ims_video_cs_call_types);
+            mCallTypePref.setEntries(R.array.ims_video_cs_call_types_choices);
+            mCallTypePref.setEntryValues(R.array.ims_video_cs_call_types_values);
             if (mSharedPreferences.getCallType() == Phone.CALL_TYPE_VOICE) {
                 mSharedPreferences.setCallType(Phone.CALL_TYPE_UNKNOWN);
             }
             mSharedPreferences.setCallTypeSelectable(true);
         } else {
-            mCallTypePref.setEntries(R.array.cs_call_type);
-            mCallTypePref.setEntryValues(R.array.cs_call_type);
+            mCallTypePref.setEntries(R.array.cs_call_type_choices);
+            mCallTypePref.setEntryValues(R.array.cs_call_type_values);
             if (mSharedPreferences.getCallType() == Phone.CALL_TYPE_VOICE
                     || mSharedPreferences.getCallType() == Phone.CALL_TYPE_VT) {
                 mSharedPreferences.setCallType(Phone.CALL_TYPE_UNKNOWN);
