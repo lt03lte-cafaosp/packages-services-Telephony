@@ -777,4 +777,18 @@
     <string name="uplmn_list_setting_add_plmn">新增 PLMN</string>
     <string name="gsm_umts_network_preferences_title">网络模式</string>
     <string name="gsm_umts_network_preferences_dialogtitle">网络模式</string>
+
+    <!-- IMS settings related strings -->
+    <string name="ims_edit_title">IMS 账户详情</string>
+    <string name="ims_accounts_title">IMS 账户</string>
+    <string name="ims_domain_address_title">IMS 服务器</string>
+    <string name="mo_call_type_title">外拨电话类型</string>
+    <string name="ims_service_capability">开启/关闭服务器</string>
+    <string name="ims_service_capability_title">开启/关闭IMS服务器</string>
+    <string name="ims_menu_save">保存</string>
+    <string name="ims_menu_discard">忽略</string>
+    <string name="remove_ims_account">删除账户</string>
+    <string name="default_call_type">CS语音电话</string>
+    <string name="ims_call_type_voice">语音电话</string>
+    <string name="ims_call_type_video">视频电话</string>
 </resources>
