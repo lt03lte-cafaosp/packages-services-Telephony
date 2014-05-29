@@ -33,6 +33,7 @@ import android.os.AsyncResult;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Messenger;
 import android.os.SystemProperties;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
@@ -501,6 +502,10 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     private void setPreferredNetworkType(boolean containAcq, int networkMode, String strAcq) {
      // now use phone feature service to set network mode
         final int modemNetworkMode = networkMode;
+        Messenger msger = new Messenger(mHandler);
+        final Message msg = mHandler.obtainMessage(
+                MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE);
+        msg.replyTo = msger;
         if (containAcq) {
             final int acq = Integer.valueOf(strAcq).intValue();
             mHandler.post(new Runnable() {
@@ -512,8 +517,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                     if (success) {
                         if (MSimPhoneGlobals.getInstance().mPhoneServiceClient != null) {
                             MSimPhoneGlobals.getInstance().setPrefNetwork(mSubscription,
-                                    modemNetworkMode, mHandler.obtainMessage(
-                                            MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE));
+                                    modemNetworkMode, msg);
                         } else {
                             //Set the modem network mode
                             mPhone.setPreferredNetworkType(modemNetworkMode, mHandler
@@ -528,8 +532,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             });
         } else {
             if (MSimPhoneGlobals.getInstance().mPhoneServiceClient != null) {
-                MSimPhoneGlobals.getInstance().setPrefNetwork(mSubscription, modemNetworkMode,
-                        mHandler.obtainMessage(MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE));
+                MSimPhoneGlobals.getInstance().setPrefNetwork(mSubscription, modemNetworkMode, msg);
             } else {
                 //Set the modem network mode
                 mPhone.setPreferredNetworkType(modemNetworkMode, mHandler
