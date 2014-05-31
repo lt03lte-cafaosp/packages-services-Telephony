@@ -515,6 +515,11 @@
     <item msgid="2883365539347850535">"长"</item>
   </string-array>
     <string name="network_message" msgid="4483886461245213802">"网络讯息"</string>
+    <!-- Carrier Name -->
+    <string name="China_Mobile">中国移动</string>
+    <string name="China_Unicom">中国联通</string>
+    <string name="China_Telecom">中国电信</string>
+    <string name="roamingTextSearching">"正在搜索服务"</string>
     <string name="network_forbidden">(禁用)</string>
     <string name="ota_title_activate" msgid="8616918561356194398">"激活您的手机"</string>
     <string name="ota_touch_activate" msgid="6553212803262586244">"需要拨打特别号码才能激活您的手机服务。\n\n在按下“激活”后，按照语音提示激活您的手机。"</string>
@@ -777,6 +782,9 @@
     <string name="uplmn_list_setting_add_plmn">新增 PLMN</string>
     <string name="gsm_umts_network_preferences_title">网络模式</string>
     <string name="gsm_umts_network_preferences_dialogtitle">网络模式</string>
+
+    <!-- Manual PLMN scan data disconnect dialog text -->
+    <string name="disconnect_data_confirm">"这个动作会暂时关闭数据连接。您确定要这样么？"</string>
 
     <!-- IMS settings related strings -->
     <string name="ims_edit_title">IMS 账户详情</string>

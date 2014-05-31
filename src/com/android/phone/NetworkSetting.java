@@ -500,9 +500,15 @@ public class NetworkSetting extends PreferenceActivity
     private String getNetworkTitle(OperatorInfo ni) {
         String title = ni.getOperatorNumeric();
         if (!TextUtils.isEmpty(ni.getOperatorAlphaLong())) {
-            title = ni.getOperatorAlphaLong();
+            title = android.util.NativeTextHelper.getInternalLocalString(this,
+                    ni.getOperatorAlphaLong(),
+                    R.array.original_carrier_names,
+                    R.array.locale_carrier_names);
         } else if (!TextUtils.isEmpty(ni.getOperatorAlphaShort())) {
-            title = ni.getOperatorAlphaShort();
+            title = android.util.NativeTextHelper.getInternalLocalString(this,
+                    ni.getOperatorAlphaShort(),
+                    R.array.original_carrier_names,
+                    R.array.locale_carrier_names);
         }
         if (ni.getState() == OperatorInfo.State.FORBIDDEN) {
             title += getString(R.string.network_forbidden);
