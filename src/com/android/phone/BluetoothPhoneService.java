@@ -47,6 +47,8 @@ import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.CallManager;
 import android.telephony.MSimTelephonyManager;
 
+import com.android.phone.CallGatewayManager.RawGatewayInfo;
+
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -71,6 +73,7 @@ public class BluetoothPhoneService extends Service {
 
     private BluetoothAdapter mAdapter;
     private CallManager mCM;
+    private CallGatewayManager mCallGatewayManager;
 
     private BluetoothHeadset mBluetoothHeadset;
 
@@ -116,6 +119,7 @@ public class BluetoothPhoneService extends Service {
             if (VDBG) Log.d(TAG, "mAdapter null");
             return;
         }
+        mCallGatewayManager = CallGatewayManager.getInstance();
 
         mPowerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         mStartCallWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
@@ -530,7 +534,9 @@ public class BluetoothPhoneService extends Service {
         }
         // end the result
         // when index is 0, other parameter does not matter
-        mBluetoothHeadset.clccResponse(0, 0, 0, 0, false, "", 0);
+        if (mBluetoothHeadset != null) {
+            mBluetoothHeadset.clccResponse(0, 0, 0, 0, false, "", 0);
+        }
     }
 
     private void handleQueryPhoneState() {
@@ -775,15 +781,27 @@ public class BluetoothPhoneService extends Service {
             mpty = call.isMultiparty();
         }
 
-        int direction = connection.isIncoming() ? 1 : 0;
+        boolean isIncoming = connection.isIncoming();
 
+        // For GV outgoing calls send the contact phone #, not the gateway #.
         String number = connection.getAddress();
+        if (!isIncoming) {
+            RawGatewayInfo rawInfo = mCallGatewayManager.getGatewayInfo(connection);
+            if (!rawInfo.isEmpty()) {
+                number = rawInfo.trueNumber;
+            }
+        }
         int type = -1;
         if (number != null) {
             type = PhoneNumberUtils.toaFromString(number);
+        } else {
+            number = "";
         }
 
-        mBluetoothHeadset.clccResponse(index + 1, direction, state, 0, mpty, number, type);
+        if (mBluetoothHeadset != null) {
+            mBluetoothHeadset.clccResponse(index + 1, isIncoming ? 1 : 0,
+                    state, 0, mpty, number, type);
+        }
     }
 
     /** Build the +CLCC result for CDMA
@@ -906,9 +924,16 @@ public class BluetoothPhoneService extends Service {
                 // as per Bluetooth SIG PTS
         }
 
-        int direction = connection.isIncoming() ? 1 : 0;
+        boolean isIncoming = connection.isIncoming();
 
+        // For GV outgoing calls send the contact phone #, not the gateway #.
         String number = connection.getAddress();
+        if (!isIncoming) {
+            RawGatewayInfo rawInfo = mCallGatewayManager.getGatewayInfo(connection);
+            if (!rawInfo.isEmpty()) {
+                number = rawInfo.trueNumber;
+            }
+        }
         int type = -1;
         if (number != null) {
             type = PhoneNumberUtils.toaFromString(number);
@@ -916,7 +941,10 @@ public class BluetoothPhoneService extends Service {
             number = "";
         }
 
-        mBluetoothHeadset.clccResponse(index + 1, direction, state, 0, mpty, number, type);
+        if (mBluetoothHeadset != null) {
+            mBluetoothHeadset.clccResponse(index + 1, isIncoming ? 1 : 0,
+                    state, 0, mpty, number, type);
+        }
     }
 
     private void handleCdmaSwapSecondCallState() {
