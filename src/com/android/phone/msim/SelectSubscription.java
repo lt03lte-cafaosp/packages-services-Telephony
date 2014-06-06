@@ -44,6 +44,7 @@ import android.app.TabActivity;
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
 
+
 public class SelectSubscription extends  TabActivity {
 
     private static final String LOG_TAG = "SelectSubscription";
@@ -54,6 +55,7 @@ public class SelectSubscription extends  TabActivity {
 
     private static int[] subString = {R.string.sub_1, R.string.sub_2, R.string.sub_3};
 
+    private static final String MULTI_SIM_NAME = "perferred_name_sub";
     private TabSpec subscriptionPref;
 
     @Override
@@ -81,7 +83,11 @@ public class SelectSubscription extends  TabActivity {
 
         for (int i = 0; i < numPhones; i++) {
             log("Creating SelectSub activity = " + i);
-            String tabLabel = getString(subString[i]);
+            String tabLabel = Settings.System.getString(getContentResolver(),
+                    MULTI_SIM_NAME + (i + 1));
+            if(tabLabel.equals("")) {
+                tabLabel = getString(subString[i]);
+            }
             subscriptionPref = tabHost.newTabSpec(tabLabel);
             subscriptionPref.setIndicator(tabLabel);
             intent = new Intent().setClassName(pkg, targetClass)
