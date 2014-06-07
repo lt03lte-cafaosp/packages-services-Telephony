@@ -80,6 +80,10 @@ import com.android.internal.telephony.RILConstants;
 import com.android.internal.telephony.TelephonyCapabilities;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.cdma.TtyIntent;
+import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppType;
+import com.android.internal.telephony.uicc.IccCardStatus.CardState;
+import com.android.internal.telephony.uicc.UiccCard;
+import com.android.internal.telephony.uicc.UiccCardApplication;
 import com.android.phone.common.CallLogAsync;
 import com.android.phone.OtaUtils.CdmaOtaScreenState;
 import com.android.phone.WiredHeadsetManager.WiredHeadsetListener;
@@ -88,6 +92,7 @@ import com.android.services.telephony.common.AudioMode;
 
 import org.codeaurora.ims.IImsService;
 import org.codeaurora.ims.IImsServiceListener;
+import com.codeaurora.telephony.msim.MSimUiccController;
 
 import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
 import org.codeaurora.ims.csvt.CallForwardInfoP;
@@ -1739,5 +1744,24 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
      */
     public int getDefaultDataSubscription() {
         return DEFAULT_SUBSCRIPTION;
+    }
+
+    /*
+     * Whether card is USIM card or not
+     */
+    public boolean isUsim(int sub) {
+        UiccCard uiccCard = MSimUiccController.getInstance().getUiccCard(sub);
+        if (uiccCard != null
+                && uiccCard.getCardState() == CardState.CARDSTATE_PRESENT) {
+            int numApps = uiccCard.getNumApplications();
+            for (int i = 0; i < numApps; i++) {
+                UiccCardApplication app = uiccCard.getApplicationIndex(i);
+                if (app != null
+                        && app.getType() == AppType.APPTYPE_USIM) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
