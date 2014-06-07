@@ -273,9 +273,22 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             case Constants.NETWORK_MODE_CMCC:
                 mButtonPreferredNetworkMode
                         .setDialogTitle(R.string.preferred_network_mode_dialogtitle_cmcc);
-                mButtonPreferredNetworkMode.setEntries(R.array.preferred_network_mode_choices_cmcc);
-                mButtonPreferredNetworkMode
-                        .setEntryValues(R.array.preferred_network_mode_values_cmcc);
+                if (getResources().getBoolean(R.bool.config_network_cmcc_feature)) {
+                    if (PhoneGlobals.getInstance().isUsim(mSubscription) &&
+                            (PhoneGlobals.getInstance().getPreferredLTESub() == mSubscription)) {
+                        mButtonPreferredNetworkMode.setEntries(
+                                R.array.preferred_network_mode_options_cmcc);
+                        mButtonPreferredNetworkMode.setEntryValues(
+                                R.array.preferred_network_mode_options_values_cmcc);
+                    } else {
+                        prefSet.removePreference(mButtonPreferredNetworkMode);
+                    }
+                } else {
+                    mButtonPreferredNetworkMode
+                            .setEntries(R.array.preferred_network_mode_choices_cmcc);
+                    mButtonPreferredNetworkMode
+                            .setEntryValues(R.array.preferred_network_mode_values_cmcc);
+                }
                 break;
             case Constants.NETWORK_MODE_TDCDMA:
                 mButtonPreferredNetworkMode
@@ -402,14 +415,18 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         if ((networkFeature == Constants.NETWORK_MODE_CMCC
                 || networkFeature == Constants.NETWORK_MODE_LTE)
                 && (settingsNetworkMode == RILConstants.NETWORK_MODE_TD_SCDMA_GSM_WCDMA_LTE)) {
-            // default is 4G preferred mode
-            int acq = getAcqValue();
-            String acqString = (0 == acq) ? "1" : Integer.toString(acq);
-
-            String networkmodeString = Integer.toString(settingsNetworkMode)
-                    + NETWORK_MODE_SEPARATOR + acqString;
-            Log.d(LOG_TAG, networkmodeString);
-            mButtonPreferredNetworkMode.setValue(networkmodeString);
+            if (networkFeature == Constants.NETWORK_MODE_CMCC
+                    && getResources().getBoolean(R.bool.config_network_cmcc_feature)) {
+                mButtonPreferredNetworkMode.setValue(Integer.toString(settingsNetworkMode));
+            } else {
+                // default is 4G preferred mode
+                int acq = getAcqValue();
+                String acqString = (0 == acq) ? "1" : Integer.toString(acq);
+                String networkmodeString = Integer.toString(settingsNetworkMode)
+                        + NETWORK_MODE_SEPARATOR + acqString;
+                Log.d(LOG_TAG, networkmodeString);
+                mButtonPreferredNetworkMode.setValue(networkmodeString);
+            }
         } else {
             mButtonPreferredNetworkMode.setValue(Integer.toString(settingsNetworkMode));
         }
@@ -769,15 +786,20 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                 break;
             case Phone.NT_MODE_TD_SCDMA_GSM_WCDMA_LTE:
                 if (networkFeature == Constants.NETWORK_MODE_CMCC) {
-                    if (acq == 1) {
-                        mButtonPreferredNetworkMode
-                                .setSummary(R.string.preferred_network_mode_4g_3g_2g_4g);
-                    } else if (acq == 2) {
-                        mButtonPreferredNetworkMode
-                                .setSummary(R.string.preferred_network_mode_4g_3g_2g_3g);
-                    } else {
+                    if (getResources().getBoolean(R.bool.config_network_cmcc_feature)) {
                         mButtonPreferredNetworkMode
                                 .setSummary(R.string.preferred_network_mode_4g_3g_2g_auto_summary);
+                    } else {
+                        if (acq == 1) {
+                            mButtonPreferredNetworkMode
+                                    .setSummary(R.string.preferred_network_mode_4g_3g_2g_4g);
+                        } else if (acq == 2) {
+                            mButtonPreferredNetworkMode
+                                    .setSummary(R.string.preferred_network_mode_4g_3g_2g_3g);
+                        } else {
+                            mButtonPreferredNetworkMode.setSummary(
+                                    R.string.preferred_network_mode_4g_3g_2g_auto_summary);
+                        }
                     }
                 } else if (networkFeature == Constants.NETWORK_MODE_LTE){
                     if (acq == 1) {
