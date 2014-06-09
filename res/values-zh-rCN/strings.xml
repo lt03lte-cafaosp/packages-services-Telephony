@@ -799,4 +799,5 @@
     <string name="default_call_type">CS语音电话</string>
     <string name="ims_call_type_voice">语音电话</string>
     <string name="ims_call_type_video">视频电话</string>
+    <string name="set_subscription">选择SIM卡</string>
 </resources>
