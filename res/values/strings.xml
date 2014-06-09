@@ -498,6 +498,15 @@
         <item>"18"</item>
     </string-array>
 
+    <string-array name="preferred_network_mode_options_cmcc">
+        <item>@string/preferred_network_mode_4g_3g_2g_auto</item>
+        <item>@string/preferred_network_mode_3g_2g_auto</item>
+    </string-array>
+    <string-array name="preferred_network_mode_options_values_cmcc" translatable="false">
+        <item>"20"</item>
+        <item>"18"</item>
+    </string-array>
+
     <string-array name="preferred_network_mode_choices">
         <item>TD-SCDMA/LTE/GSM/WCDMA/CDMA/EVDO </item>
         <item>TD-SCDMA/GSM/WCDMA/CDMA/EVDO </item>
