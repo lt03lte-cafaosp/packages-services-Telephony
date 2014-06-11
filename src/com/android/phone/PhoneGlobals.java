@@ -853,6 +853,33 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
         }
     };
 
+    public static boolean isIMSRegisterd(){
+        boolean IMSRegisterd = false;
+        int IMSRegistrationState = 0;
+        try {
+            //here have a problem for csvt mode.
+            IMSRegistrationState = PhoneGlobals.mImsService.getRegistrationState();
+        } catch (Exception e) {
+            Log.e(LOG_TAG,
+                    "Exception in getRegistrationState(), IMSRegistrationState = "
+                    + IMSRegistrationState);
+        }
+        switch (IMSRegistrationState){
+            case 1:
+                IMSRegisterd = true;
+                break;
+            case 2:
+                IMSRegisterd = false;
+                break;
+            default:
+                Log.e(LOG_TAG, "getRegistrationState() failed");
+                break;
+        }
+        Log.v(LOG_TAG, "isIMSRegisterd= " + IMSRegisterd + ",IMSRegistrationState= "
+                + IMSRegistrationState);
+        return IMSRegisterd;
+    }
+
     public boolean isCsvtActive(){
         boolean result = false;
         if (mCsvtService != null){
