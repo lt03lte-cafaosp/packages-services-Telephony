@@ -37,6 +37,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.SystemProperties;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
@@ -66,6 +67,11 @@ public class ImsEditor extends PreferenceActivity
     private static final String IMS_CALL_TYPE_VOICE = "Voice";
     private static final String IMS_CALL_TYPE_VIDEO = "Video";
     private static final String IMS_CALL_TYPE_CS = "CSVoice";
+
+    /**
+     * Specify if IMS calls should be originated with PS domain
+     */
+    private static final String IMS_PS_DOMAIN = "persist.radio.domain.ps";
 
     private static final String TAG = ImsEditor.class.getSimpleName();
 
@@ -354,6 +360,10 @@ public class ImsEditor extends PreferenceActivity
         return callTypeInt;
     }
 
+    private boolean isPSDomain() {
+        return (SystemProperties.getBoolean(IMS_PS_DOMAIN, true));
+    }
+
     private void loadPreferences() {
         HashSet<String> callTypeSet = new HashSet<String>();
         boolean voiceSupp = mSharedPreferences.isImsSrvAllowed(Phone.CALL_TYPE_VOICE);
@@ -376,7 +386,14 @@ public class ImsEditor extends PreferenceActivity
         mSharedPreferences.setIsImsCapEnabled(Phone.CALL_TYPE_VT, vtSupp);
 
         /* Update List Preference for MO Call Type */
-        if (voiceSupp && vtSupp) {
+        /**
+         * In auto domain, all MO call types are displayed even
+         * if VOLTE/VT capabilities are unavailable and calls will
+         * be allowed in auto domain. Modem will do domain selection.
+         * Also, this will help retain user option of MO Call type when
+         * network moves in & out of LTE coverage.
+         */
+        if ((voiceSupp && vtSupp) || (!isPSDomain())) {
             mCallTypePref.setEntries(R.array.ims_call_types);
             mCallTypePref.setEntryValues(R.array.ims_call_types);
             mSharedPreferences.setCallTypeSelectable(true);
