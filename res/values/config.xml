@@ -166,4 +166,7 @@
     <bool name="show_emergency_call_list">false</bool>
     <!-- Disable data before manual PLMN scan if true-->
     <bool name="config_disable_data_manual_plmn">false</bool>
+
+    <!-- whether show network options for CMCC-->
+    <bool name="config_network_cmcc_feature">true</bool>
 </resources>
