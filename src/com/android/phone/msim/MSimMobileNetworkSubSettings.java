@@ -915,14 +915,10 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                 android.provider.Settings.Global.MOBILE_DATA + sub, enabled ? 1 : 0);
         log("Set Mobile Data for SUB-" + sub + " is " + enabled);
 
-        // If current DDS is this SUB, update the Global flag also
-        if (sub == android.telephony.MSimTelephonyManager.
-                getDefault().getPreferredDataSubscription()) {
-            ConnectivityManager cm =
-                    (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-            cm.setMobileDataEnabled(enabled);
-            log("Set Mobile Data for DDS-" + sub + " is " + enabled);
-        }
+        ConnectivityManager cm =
+            (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        cm.setMobileDataEnabledOnSubscription(enabled, sub);
+        log("Set Mobile Data for DDS-" + sub + " is " + enabled);
     }
 
     private void setPrefNetworkTypeInSp(int preNetworkType) {

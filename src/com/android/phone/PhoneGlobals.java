@@ -1387,6 +1387,8 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
                 if (VDBG) Log.d(LOG_TAG, "- state: " + intent.getStringExtra(PhoneConstants.STATE_KEY));
                 if (VDBG) Log.d(LOG_TAG, "- reason: "
                                 + intent.getStringExtra(PhoneConstants.STATE_CHANGE_REASON_KEY));
+                if (VDBG) Log.d(LOG_TAG, "- subscription: " + intent.getIntExtra(
+                            SUBSCRIPTION_KEY, getDefaultSubscription()));
 
                 // The "data disconnected due to roaming" notification is shown
                 // if (a) you have the "data roaming" feature turned off, and
