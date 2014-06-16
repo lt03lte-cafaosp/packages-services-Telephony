@@ -55,9 +55,12 @@ import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.TelephonyProperties;
+import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppType;
 import com.android.phone.MSimPhoneGlobals;
 import com.android.phone.R;
 import com.android.internal.telephony.RILConstants;
+
+import com.codeaurora.telephony.msim.MSimUiccController;
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 
@@ -279,8 +282,11 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                 mButtonPreferredNetworkMode
                         .setDialogTitle(R.string.preferred_network_mode_dialogtitle_cmcc);
                 if (getResources().getBoolean(R.bool.config_network_cmcc_feature)) {
-                    if (PhoneGlobals.getInstance().isUsim(mSubscription) &&
-                            (PhoneGlobals.getInstance().getPreferredLTESub() == mSubscription)) {
+                    if (MSimUiccController.getInstance().getUiccCard(mSubscription) != null &&
+                            MSimUiccController.getInstance().getUiccCard(mSubscription)
+                                    .isApplicationOnIcc(AppType.APPTYPE_USIM) &&
+                            (PhoneGlobals.getInstance().mPhoneServiceClient == null ||
+                            PhoneGlobals.getInstance().getPreferredLTESub() == mSubscription)) {
                         mButtonPreferredNetworkMode.setEntries(
                                 R.array.preferred_network_mode_options_cmcc);
                         mButtonPreferredNetworkMode.setEntryValues(
