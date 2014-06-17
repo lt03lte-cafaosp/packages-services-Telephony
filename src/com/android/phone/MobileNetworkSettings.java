@@ -20,6 +20,7 @@ import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.TelephonyProperties;
+import com.android.internal.telephony.uicc.UiccController;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
@@ -48,6 +49,7 @@ import android.util.Log;
 import android.view.MenuItem;
 
 import com.android.internal.telephony.RILConstants;
+import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppType;
 
 import static com.android.internal.telephony.MSimConstants.SUB1;
 
@@ -262,7 +264,9 @@ public class MobileNetworkSettings extends PreferenceActivity
                 mButtonPreferredNetworkMode
                         .setDialogTitle(R.string.preferred_network_mode_dialogtitle_cmcc);
                 if (getResources().getBoolean(R.bool.config_network_cmcc_feature)) {
-                    if (PhoneGlobals.getInstance().isUsim(SUB1)) {
+                    if (UiccController.getInstance().getUiccCard() != null &&
+                            UiccController.getInstance().getUiccCard()
+                                    .isApplicationOnIcc(AppType.APPTYPE_USIM)) {
                         mButtonPreferredNetworkMode.setEntries(
                                 R.array.preferred_network_mode_options_cmcc);
                         mButtonPreferredNetworkMode.setEntryValues(
