@@ -355,6 +355,13 @@ public class CallController extends Handler {
             okToCallStatus = checkIfOkToInitiateOutgoingCall(
                     phone.getServiceState().getState());
 
+            // When IMS is not registered IMS call should always be originated in
+            // auto domain so set okToCallStatus = CallStatusCode.SUCCESS
+            if ((okToCallStatus == CallStatusCode.OUT_OF_SERVICE) &&
+                    (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_IMS)) {
+                okToCallStatus = CallStatusCode.SUCCESS;
+            }
+
         } catch (PhoneUtils.VoiceMailNumberMissingException ex) {
             // If the call status is NOT in an acceptable state, it
             // may effect the way the voicemail number is being
