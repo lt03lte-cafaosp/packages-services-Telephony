@@ -169,4 +169,7 @@
 
     <!-- whether show network options for CMCC-->
     <bool name="config_network_cmcc_feature">true</bool>
+
+    <!-- whether show toast when dialing-->
+    <bool name="config_show_toast_when_dialing">false</bool>
 </resources>
