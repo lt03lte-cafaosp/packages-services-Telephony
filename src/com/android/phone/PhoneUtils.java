@@ -2897,7 +2897,7 @@ public class PhoneUtils {
 
         dst.putExtra(OutgoingCallBroadcaster.EXTRA_CALL_TYPE,
                 src.getIntExtra(OutgoingCallBroadcaster.EXTRA_CALL_TYPE,
-                        Phone.CALL_TYPE_VOICE));
+                        Phone.CALL_TYPE_INVALID));
         dst.putExtra(OutgoingCallBroadcaster.EXTRA_CALL_DOMAIN,
                 src.getIntExtra(OutgoingCallBroadcaster.EXTRA_CALL_DOMAIN,
                         Phone.CALL_DOMAIN_CS));
