@@ -286,7 +286,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                             MSimUiccController.getInstance().getUiccCard(mSubscription)
                                     .isApplicationOnIcc(AppType.APPTYPE_USIM) &&
                             (PhoneGlobals.getInstance().mPhoneServiceClient == null ||
-                            PhoneGlobals.getInstance().getPreferredLTESub() == mSubscription)) {
+                            PhoneGlobals.getInstance().getCurrentLTESub() == mSubscription)) {
                         mButtonPreferredNetworkMode.setEntries(
                                 R.array.preferred_network_mode_options_cmcc);
                         mButtonPreferredNetworkMode.setEntryValues(
