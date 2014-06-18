@@ -422,7 +422,6 @@ public class MSimPhoneGlobals extends PhoneGlobals {
                                       CallFeaturesSetting.HAC_VAL_OFF);
         }
 
-        loadPhoneServiceBinder();
         if (mQcrilHook != null) {
             restoreAcqIfNeed();
         }
