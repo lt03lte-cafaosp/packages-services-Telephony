@@ -512,6 +512,17 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
         }
     }
 
+    public int getCurrentLTESub() {
+        Object result = invokeMethod(
+                "com.qualcomm.qti.phonefeature.PhoneServiceClient",
+                "getCurrentLteSub", mPhoneServiceClient, null, null);
+        if (result != null) {
+            return (Integer) result;
+        } else {
+            return -1;
+        }
+    }
+
     protected void restoreAcqIfNeed() {
         // default is 4G
         int acqSettings = 1;
