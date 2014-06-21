@@ -20,6 +20,7 @@
 package com.android.phone;
 
 import com.android.internal.telephony.CallManager;
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.PhoneConstants;
@@ -191,6 +192,17 @@ public class SipCallOptionHandler extends Activity implements
         if (IMS_DBG) {
             Log.v(TAG, " IMS call type: " + mImsCallType);
         }
+
+        /**
+         * In MultiSim scenario, if it's not an IMS subscription,
+         * then set call type as CS call.
+         */
+        Phone phone = PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
+        if ((phone != null) && (phone.getSubscription() !=
+                mIntent.getIntExtra(MSimConstants.SUBSCRIPTION_KEY, MSimConstants.DEFAULT_SUBSCRIPTION))) {
+            mImsCallType = Phone.CALL_TYPE_UNKNOWN;
+        }
+        if (DBG) Log.v(TAG, "IMS call type: " + mImsCallType);
 
         Uri uri = mIntent.getData();
         String scheme = uri.getScheme();
