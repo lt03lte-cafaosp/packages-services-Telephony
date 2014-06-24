@@ -485,7 +485,9 @@ public class OutgoingCallBroadcaster extends Activity
         String action = intent.getAction();
         String number = PhoneNumberUtils.getNumberFromIntent(intent, this);
         boolean isConferenceUri = intent.getBooleanExtra(EXTRA_DIAL_CONFERENCE_URI, false);
-        Log.d(TAG, "outGoingcallBroadCaster action is "+ action + " number = " + number);
+        if (VDBG) {
+            Log.d(TAG, "outGoingcallBroadCaster action is "+ action + " number = " + number);
+        }
         // Check the number, don't convert for sip uri
         // TODO put uriNumber under PhoneNumberUtils
         if (number != null) {
