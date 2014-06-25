@@ -35,6 +35,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.EventLog;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallerInfo;
@@ -76,6 +77,9 @@ public class MSimCallNotifier extends CallNotifier {
 
     private static final boolean sLocalCallHoldToneEnabled =
             SystemProperties.getBoolean("persist.radio.lch_inband_tone", false);
+
+    private boolean[] mIsPermDiscCauseReceived = new
+            boolean[MSimTelephonyManager.getDefault().getPhoneCount()];
 
     /**
      * Initialize the singleton CallNotifier instance.
@@ -388,6 +392,24 @@ public class MSimCallNotifier extends CallNotifier {
 
         Phone fgPhone = mCM.getFgPhone(subscription);
         vibrateAfterCallConnected(fgPhone);
+
+        // CTA require that UE should disconnect current foregroundCall if answering a MT call on
+        // other sub and current foregroundCall callstate is dialing
+        if (fgPhone.getForegroundCall().getState() == Call.State.ACTIVE &&
+                mApplication.getApplicationContext().getResources().getBoolean
+                (R.bool.config_disconnect_other_fgcall)) {
+            for (int i = 0; i < MSimTelephonyManager.getDefault().getPhoneCount(); i++) {
+                if (i != subscription) {
+                    Phone otherFgPhone = mCM.getFgPhone(i);
+                    if (DBG) log("otherFgPhoneState: " + otherFgPhone.getForegroundCall().
+                            getState());
+                    if (otherFgPhone.getForegroundCall().getState() == Call.State.DIALING ||
+                            otherFgPhone.getForegroundCall().getState() == Call.State.ALERTING) {
+                        PhoneUtils.hangupActiveCall(otherFgPhone.getForegroundCall());
+                    }
+                }
+            }
+        }
         if (fgPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
             if ((fgPhone.getForegroundCall().getState() == Call.State.ACTIVE)
                     && ((mPreviousCdmaCallState == Call.State.DIALING)
@@ -480,6 +502,15 @@ public class MSimCallNotifier extends CallNotifier {
                     mInCallRingbackTonePlayer.stopTone();
                     mInCallRingbackTonePlayer = null;
                 }
+            }
+        }
+
+        if (mApplication.getResources().getBoolean(R.bool.config_show_toast_when_dialing)) {
+            Call.State callState = mCM.getActiveFgCallState(subscription);
+            if (callState.isDialing()) {
+                Toast toast = Toast.makeText(mApplication, R.string.dialing,
+                        Toast.LENGTH_SHORT);
+                toast.show();
             }
         }
     }
@@ -602,11 +633,32 @@ public class MSimCallNotifier extends CallNotifier {
             if (isEmergencyNumber &&
                     (cause == Connection.DisconnectCause.EMERGENCY_TEMP_FAILURE
                     || cause == Connection.DisconnectCause.EMERGENCY_PERM_FAILURE)) {
-                int subToCall = PhoneUtils.getNextSubscriptionId(phone.getSubscription());
-                log("Redial emergency call on subscription " + subToCall);
-                PhoneUtils.placeCall(mApplication,
-                        mApplication.getPhone(subToCall), number, null, false);
-                return;
+                int subToCall = phone.getSubscription();
+                if (cause == Connection.DisconnectCause.EMERGENCY_PERM_FAILURE) {
+                    log("EMERGENCY_PERM_FAILURE received on sub:" +
+                            phone.getSubscription());
+                    // update mIsPermDiscCauseReceived so that next redial doesn't occur
+                    // on this sub
+                    mIsPermDiscCauseReceived[phone.getSubscription()] = true;
+                    subToCall = MSimConstants.INVALID_SUBSCRIPTION;
+                }
+                // Check for any subscription on which EMERGENCY_PERM_FAILURE is received
+                // if no such sub, then redial should be stopped.
+                for (int i = PhoneUtils.getNextSubscriptionId(phone.getSubscription());
+                        i != phone.getSubscription(); i = PhoneUtils.getNextSubscriptionId(i)) {
+                    if (mIsPermDiscCauseReceived[i] == false) {
+                        subToCall = i;
+                        break;
+                    }
+                }
+                if (subToCall == MSimConstants.INVALID_SUBSCRIPTION) {
+                    log("EMERGENCY_PERM_FAILURE recieved on all subs, abort redial");
+                } else {
+                    log("Redial emergency call on subscription " + subToCall);
+                    PhoneUtils.placeCall(mApplication,
+                            mApplication.getPhone(subToCall), number, null, false);
+                    return;
+                }
             }
         }
         // If this is the end of an OTASP call, pass it on to the PhoneApp.
@@ -783,15 +835,24 @@ public class MSimCallNotifier extends CallNotifier {
     }
 
     /**
+     * Resets mIsPermDiscCauseReceived array elements to false.
+     */
+    void onEmergencyCallDialed() {
+        for (int i = 0; i < mIsPermDiscCauseReceived.length; i++) {
+            mIsPermDiscCauseReceived[i] = false;
+        }
+    }
+
+    /**
      * Resets the audio mode and speaker state when a call ends.
      */
     @Override
     protected void resetAudioStateAfterDisconnect() {
         if (VDBG) log("resetAudioStateAfterDisconnect()...");
 
-        // If other subscription has active voice call, do not reset the audio.
-        if (PhoneUtils.isAnyOtherSubActive(PhoneUtils.getActiveSubscription())) {
-            if (DBG) log(" Other sub has active call, Do not reset audio ");
+        // If any subscription has active voice call, do not reset the audio.
+        if (PhoneUtils.isAnySubActive()) {
+            if (DBG) log("there is a sub which has active call, Do not reset audio ");
             return;
         }
 

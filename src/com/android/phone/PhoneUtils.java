@@ -833,6 +833,11 @@ public class PhoneUtils {
             PhoneUtils.isRoutableViaGateway(number)) {  // Filter out MMI, OTA and other codes.
             useGateway = true;
         }
+        if(isCsvtCallActive())
+        {
+            Log.e(LOG_TAG, "Unsupported another CALL when background CSVT active");
+            return CALL_STATUS_FAILED;
+        }
 
         int status = CALL_STATUS_DIALED;
         Connection connection;
@@ -3540,6 +3545,25 @@ public class PhoneUtils {
             }
         }
         return otherSub;
+    }
+
+    /**
+     * Check whether any sub is in active state.
+     * @return if any sub is active, return true. if no sub is in
+     * active state return false.
+     */
+    static boolean isAnySubActive() {
+        int count = MSimTelephonyManager.getDefault().getPhoneCount();
+        CallManager cm = MSimPhoneGlobals.getInstance().mCM;
+
+        if (DBG) Log.d(LOG_TAG, "isAnySubActive");
+        for (int i = 0; i < count; i++) {
+            if (cm.getState(i) != PhoneConstants.State.IDLE) {
+                Log.d(LOG_TAG, "isAnySubActive: active sub  = " + i );
+                return true;
+            }
+        }
+        return false;
     }
 
     public static boolean isCsvtCallActive() {
