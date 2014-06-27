@@ -169,4 +169,7 @@
 
     <!-- whether show network options for CMCC-->
     <bool name="config_network_cmcc_feature">true</bool>
+
+    <!-- config for CTA requirement -->
+    <bool name="config_disconnect_other_fgcall">false</bool>
 </resources>
