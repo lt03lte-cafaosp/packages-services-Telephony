@@ -33,7 +33,6 @@ import android.os.AsyncResult;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.os.Messenger;
 import android.os.SystemProperties;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
@@ -525,34 +524,24 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     private void setPreferredNetworkType(boolean containAcq, int networkMode, String strAcq) {
      // now use phone feature service to set network mode
         final int modemNetworkMode = networkMode;
-        Messenger msger = new Messenger(mHandler);
-        final Message msg = mHandler.obtainMessage(
-                MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE);
-        msg.replyTo = msger;
+        final Message msg;
+        if (MSimPhoneGlobals.getInstance().mPhoneServiceClient != null) {
+            msg = mHandler.obtainMessage(
+                    MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE_WITH_ACQ);
+        } else {
+            msg = mHandler.obtainMessage(
+                    MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE);
+        }
         if (containAcq) {
             final int acq = Integer.valueOf(strAcq).intValue();
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    boolean success = PhoneGlobals.getInstance().mQcrilHook != null
-                            && PhoneGlobals.getInstance().setPrefNetworkAcq(acq, mSubscription);
-                    Log.d(LOG_TAG, "restore acq, success: " + success);
-                    if (success) {
-                        if (MSimPhoneGlobals.getInstance().mPhoneServiceClient != null) {
-                            MSimPhoneGlobals.getInstance().setPrefNetwork(mSubscription,
-                                    modemNetworkMode, msg);
-                        } else {
-                            //Set the modem network mode
-                            mPhone.setPreferredNetworkType(modemNetworkMode, mHandler
-                                    .obtainMessage(MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE));
-                        }
-                    } else {
-                        // recovery the status of before
-                        mPhone.getPreferredNetworkType(mHandler
-                                .obtainMessage(MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
-                    }
-                }
-            });
+            if (MSimPhoneGlobals.getInstance().mPhoneServiceClient != null) {
+                MSimPhoneGlobals.getInstance().setPrefNetworWithAcq(mSubscription,
+                        modemNetworkMode, acq, msg);
+            } else {
+                //Set the modem network mode
+                mPhone.setPreferredNetworkType(modemNetworkMode, mHandler
+                        .obtainMessage(MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE));
+            }
         } else {
             if (MSimPhoneGlobals.getInstance().mPhoneServiceClient != null) {
                 MSimPhoneGlobals.getInstance().setPrefNetwork(mSubscription, modemNetworkMode, msg);
@@ -589,6 +578,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
 
         static final int MESSAGE_GET_PREFERRED_NETWORK_TYPE = 0;
         static final int MESSAGE_SET_PREFERRED_NETWORK_TYPE = 1;
+        static final int MESSAGE_SET_PREFERRED_NETWORK_TYPE_WITH_ACQ = 2;
 
         @Override
         public void handleMessage(Message msg) {
@@ -600,6 +590,16 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                 case MESSAGE_SET_PREFERRED_NETWORK_TYPE:
                     handleSetPreferredNetworkTypeResponse(msg);
                     break;
+                case MESSAGE_SET_PREFERRED_NETWORK_TYPE_WITH_ACQ:
+                    handleSetPreferredNetworkTypeWithAcqResponse();
+                    break;
+            }
+        }
+
+        private void handleSetPreferredNetworkTypeWithAcqResponse() {
+            if (mButtonPreferredNetworkMode != null) {
+                UpdatePreferredNetworkModeSummary(getPreferredNetworkMode(),
+                        getAcqValue());
             }
         }
 
@@ -658,24 +658,10 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         private void handleSetPreferredNetworkTypeResponse(Message msg) {
             AsyncResult ar = (AsyncResult) msg.obj;
 
-            if (ar == null || ar.exception == null) {
-                String strValue = mButtonPreferredNetworkMode.getValue();
-                String strAcq = null;
-                boolean isContainAcq = strValue.contains(NETWORK_MODE_SEPARATOR);
-                if (isContainAcq) {
-                    String[] values = strValue.split(NETWORK_MODE_SEPARATOR);
-                    strValue = values[0];
-                    strAcq = values[1];
-                }
-
-                setPreferredNetworkMode(Integer.valueOf(strValue).intValue());
-                setPrefNetworkTypeInSp(Integer.valueOf(strValue).intValue());
-                //only these cases need set acq
-                if (isContainAcq) {
-                    MSimTelephonyManager.putIntAtIndex(getContentResolver(),
-                            Constants.SETTINGS_ACQ, mSubscription, Integer.valueOf(strAcq)
-                                    .intValue());
-                }
+            if (ar.exception == null) {
+                int networkMode = Integer.valueOf(
+                        mButtonPreferredNetworkMode.getValue()).intValue();
+                setPreferredNetworkMode(networkMode);
             } else {
                 mPhone.getPreferredNetworkType(obtainMessage(MESSAGE_GET_PREFERRED_NETWORK_TYPE));
             }
@@ -787,6 +773,9 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                 if (networkFeature == Constants.NETWORK_MODE_CMCC) {
                     mButtonPreferredNetworkMode.setSummary(
                             R.string.preferred_network_mode_3g_2g_auto_summary);
+                } else if (networkFeature == Constants.NETWORK_MODE_LTE) {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_4g_3g_2g_td);
                 } else {
                     mButtonPreferredNetworkMode.setSummary(
                             R.string.preferred_network_mode_td_scdma_gsm_wcdma_summary);
@@ -817,9 +806,6 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                     if (acq == 1) {
                         mButtonPreferredNetworkMode
                                 .setSummary(R.string.preferred_network_mode_4g_3g_2g_lte);
-                    } else if (acq == 2) {
-                        mButtonPreferredNetworkMode
-                                .setSummary(R.string.preferred_network_mode_4g_3g_2g_td);
                     } else {
                         mButtonPreferredNetworkMode.setSummary(
                                 R.string.preferred_network_mode_td_scdma_gsm_wcdma_lte_summary);
