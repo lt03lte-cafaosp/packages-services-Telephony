@@ -90,7 +90,10 @@ public class MMIDialogActivity extends Activity {
 
         // if phone is a CDMA phone display feature code completed message
         int phoneType = mPhone.getPhoneType();
-        if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
+        int mmiPhoneType = mmiCode.getPhone().getPhoneType();
+        Log.v(TAG, "onMMIComplete phoneType = " + phoneType + " mmiPhoneType = " + mmiPhoneType);
+        if (phoneType == PhoneConstants.PHONE_TYPE_CDMA &&
+                mmiPhoneType != PhoneConstants.PHONE_TYPE_IMS) {
             PhoneUtils.displayMMIComplete(mPhone, this, mmiCode, null, null);
         } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
             if (mmiCode.getState() != MmiCode.State.PENDING) {
