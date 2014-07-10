@@ -34,7 +34,6 @@ import android.os.AsyncResult;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.os.Messenger;
 import android.os.SystemProperties;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
@@ -605,34 +604,25 @@ public class MobileNetworkSettings extends PreferenceActivity
     private void setPreferredNetworkType(boolean containAcq, int networkMode, String strAcq) {
         // now use phone feature service to set network mode
         final int modemNetworkMode = networkMode;
-        Messenger msger = new Messenger(mHandler);
-        final Message msg = mHandler.obtainMessage(
+        final Message msg;
+        if (PhoneGlobals.getInstance().mPhoneServiceClient != null) {
+            msg = mHandler.obtainMessage(
+                MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE_WITH_ACQ);
+        } else {
+            msg = mHandler.obtainMessage(
                 MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE);
-        msg.replyTo = msger;
+        }
         if (containAcq) {
             final int acq = Integer.valueOf(strAcq).intValue();
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    boolean success = PhoneGlobals.getInstance().mQcrilHook != null
-                            && PhoneGlobals.getInstance().setPrefNetworkAcq(acq, 0);
-                    Log.d(LOG_TAG, "restore acq, success: " + success);
-                    if (success) {
-                        if (PhoneGlobals.getInstance().mPhoneServiceClient != null) {
-                            PhoneGlobals.getInstance().setPrefNetwork(0, modemNetworkMode, msg);
-                        } else {
-                            // Set the modem network mode
-                            mPhone.setPreferredNetworkType(modemNetworkMode,
-                                    mHandler.obtainMessage(
-                                            MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE));
-                        }
-                    } else {
-                        // recovery the status of before
-                        mPhone.getPreferredNetworkType(mHandler
-                                .obtainMessage(MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
-                    }
-                }
-            });
+            if (PhoneGlobals.getInstance().mPhoneServiceClient != null) {
+                PhoneGlobals.getInstance()
+                        .setPrefNetworWithAcq(0, modemNetworkMode, acq, msg);
+            } else {
+                // Set the modem network mode
+                mPhone.setPreferredNetworkType(modemNetworkMode,
+                        mHandler.obtainMessage(
+                                MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE));
+            }
         } else {
             if (PhoneGlobals.getInstance().mPhoneServiceClient != null) {
                 PhoneGlobals.getInstance().setPrefNetwork(0, modemNetworkMode, msg);
@@ -648,6 +638,7 @@ public class MobileNetworkSettings extends PreferenceActivity
 
         static final int MESSAGE_GET_PREFERRED_NETWORK_TYPE = 0;
         static final int MESSAGE_SET_PREFERRED_NETWORK_TYPE = 1;
+        static final int MESSAGE_SET_PREFERRED_NETWORK_TYPE_WITH_ACQ = 2;
 
         @Override
         public void handleMessage(Message msg) {
@@ -659,6 +650,18 @@ public class MobileNetworkSettings extends PreferenceActivity
                 case MESSAGE_SET_PREFERRED_NETWORK_TYPE:
                     handleSetPreferredNetworkTypeResponse(msg);
                     break;
+                case MESSAGE_SET_PREFERRED_NETWORK_TYPE_WITH_ACQ:
+                    handleSetPreferredNetworkTypeWithAcqResponse();
+                    break;
+            }
+        }
+
+        private void handleSetPreferredNetworkTypeWithAcqResponse() {
+            if (mButtonPreferredNetworkMode != null) {
+                UpdatePreferredNetworkModeSummary(android.provider.Settings.Global
+                        .getInt(mPhone.getContext().getContentResolver(),
+                        android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
+                        preferredNetworkMode), getAcqValue());
             }
         }
 
@@ -752,31 +755,19 @@ public class MobileNetworkSettings extends PreferenceActivity
             AsyncResult ar = (AsyncResult) msg.obj;
             int networkMode;
 
-            if (ar == null || ar.exception == null) {
+            if (ar.exception == null) {
                 if (mButtonPreferredNetworkMode != null) {
-                    String strValue = mButtonPreferredNetworkMode.getValue();
-                    String strAcq = null;
-                    boolean isContainAcq = strValue.contains(NETWORK_MODE_SEPARATOR);
-                    if (isContainAcq) {
-                        String[] values = strValue.split(NETWORK_MODE_SEPARATOR);
-                        strValue = values[0];
-                        strAcq = values[1];
-                    }
-                    android.provider.Settings.Global
-                            .putInt(mPhone.getContext().getContentResolver(),
-                                    android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
-                                    Integer.valueOf(strValue).intValue());
-                    // only these cases need set acq
-                    if (isContainAcq) {
-                        Settings.Global.putInt(getContentResolver(),
-                                Constants.SETTINGS_ACQ, Integer.valueOf(strAcq).intValue());
-                    }
+                    networkMode = Integer.valueOf(
+                            mButtonPreferredNetworkMode.getValue()).intValue();
+                    android.provider.Settings.Global.putInt(mPhone.getContext()
+                            .getContentResolver(),
+                            android.provider.Settings.Global.PREFERRED_NETWORK_MODE, networkMode);
                 } else if (mButtonEnabledNetworks != null) {
-                    networkMode = Integer.valueOf(mButtonEnabledNetworks.getValue()).intValue();
-                    android.provider.Settings.Global
-                            .putInt(mPhone.getContext().getContentResolver(),
-                                    android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
-                                    networkMode);
+                    networkMode = Integer.valueOf(
+                            mButtonEnabledNetworks.getValue()).intValue();
+                    android.provider.Settings.Global.putInt(mPhone.getContext()
+                            .getContentResolver(),
+                            android.provider.Settings.Global.PREFERRED_NETWORK_MODE, networkMode);
                 }
             } else {
                 mPhone.getPreferredNetworkType(obtainMessage(MESSAGE_GET_PREFERRED_NETWORK_TYPE));
@@ -886,6 +877,9 @@ public class MobileNetworkSettings extends PreferenceActivity
                 if (networkFeature == Constants.NETWORK_MODE_CMCC) {
                     mButtonPreferredNetworkMode.setSummary(
                             R.string.preferred_network_mode_3g_2g_auto_summary);
+                } else if (networkFeature == Constants.NETWORK_MODE_LTE) {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_4g_3g_2g_td);
                 } else {
                     mButtonPreferredNetworkMode.setSummary(
                             R.string.preferred_network_mode_td_scdma_gsm_wcdma_summary);
@@ -916,9 +910,6 @@ public class MobileNetworkSettings extends PreferenceActivity
                     if (acq == 1) {
                         mButtonPreferredNetworkMode
                                 .setSummary(R.string.preferred_network_mode_4g_3g_2g_lte);
-                    } else if (acq == 2) {
-                        mButtonPreferredNetworkMode
-                                .setSummary(R.string.preferred_network_mode_4g_3g_2g_td);
                     } else {
                         mButtonPreferredNetworkMode.setSummary(
                                 R.string.preferred_network_mode_td_scdma_gsm_wcdma_lte_summary);

@@ -130,8 +130,6 @@
 
             <uses-library android:name="com.qualcomm.qti.phoneclient"
                 android:required="false" />
-            <uses-library android:name="com.qualcomm.qcrilhook"
-                android:required="false" />
 
         <!-- Dialer UI that only allows emergency calls -->
         <activity android:name="EmergencyDialer"
