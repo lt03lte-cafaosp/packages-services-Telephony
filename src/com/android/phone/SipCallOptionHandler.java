@@ -456,6 +456,21 @@ public class SipCallOptionHandler extends Activity implements
         return useIms;
     }
 
+    private boolean isImsCallAllowed(Phone phone) {
+        boolean allowCallOnIms = false;
+        if (phone != null) {
+            if (phone.getServiceState().getState() == ServiceState.STATE_IN_SERVICE) {
+                allowCallOnIms = true;
+            } else if (!SystemProperties.getBoolean(IMS_PS_DOMAIN, true) &&
+                    (phone.getServiceState().getState() == ServiceState.STATE_OUT_OF_SERVICE)) {
+                // Auto domain
+                allowCallOnIms = true;
+            }
+        }
+        Log.d(TAG, "isImsCallAllowed returns " + allowCallOnIms);
+        return allowCallOnIms;
+    }
+
     private void setResultAndFinish() {
         runOnUiThread(new Runnable() {
             public void run() {
@@ -489,9 +504,7 @@ public class SipCallOptionHandler extends Activity implements
                          * user requested to make an IMS call
                          */
                         Phone phone = PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
-                        if (phone != null &&
-                                phone.getServiceState().getState()
-                                    == ServiceState.STATE_IN_SERVICE) {
+                        if (isImsCallAllowed(phone)) {
                             // Ims VT Call cannot be placed
                             if (PhoneUtils.isImsVtCallNotAllowed(mImsCallType)) {
                                 // show UI error
@@ -505,9 +518,6 @@ public class SipCallOptionHandler extends Activity implements
                                 // show UI error
                                 showDialog(DIALOG_NO_VOLTE);
                                 return;
-                            } else {
-                                // place call silently in CS
-                                Log.d(TAG, "IMS phone is unavailable , place CS call");
                             }
                         }
                     }
