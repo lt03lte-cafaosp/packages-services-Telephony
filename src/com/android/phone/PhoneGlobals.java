@@ -419,17 +419,11 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
         }
     };
 
-    public final Object mQcrilHook;
     public Object mPhoneServiceClient;
     private Object mProxy;
 
     public PhoneGlobals(Context context) {
         super(context);
-        mQcrilHook = loadClassObj("com.qualcomm.qcrilhook.QcRilHook", new Class<?>[] {
-            Context.class
-        }, new Object[] {
-            this
-        });
         sMe = this;
     }
 
@@ -489,26 +483,27 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
         return null;
     }
 
-    public boolean setPrefNetworkAcq(int acq, int sub) {
-        Object result = invokeMethod("com.qualcomm.qcrilhook.QcRilHook",
-                "qcRilSetPreferredNetworkAcqOrder", mQcrilHook, new Class<?>[] {
-                        int.class, int.class
-                }, new Object[] {
-                        acq, sub
-                });
-        if (result != null) {
-            return (Boolean) result;
-        } else {
-            return false;
-        }
-    }
-
     public void setPrefNetwork(int sub, int network, Message callback) {
+        if (callback != null) {
+            callback.replyTo = new Messenger(callback.getTarget());
+        }
         invokeMethod("com.qualcomm.qti.phonefeature.IServiceBinder", "setPreferredNetwork",
                 mPhoneServiceClient, new Class<?>[] {
                         int.class, int.class, Message.class
                 }, new Object[] {
                         sub, network, callback
+                });
+    }
+
+    public void setPrefNetworWithAcq(int sub, int network, int acq, Message callback) {
+        if (callback != null) {
+            callback.replyTo = new Messenger(callback.getTarget());
+        }
+        invokeMethod("com.qualcomm.qti.phonefeature.IServiceBinder", "setPreferredNetworkWithAcq",
+                mPhoneServiceClient, new Class<?>[] {
+                        int.class, int.class, int.class, Message.class
+                }, new Object[] {
+                        sub, network, acq, callback
                 });
     }
 
@@ -529,42 +524,6 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
             return (Integer) result;
         } else {
             return -1;
-        }
-    }
-
-    protected void restoreAcqIfNeed() {
-        // default is 4G
-        int acqSettings = 1;
-        try {
-            acqSettings = Settings.Global.getInt(getContentResolver(), Constants.SETTINGS_ACQ);
-        } catch (SettingNotFoundException e) {
-            Settings.Global.putInt(getContentResolver(), Constants.SETTINGS_ACQ, 1);
-        }
-        try {
-            final int prefNetwork = Settings.Global.getInt(getContentResolver(),
-                    Settings.Global.PREFERRED_NETWORK_MODE);
-            final int acq = acqSettings;
-            Log.d(LOG_TAG, "restore acq, preferred: " + prefNetwork + ", acq: " + acq);
-            if (prefNetwork == RILConstants.NETWORK_MODE_TD_SCDMA_GSM_WCDMA_LTE && acq != 0) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        boolean success = setPrefNetworkAcq(acq, 0);
-                        Log.d(LOG_TAG, "restore acq, success: " + success);
-                        if (success) {
-                            if (mPhoneServiceClient != null) {
-                                setPrefNetwork(0, prefNetwork, null);
-                            } else {
-                                phone.setPreferredNetworkType(prefNetwork, null);
-                            }
-                        } else {
-                            Settings.Global.putInt(getContentResolver(), Constants.SETTINGS_ACQ, 0);
-                        }
-                    }
-                });
-            }
-        } catch (SettingNotFoundException e) {
-            Log.d(LOG_TAG, "failed to restore acq", e);
         }
     }
 
@@ -803,9 +762,6 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
         }
 
         loadPhoneServiceBinder();
-        if (mQcrilHook != null) {
-            restoreAcqIfNeed();
-        }
    }
 
     public void createImsService() {
