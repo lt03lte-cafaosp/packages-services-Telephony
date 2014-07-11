@@ -313,6 +313,24 @@ public class CallHandlerServiceProxy extends Handler
     }
 
     @Override
+    public void onCallModifyResponse(Call call) {
+        try {
+            synchronized (mServiceAndQueueLock) {
+                if (mCallHandlerServiceGuarded == null) {
+                    if (DBG) {
+                        Log.d(TAG, "CallHandlerService not conneccted. Skipping "
+                                + "onCallModifyResponse().");
+                    }
+                    return;
+                }
+            }
+            mCallHandlerServiceGuarded.onCallModifyResponse(call);
+        } catch (Exception e) {
+            Log.e(TAG, "Remote exception handling onCallModifyResponse", e);
+        }
+    }
+
+    @Override
     public void onAudioModeChange(int newMode, boolean muted) {
         try {
             synchronized (mServiceAndQueueLock) {
