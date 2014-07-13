@@ -285,12 +285,10 @@ public class MSimPhoneInterfaceManager extends ITelephonyMSim.Stub {
                     ar = (AsyncResult) msg.obj;
                     request = (MainThreadRequest) ar.userObj;
                     sub = (Integer) request.argument2;
-
+                    request.result = ar.result;
                     if (ar.exception == null && ar.result != null) {
-                        request.result = ar.result;
                         mLastError[sub] = SUCCESS;
                     } else {
-                        request.result = new IccIoResult(0x6f, 0, (byte[]) null);
                         mLastError[sub] = GENERIC_FAILURE;
                         if ((ar.exception != null) &&
                                 (ar.exception instanceof CommandException)) {
@@ -392,11 +390,10 @@ public class MSimPhoneInterfaceManager extends ITelephonyMSim.Stub {
                    ar = (AsyncResult) msg.obj;
                    request = (MainThreadRequest) ar.userObj;
                    sub = (Integer) request.argument2;
+                   request.result = ar.result;
                    if (ar.exception == null && ar.result != null) {
-                       request.result = ar.result;
                        mLastError[sub] = SUCCESS;
                    } else {
-                       request.result = new IccIoResult(0x6f, 0, (byte[])null);
                        mLastError[sub] = GENERIC_FAILURE;
                        if ((ar.exception != null) &&
                                (ar.exception instanceof CommandException)) {
