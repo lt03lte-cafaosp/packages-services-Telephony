@@ -117,53 +117,6 @@ public class MSimPhoneGlobals extends PhoneGlobals {
         Log.d(LOG_TAG,"MSPhoneApp creation"+this);
     }
 
-    protected void restoreAcqIfNeed() {
-        for (int index = 0; index < MSimTelephonyManager.getDefault().getPhoneCount(); index++) {
-            restoreAcqIfNeed(index);
-        }
-    }
-
-    protected void restoreAcqIfNeed(final int sub) {
-        // default is 4G
-        int acqSettings = 1;
-        try {
-            acqSettings = MSimTelephonyManager.getIntAtIndex(getContentResolver(),
-                    Constants.SETTINGS_ACQ, sub);
-        } catch (SettingNotFoundException e) {
-            MSimTelephonyManager
-                    .putIntAtIndex(getContentResolver(), Constants.SETTINGS_ACQ, sub, 1);
-        }
-
-        try {
-            final int prefNetwork = MSimTelephonyManager.getIntAtIndex(getContentResolver(),
-                    Settings.Global.PREFERRED_NETWORK_MODE, sub);
-            final int acq = acqSettings;
-            Log.d(LOG_TAG, "restore acq in sub" + sub + ", preferred: " + prefNetwork + ", acq: "
-                    + acq);
-            if (prefNetwork == RILConstants.NETWORK_MODE_TD_SCDMA_GSM_WCDMA_LTE && acq != 0) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        boolean success = setPrefNetworkAcq(acq, sub);
-                        Log.d(LOG_TAG, "restore acq, success: " + success);
-                        if (success) {
-                            if (mPhoneServiceClient != null) {
-                                setPrefNetwork(sub, prefNetwork, null);
-                            } else {
-                                getPhone(sub).setPreferredNetworkType(prefNetwork, null);
-                            }
-                        } else {
-                            MSimTelephonyManager.putIntAtIndex(getContentResolver(),
-                                    Constants.SETTINGS_ACQ, sub, 0);
-                        }
-                    }
-                });
-            }
-        } catch (SettingNotFoundException e) {
-            Log.d(LOG_TAG, "failed to restore network mode in sub" + sub, e);
-        }
-    }
-
     public void onCreate() {
         if (VDBG) Log.v(LOG_TAG, "onCreate()...");
         Log.d(LOG_TAG, "MSimPhoneApp:"+this);
@@ -424,9 +377,6 @@ public class MSimPhoneGlobals extends PhoneGlobals {
         }
 
         loadPhoneServiceBinder();
-        if (mQcrilHook != null) {
-            restoreAcqIfNeed();
-        }
     }
 
     /**
