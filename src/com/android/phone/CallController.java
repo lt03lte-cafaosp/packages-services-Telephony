@@ -302,6 +302,7 @@ public class CallController extends Handler {
         String number;
         int callType;
         boolean isConferenceUri = false;
+        boolean isSkipParsing = false;
         String[] extras = null;
         Phone phone = null;
 
@@ -328,6 +329,14 @@ public class CallController extends Handler {
                 final Map<String, String> extrasMap = Maps.newHashMap();
                 extrasMap.put(Phone.EXTRAS_IS_CONFERENCE_URI,
                         Boolean.toString(isConferenceUri));
+                extras = PhoneUtils.getExtrasFromMap(extrasMap);
+            }
+            isSkipParsing = intent.getBooleanExtra(
+                    OutgoingCallBroadcaster.EXTRA_SKIP_SCHEMA_PARSING, false);
+            if (isSkipParsing) {
+                final Map<String, String> extrasMap = Maps.newHashMap();
+                extrasMap.put(Phone.EXTRA_SKIP_SCHEMA_PARSING,
+                        Boolean.toString(isSkipParsing));
                 extras = PhoneUtils.getExtrasFromMap(extrasMap);
             }
             // find the phone first
