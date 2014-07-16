@@ -61,6 +61,7 @@ class CallStateMonitor extends Handler {
     public static final int PHONE_ACTIVE_SUBSCRIPTION_CHANGE = 15;
     public static final int PHONE_CALL_MODIFY = 16;
     public static final int PHONE_SUPP_SERVICE_FAILED = 17;
+    public static final int PHONE_CALL_MODIFY_RESPONSE = 18;
 
     // Other events from call manager
     public static final int EVENT_OTA_PROVISION_CHANGE = 20;
@@ -97,6 +98,7 @@ class CallStateMonitor extends Handler {
         callManager.registerForSuppServiceNotification(this, PHONE_SUPP_SERVICE_NOTIFY, null);
         callManager.registerForCallModify(this, PHONE_CALL_MODIFY, null);
         callManager.registerForSuppServiceFailed(this, PHONE_SUPP_SERVICE_FAILED, null);
+        callManager.registerForCallModifyResponse(this, PHONE_CALL_MODIFY_RESPONSE, null);
     }
 
     public void addListener(Handler handler) {
@@ -143,6 +145,7 @@ class CallStateMonitor extends Handler {
         callManager.unregisterForPostDialCharacter(this);
         callManager.unregisterForSuppServiceNotification(this);
         callManager.unregisterForCallModify(this);
+        callManager.unregisterForCallModifyResponse(this);
 
         registerForNotifications();
     }
