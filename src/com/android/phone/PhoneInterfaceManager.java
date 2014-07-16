@@ -1346,6 +1346,10 @@ public class PhoneInterfaceManager extends ITelephony.Stub implements CallModele
     }
 
     @Override
+    public void onCallModifyResponse(Call call) {
+    }
+
+    @Override
     public void onActiveSubChanged(int activeSub) {
     }
 
