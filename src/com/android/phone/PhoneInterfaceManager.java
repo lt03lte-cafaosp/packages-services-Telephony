@@ -257,11 +257,10 @@ public class PhoneInterfaceManager extends ITelephony.Stub implements CallModele
                 case EVENT_EXCHANGE_APDU_DONE:
                     ar = (AsyncResult) msg.obj;
                     request = (MainThreadRequest) ar.userObj;
+                    request.result = ar.result;
                     if (ar.exception == null && ar.result != null) {
-                        request.result = ar.result;
                         mLastError = SUCCESS;
                     } else {
-                        request.result = new IccIoResult(0x6f, 0, (byte[]) null);
                         mLastError = GENERIC_FAILURE;
                         if ((ar.exception != null) &&
                                 (ar.exception instanceof CommandException)) {
@@ -352,11 +351,10 @@ public class PhoneInterfaceManager extends ITelephony.Stub implements CallModele
                case EVENT_SIM_IO_DONE:
                     ar = (AsyncResult) msg.obj;
                     request = (MainThreadRequest) ar.userObj;
+                    request.result = ar.result;
                     if (ar.exception == null && ar.result != null) {
-                        request.result = ar.result;
                         mLastError = SUCCESS;
                     } else {
-                        request.result = new IccIoResult(0x6f, 0, (byte[])null);
                         mLastError = GENERIC_FAILURE;
                         if ((ar.exception != null) &&
                                 (ar.exception instanceof CommandException)) {
