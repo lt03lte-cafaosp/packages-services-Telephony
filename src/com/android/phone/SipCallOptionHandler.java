@@ -41,6 +41,7 @@ import android.net.Uri;
 import android.net.sip.SipException;
 import android.net.sip.SipManager;
 import android.net.sip.SipProfile;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -99,6 +100,7 @@ public class SipCallOptionHandler extends Activity implements
     private boolean mUseSipPhone = false;
     private boolean mMakePrimary = false;
     private int mImsCallType;
+    private WifiManager mWifiManager;
 
     /**
      * Specify if IMS calls should be originated with PS domain
@@ -185,6 +187,8 @@ public class SipCallOptionHandler extends Activity implements
         if (IMS_DBG) {
             Log.v(TAG, " IMS call type: " + mImsCallType);
         }
+
+        mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 
         Uri uri = mIntent.getData();
         String scheme = uri.getScheme();
@@ -443,12 +447,23 @@ public class SipCallOptionHandler extends Activity implements
         boolean useIms = false;
         if (!mUseSipPhone && mImsCallType != Phone.CALL_TYPE_UNKNOWN) {
             CallManager cm = PhoneGlobals.getInstance().mCM;
-            // If a 1x call exists, place current call on CDMA even though IMS is available
-            // If airplane mode is on then use default phone for call
-            if (!((cm.getPhoneInCall().getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA
+
+            boolean isWiFiOnInApm = mWifiManager.isWifiEnabled() &&
+                    cm.getDefaultPhone().getServiceState().getState() ==
+                            ServiceState.STATE_POWER_OFF;
+            Log.d(TAG, "useImsPhone isWiFiOnInApm : " + isWiFiOnInApm);
+
+            /*
+             * 1. If there exists Wi-Fi connectivity when airplane mode is ON, then use imsPhone
+             *    for call
+             * 2. If a 1x call exists, place current call on CDMA even though IMS is available
+             * 3. If airplane mode is on then use default phone for call
+             */
+            if (isWiFiOnInApm ||
+                    (!((cm.getPhoneInCall().getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA
                     && cm.getPhoneInCall().getState() != PhoneConstants.State.IDLE) ||
-                    (cm.getDefaultPhone().getServiceState().getState()
-                            == ServiceState.STATE_POWER_OFF))){
+                    cm.getDefaultPhone().getServiceState().getState()
+                            == ServiceState.STATE_POWER_OFF))) {
                 useIms = true;
             }
         }
