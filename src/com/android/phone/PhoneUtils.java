@@ -2085,7 +2085,12 @@ public class PhoneUtils {
         final PhoneGlobals app = PhoneGlobals.getInstance();
 
         // Sanity-check that this is OK given the current state of the phone.
-        if (!okToAddCall(cm)) {
+        if ((MSimTelephonyManager.getDefault().isMultiSimEnabled()) &&
+                (!okToAddCall(cm, cm.getActiveSubscription()))) {
+            Log.w(LOG_TAG, "startNewCall: can't add a new call in the current state for MultiSim");
+            dumpCallManager();
+            return false;
+        } else if (!okToAddCall(cm)) {
             Log.w(LOG_TAG, "startNewCall: can't add a new call in the current state");
             dumpCallManager();
             return false;
@@ -2726,6 +2731,33 @@ public class PhoneUtils {
     }
 
     static boolean okToAddCall(CallManager cm, int subscription) {
+        boolean result;
+        result = okToAddCallOnSub(cm,subscription);
+        if ((MSimTelephonyManager.getDefault().getMultiSimConfiguration()
+                        != MSimTelephonyManager.MultiSimVariants.DSDS) &&
+                        (MSimTelephonyManager.getDefault().getMultiSimConfiguration()
+                        != MSimTelephonyManager.MultiSimVariants.TSTS)) {
+            int count = MSimTelephonyManager.getDefault().getPhoneCount();
+            for (int i = 0; i < count; i++) {
+                Log.d(LOG_TAG, "Count = " + i);
+                if (i == subscription) {
+                    continue;
+                }
+                if ((i != subscription) && (cm.getState(i) == PhoneConstants.State.IDLE)) {
+                    result = true;
+                    break;
+                }
+                if (cm.hasActiveFgCall(i) || cm.hasActiveBgCall(i) ||
+                        cm.hasActiveRingingCall(i)) {
+                    result = result || okToAddCallOnSub(cm,i);
+                }
+            }
+        }
+        return result;
+    }
+
+    private static boolean okToAddCallOnSub(CallManager cm, int subscription) {
+
         if (!isCallOnImsEnabled()) {
             Phone phone = cm.getActiveFgCall(subscription).getPhone();
 
