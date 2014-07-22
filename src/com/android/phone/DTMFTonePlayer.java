@@ -156,6 +156,11 @@ public class DTMFTonePlayer implements CallModeler.Listener {
     }
 
     @Override
+    public void onCallModifyResponse(Call call){
+        // no-op
+    }
+
+    @Override
     public void onActiveSubChanged(int activeSub) {
         // no-op
     }

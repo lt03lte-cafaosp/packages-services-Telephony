@@ -375,8 +375,11 @@ public class CallNotifier extends Handler
                     }
                 }
                 break;
+            case CallStateMonitor.PHONE_CALL_MODIFY_RESPONSE:
+                onCallModifyResponse((AsyncResult) msg.obj);
+                break;
 
-            default:
+           default:
                 // super.handleMessage(msg);
         }
     }
@@ -1913,6 +1916,16 @@ public class CallNotifier extends Handler
             Log.e(LOG_TAG, "Error EVENT_MODIFY_CALL AsyncResult ar= " + r);
         }
     }
+
+   private void onCallModifyResponse(AsyncResult r) {
+        if (r != null && r.result != null && r.exception == null) {
+            Object res[] = (Object[])r.result;
+            mCallModeler.onCallModifyResponse(res);
+        } else {
+            Log.e(LOG_TAG, "Error EVENT_MODIFY_CALL_RESPONSE AsyncResult ar= " + r);
+        }
+    }
+
     private String getMoSsNotificationText(int code) {
         String callForwardTxt = "";
         switch (code) {
