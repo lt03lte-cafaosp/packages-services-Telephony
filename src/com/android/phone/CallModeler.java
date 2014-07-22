@@ -38,6 +38,7 @@ import com.android.services.telephony.common.Call;
 import com.android.services.telephony.common.CallDetails;
 import com.android.services.telephony.common.Call.Capabilities;
 import com.android.services.telephony.common.Call.State;
+import com.android.internal.telephony.CallModify;
 
 import com.google.android.collect.Maps;
 import com.google.android.collect.Sets;
@@ -358,6 +359,16 @@ public class CallModeler extends Handler {
                 conn.getCallModify().error + "");
         for (int i = 0; i < mListeners.size(); i++) {
             mListeners.get(i).onModifyCall(call);
+        }
+    }
+
+    /* package */void onCallModifyResponse(Object[] res) {
+        Connection conn = (Connection)res[0];
+        CallModify callmodify = (CallModify)res[1];
+        final Call call = getCallFromMap(mCallMap, conn, false);
+        copyDetails(callmodify.call_details, call.getCallModifyDetails(),callmodify.error + "");
+        for (int i = 0; i < mListeners.size(); i++) {
+            mListeners.get(i).onCallModifyResponse(call);
         }
     }
 
@@ -1093,6 +1104,7 @@ public class CallModeler extends Handler {
         void onActiveSubChanged(int activeSub);
         void onModifyCall(Call call);
         void onSuppServiceFailed(int service);
+        void onCallModifyResponse(Call call);
     }
 
     /**
