@@ -98,5 +98,15 @@ interface IImsService {
      * Message.replyTo must be a valid Messenger.
      */
     void setVtQuality(int quality, in Message response);
+
+    /**
+     * Set for current TTY Mode.
+     * @param status - TTY Mode to set: 0-TTY_MODE_OFF; 1-TTY_MODE_FULL;
+     *         2-TTY_MODE_HCO; 3-TTY_MODE_VCO
+     * @param response - Message object is used to send back the status and Mode value.
+     * Message.arg1 contains 0 if the request succeeded, non-zero otherwise.
+     * Message.replyTo must be a valid Messenger.
+     */
+    void setTtyMode(int status, in Message response);
 }
 
