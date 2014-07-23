@@ -378,6 +378,10 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
                         ttyMode = Phone.TTY_MODE_OFF;
                     }
                     phone.setTTYMode(ttyMode, mHandler.obtainMessage(EVENT_TTY_MODE_SET));
+                    // when headset is not plugged in,sending user selected TTY mode
+                    // to lower layers.Sending TTY mode change(off) and the UI tty
+                    // mode change (full /vco/hco) will be different when headset is not plugged.
+                    setTty(mPreferredTtyMode);
                     break;
 
                 case EVENT_TTY_MODE_GET:
@@ -398,6 +402,17 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
         }
     };
 
+    private void setTty(int status) {
+           try {
+               if (mImsService != null) {
+                   mImsService.setTtyMode(status, null);
+               } else {
+                   Log.e(LOG_TAG, "setTtyMode failed. ImsService is null");
+               }
+           } catch (Exception e) {
+               Log.e(LOG_TAG, "setTtyMode failed. Exception=" + e);
+           }
+    }
     public PhoneGlobals(Context context) {
         super(context);
         sMe = this;
