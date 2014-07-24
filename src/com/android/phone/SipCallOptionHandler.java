@@ -180,8 +180,14 @@ public class SipCallOptionHandler extends Activity implements
         mCallOption = mSipSharedPreferences.getSipCallOption();
         if (DBG) Log.v(TAG, "Call option: " + mCallOption);
 
-        mImsSharedPreferences = new ImsSharedPreferences(this);
-        mImsCallType = mImsSharedPreferences.getCallType();
+        // In intent if there is no EXTRA_CALL_TYPE consider call type from
+        // shared preference. else consider call type from the intent.
+        mImsCallType = mIntent.getIntExtra(OutgoingCallBroadcaster.EXTRA_CALL_TYPE,
+                Phone.CALL_TYPE_INVALID);
+        if (mImsCallType == Phone.CALL_TYPE_INVALID) {
+            mImsSharedPreferences = new ImsSharedPreferences(this);
+            mImsCallType = mImsSharedPreferences.getCallType();
+        }
         if (IMS_DBG) {
             Log.v(TAG, " IMS call type: " + mImsCallType);
         }
