@@ -56,7 +56,9 @@ import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.os.UpdateLock;
 import android.os.UserHandle;
+import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+import android.preference.PreferenceScreen;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
 import android.provider.Settings.System;
@@ -90,6 +92,7 @@ import org.codeaurora.ims.IImsService;
 import org.codeaurora.ims.IImsServiceListener;
 
 import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
+import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 import org.codeaurora.ims.csvt.CallForwardInfoP;
 import org.codeaurora.ims.csvt.ICsvtService;
 import org.codeaurora.ims.csvt.ICsvtServiceListener;
@@ -145,6 +148,8 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
     public static final int MMI_INITIATE = 51;
     public static final int MMI_COMPLETE = 52;
     public static final int MMI_CANCEL = 53;
+
+    public static final int CALL_WAITING = 7;
     // Don't use message codes larger than 99 here; those are reserved for
     // the individual Activities of the Phone UI.
 
@@ -1009,6 +1014,25 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
                 Uri.fromParts(Constants.SCHEME_SMSTO, number, null),
                 context, NotificationBroadcastReceiver.class);
         return PendingIntent.getBroadcast(context, 0, intent, 0);
+    }
+
+    /* package */ static void initCallWaitingPref(PreferenceActivity activity, int subscription) {
+        PreferenceScreen prefCWAct = (PreferenceScreen)
+                activity.findPreference("button_cw_act_key");
+        PreferenceScreen prefCWDeact = (PreferenceScreen)
+                activity.findPreference("button_cw_deact_key");
+
+        CdmaCallOptionsSetting callOptionSettings = new CdmaCallOptionsSetting(activity,
+                CALL_WAITING, subscription);
+
+        prefCWAct.getIntent().putExtra(SUBSCRIPTION_KEY, subscription)
+                .setData(Uri.fromParts("tel", callOptionSettings.getActivateNumber(), null));
+        prefCWAct.setSummary(callOptionSettings.getActivateNumber());
+
+        prefCWDeact.getIntent().putExtra(SUBSCRIPTION_KEY, subscription)
+                .setData(Uri.fromParts("tel", callOptionSettings.getDeactivateNumber(), null));
+        prefCWDeact.setSummary(callOptionSettings.getDeactivateNumber());
+
     }
 
     boolean isSimPinEnabled() {
