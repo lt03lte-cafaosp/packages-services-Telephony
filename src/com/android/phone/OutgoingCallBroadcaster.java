@@ -96,6 +96,8 @@ public class OutgoingCallBroadcaster extends Activity
             "android.phone.extra.ACTUAL_NUMBER_TO_DIAL";
     public static final String EXTRA_CALL_TYPE = "android.phone.extra.CALL_TYPE";
     public static final String EXTRA_CALL_DOMAIN = "android.phone.extra.CALL_DOMAIN";
+    public static final String EXTRA_SKIP_SCHEMA_PARSING =
+            "org.codeaurora.extra.SKIP_SCHEMA_PARSING";
 
     /** the key used to specify subscription to be used for emergency calls */
     private static final String BLUETOOTH = "Bluetooth";
@@ -344,7 +346,12 @@ public class OutgoingCallBroadcaster extends Activity
         // CallController.placeCall() after the SipCallOptionHandler step.
 
         Intent newIntent = new Intent(Intent.ACTION_CALL, uri);
-        newIntent.putExtra(EXTRA_ACTUAL_NUMBER_TO_DIAL, number);
+        if (intent.getBooleanExtra(OutgoingCallBroadcaster.EXTRA_SKIP_SCHEMA_PARSING,
+                false)) {
+            newIntent.putExtra(EXTRA_ACTUAL_NUMBER_TO_DIAL, uri.toString());
+        } else {
+            newIntent.putExtra(EXTRA_ACTUAL_NUMBER_TO_DIAL, number);
+        }
         newIntent.putExtra(SUBSCRIPTION_KEY, mSubscription);
         CallGatewayManager.checkAndCopyPhoneProviderExtras(intent, newIntent);
         PhoneUtils.copyImsExtras(intent, newIntent);
@@ -731,6 +738,8 @@ public class OutgoingCallBroadcaster extends Activity
             broadcastIntent.putExtra(EXTRA_ORIGINAL_URI, uri.toString());
             broadcastIntent.putExtra(EXTRA_DIAL_CONFERENCE_URI,
                     intent.getBooleanExtra((EXTRA_DIAL_CONFERENCE_URI), false));
+            broadcastIntent.putExtra(EXTRA_SKIP_SCHEMA_PARSING,
+                    intent.getBooleanExtra((EXTRA_SKIP_SCHEMA_PARSING), false));
 
             // Need to raise foreground in-call UI as soon as possible while allowing 3rd party app
             // to intercept the outgoing call.
