@@ -2898,6 +2898,9 @@ public class PhoneUtils {
         dst.putExtra(OutgoingCallBroadcaster.EXTRA_DIAL_CONFERENCE_URI,
                 src.getBooleanExtra(OutgoingCallBroadcaster.EXTRA_DIAL_CONFERENCE_URI,
                         false));
+        dst.putExtra(OutgoingCallBroadcaster.EXTRA_SKIP_SCHEMA_PARSING,
+                src.getBooleanExtra(OutgoingCallBroadcaster.EXTRA_SKIP_SCHEMA_PARSING,
+                        false));
     }
 
     /**
@@ -3285,8 +3288,10 @@ public class PhoneUtils {
              */
             boolean isConferenceUri = intent.getBooleanExtra(
                     OutgoingCallBroadcaster.EXTRA_DIAL_CONFERENCE_URI, false);
+            boolean isSkipParsing = intent.getBooleanExtra(
+                    OutgoingCallBroadcaster.EXTRA_SKIP_SCHEMA_PARSING, false);
             if (intent.hasExtra(OutgoingCallBroadcaster.EXTRA_ACTUAL_NUMBER_TO_DIAL) &&
-                    !isConferenceUri) {
+                    !isSkipParsing && !isConferenceUri) {
                 intent.putExtra(OutgoingCallBroadcaster.EXTRA_ACTUAL_NUMBER_TO_DIAL,
                         imsNumber);
             }
