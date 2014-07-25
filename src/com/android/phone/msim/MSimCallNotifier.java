@@ -73,8 +73,8 @@ public class MSimCallNotifier extends CallNotifier {
     private InCallTonePlayer mSupervisoryCallHoldTonePlayer = null;
     private InCallTonePlayer mLocalCallWaitingTonePlayer = null;
 
-    private static final boolean sLocalCallHoldToneEnabled =
-            SystemProperties.getBoolean("persist.radio.lch_inband_tone", false);
+    private static final String sSchToneConfig =
+            SystemProperties.get("persist.radio.sch_tone", "none");
 
     private boolean[] mIsPermDiscCauseReceived = new
             boolean[MSimTelephonyManager.getDefault().getPhoneCount()];
@@ -977,18 +977,18 @@ public class MSimCallNotifier extends CallNotifier {
             mLocalCallReminderTonePlayer = new InCallTonePlayer(InCallTonePlayer.TONE_HOLD_RECALL);
             mLocalCallReminderTonePlayer.start();
         }
-        if (sLocalCallHoldToneEnabled) {
-            // Only play inband Supervisory call hold tone when
-            // "persist.radio.lch_inband_tone" is set to true, else play the SCH tones
-            // over DTMF
+        log(" startMSimInCallTones: Sch tones config:" + sSchToneConfig);
+        if (sSchToneConfig.equals("inband")) {
+            // if "persist.radio.sch_tone" is set to "inband", play inband supervisory
+            // call hold tone. if set to "dtmf", play the SCH tones
+            // over DTMF, don't play SCH tones for any other value.
             if (mSupervisoryCallHoldTonePlayer == null) {
                 log(" startMSimInCallTones: Supervisory call hold tone ");
                 mSupervisoryCallHoldTonePlayer =
                         new InCallTonePlayer(InCallTonePlayer.TONE_SUPERVISORY_CH);
                 mSupervisoryCallHoldTonePlayer.start();
             }
-        } else {
-            log(" startMSimInCallTones: Supervisory call hold tone over dtmf ");
+        } else if (sSchToneConfig.equals("dtmf")) {
             playLchDtmf();
         }
     }
@@ -1009,7 +1009,7 @@ public class MSimCallNotifier extends CallNotifier {
             mSupervisoryCallHoldTonePlayer.stopTone();
             mSupervisoryCallHoldTonePlayer = null;
         }
-        if (!sLocalCallHoldToneEnabled) {
+        if (sSchToneConfig.equals("dtmf")) {
             log(" stopMSimInCallTones: stop SCH Dtmf call hold tone ");
             stopLchDtmf();
             /* Remove any previous dtmf nssages from queue */
