@@ -168,7 +168,7 @@
     <bool name="config_disable_data_manual_plmn">false</bool>
 
     <!-- whether show network options for CMCC-->
-    <bool name="config_network_cmcc_feature">true</bool>
+    <bool name="config_network_cmcc_feature">false</bool>
 
     <!-- whether show toast when dialing-->
     <bool name="config_show_toast_when_dialing">false</bool>
