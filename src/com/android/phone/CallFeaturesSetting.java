@@ -196,6 +196,8 @@ public class CallFeaturesSetting extends PreferenceActivity
             "sip_call_options_wifi_only_key";
     private static final String SIP_SETTINGS_CATEGORY_KEY =
             "sip_settings_category_key";
+    private static final String IMS_SETTINGS_CATEGORY_KEY =
+            "ims_account_settings_key";
 
     private Intent mContactListIntent;
 
@@ -1790,11 +1792,12 @@ public class CallFeaturesSetting extends PreferenceActivity
 
         if (isAirplaneModeOn()) {
             Preference sipSettings = findPreference(SIP_SETTINGS_CATEGORY_KEY);
+            Preference imsSettings = findPreference(IMS_SETTINGS_CATEGORY_KEY);
             PreferenceScreen screen = getPreferenceScreen();
             int count = screen.getPreferenceCount();
             for (int i = 0 ; i < count ; ++i) {
                 Preference pref = screen.getPreference(i);
-                if (pref != sipSettings) pref.setEnabled(false);
+                if (pref != sipSettings && pref != imsSettings) pref.setEnabled(false);
             }
             return;
         }
