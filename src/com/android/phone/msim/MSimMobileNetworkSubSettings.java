@@ -281,7 +281,8 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                 BUTTON_PREFERED_NETWORK_MODE);
 
         mButtonPreferredLte = (CheckBoxPreference) prefSet.findPreference(KEY_PREFERRED_LTE);
-        if (!getResources().getBoolean(R.bool.config_tdd_data_only)) {
+        if (!getResources().getBoolean(R.bool.config_tdd_data_only)
+            || mSubscription != MSimConstants.SUB1) {
             prefSet.removePreference(mButtonPreferredLte);
             mButtonPreferredLte = null;
         }
