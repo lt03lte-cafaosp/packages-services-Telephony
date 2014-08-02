@@ -167,6 +167,7 @@ public class Constants {
 
     public static final String SETTINGS_ACQ = "network_acq";
 
+    public static final String SETTING_TDD_DATA_ONLY = "tdd_data_only";
     public static final String SETTING_TDD_DATA_ONLY_USER_REF = "tdd_data_only_user_pref";
     // network mode
     public static final int NETWORK_MODE_DEFAULT = 0;
