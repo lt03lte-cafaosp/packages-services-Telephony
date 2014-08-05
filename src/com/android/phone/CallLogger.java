@@ -146,8 +146,10 @@ class CallLogger {
         final int callLogType;
 
         if (c.isIncoming()) {
-            callLogType = (cause == Connection.DisconnectCause.INCOMING_MISSED ?
-                           Calls.MISSED_TYPE : Calls.INCOMING_TYPE);
+            callLogType = ((cause == Connection.DisconnectCause.INCOMING_MISSED) ||
+                    ((cause == Connection.DisconnectCause.INCOMING_REJECTED) &&
+                    mApplication.getResources().getBoolean(R.bool.reject_call_as_missed_call))) ?
+                    Calls.MISSED_TYPE : Calls.INCOMING_TYPE;
         } else {
             callLogType = Calls.OUTGOING_TYPE;
         }

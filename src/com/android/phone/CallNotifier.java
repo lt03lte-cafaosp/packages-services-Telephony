@@ -1030,6 +1030,10 @@ public class CallNotifier extends Handler
                 || cause == Connection.DisconnectCause.DIAL_MODIFIED_TO_SS
                 || cause == Connection.DisconnectCause.DIAL_MODIFIED_TO_DIAL) {
             log("not need show duration, caused by " + cause);
+        } else if (cause == Connection.DisconnectCause.INCOMING_REJECTED
+                && mApplication.getResources().getBoolean(
+                        R.bool.reject_call_as_missed_call)) {
+            log("not need show duration, caused by " + cause);
         } else if (Settings.System.getInt(mApplication.getContentResolver(),
                 Constants.SETTINGS_SHOW_CALL_DURATION, 1) != 1) {
             log("not need show duration, setting is disabled ");
@@ -1214,7 +1218,9 @@ public class CallNotifier extends Handler
             final long date = c.getCreateTime();
             final Connection.DisconnectCause cause = c.getDisconnectCause();
             final boolean missedCall = c.isIncoming() &&
-                    (cause == Connection.DisconnectCause.INCOMING_MISSED);
+                    ((cause == Connection.DisconnectCause.INCOMING_MISSED) ||
+                    ((cause == Connection.DisconnectCause.INCOMING_REJECTED) &&
+                    mApplication.getResources().getBoolean(R.bool.reject_call_as_missed_call)));
             if (missedCall) {
                 // Show the "Missed call" notification.
                 // (Note we *don't* do this if this was an incoming call that
