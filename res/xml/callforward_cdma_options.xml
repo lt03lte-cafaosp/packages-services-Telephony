@@ -109,14 +109,14 @@
         </PreferenceScreen>
     </PreferenceScreen>
     <PreferenceScreen android:key="button_cfnrc_setting_key"
-        android:title="@string/labelCFNRc"
+        android:title="@string/labelCFNRc_cdma"
         android:persistent="false">
         <!-- See note on com.android.phone.EditPreference above -->
         <com.android.phone.CdmaCallForwardEditPreference
             android:key="button_cfnrc_key"
             android:title="@string/CFActivate"
             android:persistent="false"
-            android:dialogTitle="@string/labelCFNRc"
+            android:dialogTitle="@string/labelCFNRc_cdma"
             android:dialogMessage="@string/messageCFNRc"
             phone:reason="not_reachable"
             android:singleLine="true"
