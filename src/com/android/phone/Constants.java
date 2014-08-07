@@ -144,6 +144,10 @@ public class Constants {
     public static final int DTMF_TONE_TYPE_NORMAL = 0;
     public static final int DTMF_TONE_TYPE_LONG   = 1;
 
+    // enable,disable value 0 = Off 1 = On
+    public static final int SETTING_OFF = 0;
+    public static final int SETTING_ON  = 1;
+
     /**
      * enable proximity sensor or not. 0 = Off 1 = On
      */
@@ -162,6 +166,8 @@ public class Constants {
     public static final String SETTINGS_IP_PREFIX = "ip_call_prefix_sub";
 
     public static final String SETTINGS_ACQ = "network_acq";
+
+    public static final String SETTING_TDD_DATA_ONLY_USER_REF = "tdd_data_only_user_pref";
     // network mode
     public static final int NETWORK_MODE_DEFAULT = 0;
     public static final int NETWORK_MODE_HIDE = 1;
