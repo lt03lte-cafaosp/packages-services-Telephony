@@ -178,4 +178,7 @@
 
     <!-- config for CTA requirement -->
     <bool name="config_disconnect_other_fgcall">false</bool>
+
+    <!-- Take reject call as missed call -->
+    <bool name="reject_call_as_missed_call">false</bool>
 </resources>
