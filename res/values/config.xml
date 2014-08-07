@@ -181,4 +181,6 @@
 
     <!-- Take reject call as missed call -->
     <bool name="reject_call_as_missed_call">false</bool>
+    <!-- config for 4G data only setting requirement -->
+    <bool name="config_tdd_data_only">false</bool>
 </resources>
