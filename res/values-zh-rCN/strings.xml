@@ -93,6 +93,7 @@
     <string name="sum_cfnry_disabled" msgid="8422350929957344729">"未启用"</string>
     <string name="disable_cfnry_forbidden" msgid="4308233959150658058">"您的运营商不支持在手机无人接听时停用来电转接功能。"</string>
     <string name="labelCFNRc" msgid="47183615370850000">"无法接通时转接"</string>
+    <string name="labelCFNRc_cdma">"隐含呼叫转移"</string>
     <string name="messageCFNRc" msgid="6380695421020295119">"无法接通时的转接号码"</string>
     <string name="sum_cfnrc_enabled" msgid="7010898346095497421">"转接到 <xliff:g id="PHONENUMBER">{0}</xliff:g>"</string>
     <string name="sum_cfnrc_disabled" msgid="7222141261321276464">"未启用"</string>
