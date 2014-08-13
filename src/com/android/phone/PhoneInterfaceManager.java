@@ -1129,7 +1129,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub implements CallModele
      */
     @Override
     public int getDataNetworkType() {
-        return mPhone.getServiceState().getDataNetworkType();
+        Phone phone = mApp.getPhone(mApp.getDataSubscription());
+        return phone.getServiceState().getDataNetworkType();
     }
 
     /**
