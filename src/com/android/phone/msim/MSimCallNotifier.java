@@ -759,7 +759,9 @@ public class MSimCallNotifier extends CallNotifier {
             final long date = c.getCreateTime();
             final Connection.DisconnectCause cause = c.getDisconnectCause();
             final boolean missedCall = c.isIncoming() &&
-                    (cause == Connection.DisconnectCause.INCOMING_MISSED);
+                    ((cause == Connection.DisconnectCause.INCOMING_MISSED) ||
+                    ((cause == Connection.DisconnectCause.INCOMING_REJECTED) &&
+                    mApplication.getResources().getBoolean(R.bool.reject_call_as_missed_call)));
 
             if (missedCall) {
                 // Show the "Missed call" notification.
