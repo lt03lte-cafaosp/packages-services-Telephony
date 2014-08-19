@@ -80,6 +80,7 @@ public class MobileNetworkSettings extends PreferenceActivity
     private static final String BUTTON_UPLMN_KEY = "button_uplmn_key";
     private static final String BUTTON_ENABLED_NETWORKS_KEY = "enabled_networks_key";
     private static final String BUTTON_CARRIER_SETTINGS_KEY = "carrier_settings_key";
+    private static final String KEY_PREFERRED_LTE = "toggle_preferred_lte";
 
     static final int preferredNetworkMode = Phone.PREFERRED_NT_MODE;
 
@@ -94,6 +95,7 @@ public class MobileNetworkSettings extends PreferenceActivity
     private CheckBoxPreference mButtonDataRoam;
     private CheckBoxPreference mButtonDataEnabled;
     private Preference mLteDataServicePref;
+    private CheckBoxPreference mButtonPreferredLte;
 
     private static final String iface = "rmnet0"; //TODO: this will go away
 
@@ -210,6 +212,14 @@ public class MobileNetworkSettings extends PreferenceActivity
                     preferredNetworkMode);
             mButtonEnabledNetworks.setValue(Integer.toString(settingsNetworkMode));
             return true;
+        } else if (preference == mButtonPreferredLte) {
+            final Message msg = mHandler.obtainMessage(MyHandler.MESSAGE_SET_PREFERRED_LTE);
+
+            if (PhoneGlobals.getInstance().mPhoneServiceClient != null) {
+                PhoneGlobals.getInstance().setTDDDataOnly(0, mButtonPreferredLte.isChecked(),
+                        msg);
+            }
+            return true;
         } else {
             // if the button is anything but the simple toggle preference,
             // we'll need to disable all preferences to reject all click
@@ -252,6 +262,12 @@ public class MobileNetworkSettings extends PreferenceActivity
                 BUTTON_ENABLED_NETWORKS_KEY);
 
         mLteDataServicePref = prefSet.findPreference(BUTTON_CDMA_LTE_DATA_SERVICE_KEY);
+
+        mButtonPreferredLte = (CheckBoxPreference) prefSet.findPreference(KEY_PREFERRED_LTE);
+        if (!getResources().getBoolean(R.bool.config_tdd_data_only)) {
+            prefSet.removePreference(mButtonPreferredLte);
+            mButtonPreferredLte = null;
+        }
 
         int networkFeature = SystemProperties.getInt("persist.radio.network_feature",
                 Constants.NETWORK_MODE_DEFAULT);
@@ -418,6 +434,20 @@ public class MobileNetworkSettings extends PreferenceActivity
         }
     }
 
+    private void updateButtonPreferredLte() {
+        if (mButtonPreferredLte == null) {
+            return;
+        }
+        try {
+            mButtonPreferredLte.setEnabled(PhoneUtils.isLTE(Settings.Global.getInt(getContentResolver(),
+                    Settings.Global.PREFERRED_NETWORK_MODE)));
+            mButtonPreferredLte.setChecked(Settings.Global.getInt(getContentResolver(),
+                    Constants.SETTING_TDD_DATA_ONLY_USER_REF) == Constants.SETTING_ON);
+        } catch (SettingNotFoundException e) {
+            Log.d(LOG_TAG, "failed to update lte button", e);
+        }
+    }
+
     private int getAcqValue() {
         int acq = 0;
         try {
@@ -468,6 +498,8 @@ public class MobileNetworkSettings extends PreferenceActivity
         // app to change this setting's backend, and re-launch this settings app
         // and the UI state would be inconsistent with actual state
         mButtonDataRoam.setChecked(mPhone.getDataRoamingEnabled());
+
+        updateButtonPreferredLte();
 
         if (getPreferenceScreen().findPreference(BUTTON_PREFERED_NETWORK_MODE) != null)  {
             mPhone.getPreferredNetworkType(mHandler.obtainMessage(
@@ -639,6 +671,7 @@ public class MobileNetworkSettings extends PreferenceActivity
         static final int MESSAGE_GET_PREFERRED_NETWORK_TYPE = 0;
         static final int MESSAGE_SET_PREFERRED_NETWORK_TYPE = 1;
         static final int MESSAGE_SET_PREFERRED_NETWORK_TYPE_WITH_ACQ = 2;
+        static final int MESSAGE_SET_PREFERRED_LTE = 3;
 
         @Override
         public void handleMessage(Message msg) {
@@ -653,7 +686,13 @@ public class MobileNetworkSettings extends PreferenceActivity
                 case MESSAGE_SET_PREFERRED_NETWORK_TYPE_WITH_ACQ:
                     handleSetPreferredNetworkTypeWithAcqResponse();
                     break;
+                case MESSAGE_SET_PREFERRED_LTE:
+                    handleSetPreferredLTEResponse();
             }
+        }
+
+        private void handleSetPreferredLTEResponse() {
+            updateButtonPreferredLte();
         }
 
         private void handleSetPreferredNetworkTypeWithAcqResponse() {
@@ -663,6 +702,7 @@ public class MobileNetworkSettings extends PreferenceActivity
                         android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
                         preferredNetworkMode), getAcqValue());
             }
+            updateButtonPreferredLte();
         }
 
         private void handleGetPreferredNetworkTypeResponse(Message msg) {
@@ -748,6 +788,7 @@ public class MobileNetworkSettings extends PreferenceActivity
                     if (DBG) log("handleGetPreferredNetworkTypeResponse: else: reset to default");
                     resetNetworkModeToDefault();
                 }
+                updateButtonPreferredLte();
             }
         }
 
@@ -769,6 +810,7 @@ public class MobileNetworkSettings extends PreferenceActivity
                             .getContentResolver(),
                             android.provider.Settings.Global.PREFERRED_NETWORK_MODE, networkMode);
                 }
+                updateButtonPreferredLte();
             } else {
                 mPhone.getPreferredNetworkType(obtainMessage(MESSAGE_GET_PREFERRED_NETWORK_TYPE));
             }
