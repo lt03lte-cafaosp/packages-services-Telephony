@@ -32,6 +32,7 @@ import com.android.phone.ims.ImsSharedPreferences;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -47,6 +48,7 @@ import android.os.Message;
 import android.os.SystemProperties;
 import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.MSimTelephonyManager;
 import android.telephony.ServiceState;
 import android.text.TextUtils;
 import android.util.Log;
@@ -56,6 +58,8 @@ import android.view.WindowManager;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
+
+import com.android.internal.telephony.MSimConstants;
 
 import java.util.List;
 
@@ -104,6 +108,9 @@ public class SipCallOptionHandler extends Activity implements
      * Specify if IMS calls should be originated with PS domain
      */
     private static final String IMS_PS_DOMAIN = "persist.radio.domain.ps";
+
+    private static final String INTENT_DISABLE_TDD_DATA_ONLY=
+            "com.qualcomm.qti.phonefeature.DISABLE_TDD_DATA_ONLY";
 
     private static final int EVENT_DELAYED_FINISH = 1;
 
@@ -510,6 +517,13 @@ public class SipCallOptionHandler extends Activity implements
                                 Log.d(TAG, "IMS phone is unavailable , place CS call");
                             }
                         }
+                    } else {
+                        int sub = mIntent.getIntExtra(MSimConstants.SUBSCRIPTION_KEY, 0);
+                        if (PhoneUtils.isTDDDataOnly(SipCallOptionHandler.this, sub)){
+                            notifyTDDDataOnly(sub);
+                            finish();
+                            return;
+                        }
                     }
 
                     // Woo hoo -- it's finally OK to initiate the outgoing call!
@@ -518,6 +532,16 @@ public class SipCallOptionHandler extends Activity implements
                 startDelayedFinish();
             }
         });
+    }
+
+    private void notifyTDDDataOnly(int sub){
+        try{
+            Intent intent = new Intent(INTENT_DISABLE_TDD_DATA_ONLY);
+            intent.putExtra(MSimConstants.SUBSCRIPTION_KEY, sub);
+            startActivity(intent);
+        }catch(ActivityNotFoundException e){
+            Log.d(TAG, "notifyTDDDataOnly catch e = " + e);
+        }
     }
 
     private boolean isNetworkConnected() {
