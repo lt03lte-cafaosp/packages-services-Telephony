@@ -50,6 +50,10 @@
         android:name="com.qti.permission.IMS"
         android:protectionLevel="signatureOrSystem" />
 
+    <permission
+        android:name="com.qti.permission.SELECT_SUBSCRIPTION"
+        android:protectionLevel="signatureOrSystem" />
+
     <uses-permission android:name="android.permission.BIND_CALL_SERVICE" />
     <uses-permission android:name="android.permission.BROADCAST_STICKY" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
@@ -557,6 +561,7 @@
         <activity android:name="SelectSubscription"
             android:label="@string/callind_multi_sim"
             android:configChanges="orientation|keyboardHidden"
+            android:permission="com.qti.permission.SELECT_SUBSCRIPTION"
             android:theme="@android:style/Theme.Holo.DialogWhenLarge">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
