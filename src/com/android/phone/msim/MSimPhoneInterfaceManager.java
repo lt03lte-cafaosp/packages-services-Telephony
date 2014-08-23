@@ -865,33 +865,45 @@ public class MSimPhoneInterfaceManager extends ITelephonyMSim.Stub {
     public int enableApnType(String type) {
         enforceModifyPermission();
         int result = PhoneConstants.APN_REQUEST_FAILED;
+        int defaultData = ((MSimPhoneGlobals)mApp).getDefaultDataSubscription();
+        int ret = getPhone(defaultData).enableApnType(type);
+        result = ret;
+        Log.d(LOG_TAG, "enableApnType result is " + ret);
+        return result;
+    }
+
+    public int enableApnTypeOnSubscription(String type, int subId) {
+        enforceModifyPermission();
+        Log.d(LOG_TAG, "enableApnTypeOnSubscription: type=" + type + "subid=" + subId);
+        int result = PhoneConstants.APN_REQUEST_FAILED;
         int numPhones = MSimTelephonyManager.getDefault().getPhoneCount();
-        int dds = ((MSimPhoneGlobals)mApp).getDataSubscription();
-        for (int i = 0; i < numPhones; i++) {
-            int ret = getPhone(i).enableApnType(type);
-            if (i == dds) {
-                result = ret;
-                Log.d(LOG_TAG, "enableApnType result is " + result);
-            }
-        }
+        Log.d(LOG_TAG, "phone = "+getPhone(subId));
+        int ret = getPhone(subId).enableApnType(type);
+
+        result = ret;
+        Log.d(LOG_TAG, "enableApnType result is " + ret);
         return result;
     }
 
     public int disableApnType(String type) {
         enforceModifyPermission();
         int result = PhoneConstants.APN_REQUEST_FAILED;
-        int numPhones = MSimTelephonyManager.getDefault().getPhoneCount();
-        int dds = ((MSimPhoneGlobals)mApp).getDataSubscription();
-        for (int i = 0; i < numPhones; i++) {
-            int ret = getPhone(i).disableApnType(type);
-            if (i == dds) {
-                Log.d(LOG_TAG, "disableApnType result is " + result);
-                result = ret;
-            }
-        }
+        int defaultData = ((MSimPhoneGlobals)mApp).getDefaultDataSubscription();
+        int ret = getPhone(defaultData).disableApnType(type);
+        result = ret;
+        Log.d(LOG_TAG, "disableApnType result is " + result);
         return result;
     }
 
+    public int disableApnTypeOnSubscription(String type, int subId) {
+        enforceModifyPermission();
+        Log.d(LOG_TAG, "disableApnTypeOnSubscription: type=" + type + "subid=" + subId);
+        int result = PhoneConstants.APN_REQUEST_FAILED;
+        int ret = getPhone(subId).disableApnType(type);
+        result = ret;
+        Log.d(LOG_TAG, "disableApnType result is " + result);
+        return result;
+    }
     public boolean disableDataConnectivity() {
         enforceModifyPermission();
         ConnectivityManager cm =
