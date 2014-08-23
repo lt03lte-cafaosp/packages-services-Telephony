@@ -866,8 +866,8 @@ public class MSimCallNotifier extends CallNotifier {
      */
     @Override
     protected void onCdmaCallWaiting(AsyncResult r) {
-        int subscription = (Integer) r.userObj;
-
+        int subscription = mPhone.getSubscription();
+        log("Call Waiting sub = " + subscription);
         PhoneUtils.setActiveSubscription(subscription);
 
         super.onCdmaCallWaiting(r);
