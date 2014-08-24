@@ -188,6 +188,7 @@ public class CallNotifier extends Handler
 
     protected Call.State mLastCallState = Call.State.IDLE;
 
+    protected Phone mPhone;
     /**
      * Initialize the singleton CallNotifier instance.
      * This is only done once, at startup, from PhoneApp.onCreate().
@@ -211,6 +212,7 @@ public class CallNotifier extends Handler
             CallStateMonitor callStateMonitor, BluetoothManager bluetoothManager,
             CallModeler callModeler) {
         mApplication = app;
+        mPhone = phone;
         mCM = app.mCM;
         mCallLogger = callLogger;
         mBluetoothManager = bluetoothManager;
