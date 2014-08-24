@@ -2058,4 +2058,6 @@
     <!-- Manual PLMN scan data disconnect dialog text -->
     <string name="disconnect_data_confirm">This needs to disconnect data service temporarily. Are you sure?</string>
     <string name="dialing">Calling</string>
+    <string name="preferred_lte">"Enable 4G data only"</string>
+    <string name="preferred_lte_summary">"When enable 4G data only, voice and SMS will not work"</string>
 </resources>

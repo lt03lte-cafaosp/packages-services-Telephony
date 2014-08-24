@@ -40,6 +40,7 @@ import android.os.Message;
 import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.provider.Settings;
+import android.provider.Settings.SettingNotFoundException;
 import android.telephony.MSimTelephonyManager;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.ServiceState;
@@ -3644,5 +3645,36 @@ public class PhoneUtils {
         }
         if (DBG) log("isImsVtCallNotAllowed: " + isNotAllowed);
         return isNotAllowed;
+    }
+
+    /**
+     * Check if the current mode is LTE mode.
+     */
+    public static boolean isLTE(int network) {
+        return (network == Phone.NT_MODE_TD_SCDMA_LTE_CDMA_EVDO_GSM_WCDMA
+                || network == Phone.NT_MODE_TD_SCDMA_GSM_WCDMA_LTE
+                || network == Phone.NT_MODE_TD_SCDMA_WCDMA_LTE
+                || network == Phone.NT_MODE_TD_SCDMA_GSM_LTE
+                || network == Phone.NT_MODE_TD_SCDMA_LTE
+                || network == Phone.NT_MODE_LTE_WCDMA
+                || network == Phone.NT_MODE_LTE_ONLY
+                || network == Phone.NT_MODE_LTE_CMDA_EVDO_GSM_WCDMA
+                || network == Phone.NT_MODE_LTE_GSM_WCDMA
+                || network == Phone.NT_MODE_LTE_CDMA_AND_EVDO);
+    }
+
+    /**
+     * Check if the current mode is LTE data only mode.
+     */
+    public static boolean isTDDDataOnly(Context context, int sub) {
+        try {
+            int tddEnabled = MSimTelephonyManager.getIntAtIndex(context.getContentResolver(),
+                    Constants.SETTING_TDD_DATA_ONLY, sub);
+            int network = MSimTelephonyManager.getIntAtIndex(context.getContentResolver(),
+                    Settings.Global.PREFERRED_NETWORK_MODE, sub);
+            return network == Phone.NT_MODE_LTE_ONLY && tddEnabled == Constants.SETTING_ON;
+        } catch (SettingNotFoundException e) {
+            return false;
+        }
     }
 }
