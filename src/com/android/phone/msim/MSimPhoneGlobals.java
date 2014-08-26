@@ -64,6 +64,7 @@ import com.android.phone.Constants;
 import com.android.phone.common.CallLogAsync;
 import com.android.phone.OtaUtils.CdmaOtaScreenState;
 import com.android.internal.telephony.PhoneConstants;
+import com.codeaurora.telephony.msim.ModemStackController;
 import com.codeaurora.telephony.msim.MSimPhoneFactory;
 import com.codeaurora.telephony.msim.SubscriptionManager;
 import com.codeaurora.telephony.msim.MSimTelephonyIntents;
@@ -663,8 +664,9 @@ public class MSimPhoneGlobals extends PhoneGlobals {
                     if (sub == voiceSub) break;
                 }
             }
-            if (sub == -1)
-                sub = 0;
+            if (sub == -1) {
+                sub = ModemStackController.getInstance().getPrimarySub();
+            }
         }
         Log.d(LOG_TAG, "Voice sub in service="+ sub +" preferred sub=" + voiceSub);
 

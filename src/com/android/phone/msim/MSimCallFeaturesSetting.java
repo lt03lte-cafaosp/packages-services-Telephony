@@ -304,6 +304,8 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
 
         createSipCallSettings();
 
+        createImsSettings();
+
         ActionBar actionBar = getActionBar();
         if (actionBar != null) {
             // android.R.id.home will be triggered in onOptionsItemSelected()
@@ -420,6 +422,10 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
                             mSipSharedPreferences.getSipCallOption()));
             mButtonSipCallOptions.setSummary(mButtonSipCallOptions.getEntry());
         }
+    }
+
+    private void createImsSettings() {
+        addPreferencesFromResource(R.xml.ims_settings_category);
     }
 
     // Gets the call options for SIP depending on whether SIP is allowed only
