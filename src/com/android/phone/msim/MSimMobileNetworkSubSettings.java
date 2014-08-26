@@ -55,7 +55,9 @@ import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppType;
+import com.android.phone.Constants;
 import com.android.phone.MSimPhoneGlobals;
+import com.android.phone.MobileNetworkSettings;
 import com.android.phone.R;
 import com.android.internal.telephony.RILConstants;
 
@@ -98,6 +100,8 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     private static final String KEY_PREF_NETWORK_MODE = "pre_network_mode_sub";
     private static final String PREF_FILE = "pre-network-mode";
 
+    private static final String KEY_PREFERRED_LTE = "toggle_preferred_lte";
+
     static final int preferredNetworkMode = Phone.PREFERRED_NT_MODE;
 
     //Information about logical "up" Activity
@@ -110,6 +114,8 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     private CheckBoxPreference mButtonDataRoam;
     private CheckBoxPreference mButtonDataEnabled;
     private Preference mLteDataServicePref;
+
+    private CheckBoxPreference mButtonPreferredLte;
 
     private static final String iface = "rmnet0"; //TODO: this will go away
 
@@ -182,6 +188,9 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             // Handles the click events for Mobile Data menu item.
             if (DBG) log("onPreferenceTreeClick: preference == mButtonDataEnabled.");
             multiSimSetMobileData(mButtonDataEnabled.isChecked(), mSubscription);
+            return true;
+        } else if (preference == mButtonPreferredLte) {
+            multiSimSetPreferredLte(mButtonPreferredLte.isChecked());
             return true;
         } else if (mCdmaOptions != null &&
                    mCdmaOptions.preferenceTreeClick(preference) == true) {
@@ -270,6 +279,13 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
 
         mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
                 BUTTON_PREFERED_NETWORK_MODE);
+
+        mButtonPreferredLte = (CheckBoxPreference) prefSet.findPreference(KEY_PREFERRED_LTE);
+        if (!getResources().getBoolean(R.bool.config_tdd_data_only)
+            || mSubscription != MSimConstants.SUB1) {
+            prefSet.removePreference(mButtonPreferredLte);
+            mButtonPreferredLte = null;
+        }
 
         int networkFeature = SystemProperties.getInt("persist.radio.network_feature",
                 Constants.NETWORK_MODE_DEFAULT);
@@ -442,6 +458,22 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         }
     }
 
+    private void updateButtonPreferredLte() {
+        if (mButtonPreferredLte == null) {
+            return;
+        }
+        try {
+            mButtonPreferredLte.setEnabled(PhoneUtils.isLTE(MSimTelephonyManager
+                    .getIntAtIndex(getContentResolver(), Settings.Global.PREFERRED_NETWORK_MODE,
+                            mSubscription)));
+            mButtonPreferredLte.setChecked(MSimTelephonyManager.getIntAtIndex(getContentResolver(),
+                    Constants.SETTING_TDD_DATA_ONLY_USER_REF, mSubscription)
+                    == Constants.SETTING_ON);
+        } catch (SettingNotFoundException e) {
+            Log.d(LOG_TAG, "failed to update lte button", e);
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -453,6 +485,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         // and the UI state would be inconsistent with actual state
         mButtonDataEnabled.setChecked(multiSimGetMobileData(mSubscription));
         mButtonDataRoam.setChecked(multiSimGetDataRoaming(mSubscription));
+        updateButtonPreferredLte();
 
         if (getPreferenceScreen().findPreference(BUTTON_PREFERED_NETWORK_MODE) != null)  {
             mPhone.getPreferredNetworkType(mHandler.obtainMessage(
@@ -579,6 +612,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         static final int MESSAGE_GET_PREFERRED_NETWORK_TYPE = 0;
         static final int MESSAGE_SET_PREFERRED_NETWORK_TYPE = 1;
         static final int MESSAGE_SET_PREFERRED_NETWORK_TYPE_WITH_ACQ = 2;
+        static final int MESSAGE_SET_PREFERRED_LTE = 3;
 
         @Override
         public void handleMessage(Message msg) {
@@ -593,7 +627,14 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                 case MESSAGE_SET_PREFERRED_NETWORK_TYPE_WITH_ACQ:
                     handleSetPreferredNetworkTypeWithAcqResponse();
                     break;
+                case MESSAGE_SET_PREFERRED_LTE:
+                    handleSetPreferredLTEResponse();
+                    break;
             }
+        }
+
+        private void handleSetPreferredLTEResponse() {
+            updateButtonPreferredLte();
         }
 
         private void handleSetPreferredNetworkTypeWithAcqResponse() {
@@ -601,6 +642,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                 UpdatePreferredNetworkModeSummary(getPreferredNetworkMode(),
                         getAcqValue());
             }
+            updateButtonPreferredLte();
         }
 
         private void handleGetPreferredNetworkTypeResponse(Message msg) {
@@ -652,6 +694,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                     if (DBG) log("handleGetPreferredNetworkTypeResponse: else: reset to default");
                     resetNetworkModeToDefault();
                 }
+                updateButtonPreferredLte();
             }
         }
 
@@ -662,6 +705,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                 int networkMode = Integer.valueOf(
                         mButtonPreferredNetworkMode.getValue()).intValue();
                 setPreferredNetworkMode(networkMode);
+                updateButtonPreferredLte();
             } else {
                 mPhone.getPreferredNetworkType(obtainMessage(MESSAGE_GET_PREFERRED_NETWORK_TYPE));
             }
@@ -906,6 +950,16 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                 android.provider.Settings.Global.MOBILE_DATA + sub, 0) != 0;
         log("Get Mobile Data for SUB-" + sub + " is " + enabled);
         return enabled;
+    }
+
+    // Set preferred LTE mode
+    private void multiSimSetPreferredLte(boolean mode) {
+        final Message msg = mHandler.obtainMessage(
+                    MyHandler.MESSAGE_SET_PREFERRED_LTE);
+
+        if (MSimPhoneGlobals.getInstance().mPhoneServiceClient != null) {
+            MSimPhoneGlobals.getInstance().setTDDDataOnly(mSubscription, mode, msg);
+        }
     }
 
     // Set Mobile Data option, in DB, as per SUB.
