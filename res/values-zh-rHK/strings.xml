@@ -628,4 +628,6 @@
     <string name="sub_1">"卡槽1"</string>
     <string name="sub_2">"卡槽2"</string>
     <string name="sub_3">"卡槽3"</string>
+    <string name="preferred_lte">"启用4G单数据 啟用4G單數據"</string>
+    <string name="preferred_lte_summary">"啟用4G單數據時，語音和短信功能將不能使用"</string>
 </resources>
