@@ -488,6 +488,18 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
         return null;
     }
 
+    public void setTDDDataOnly(int sub, boolean tddOnly, Message callback) {
+        if (callback != null) {
+            callback.replyTo = new Messenger(callback.getTarget());
+        }
+        invokeMethod("com.qualcomm.qti.phonefeature.IServiceBinder", "setTDDDataOnly",
+                mPhoneServiceClient, new Class<?>[] {
+                        int.class, boolean.class, Message.class
+                }, new Object[] {
+                        sub, tddOnly, callback
+                });
+    }
+
     public void setPrefNetwork(int sub, int network, Message callback) {
         if (callback != null) {
             callback.replyTo = new Messenger(callback.getTarget());
