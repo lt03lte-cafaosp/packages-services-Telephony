@@ -665,7 +665,7 @@
     <string name="respond_via_sms_cannot_be_empty">"快速回复内容不能为空"</string>
     <string name="respond_via_sms_edittext_dialog_title" msgid="20379890418289778">"快速回复"</string>
     <string name="respond_via_sms_menu_reset_default_activity" msgid="4029277930090150223">"还原默认设置"</string>
-    <string name="respond_via_sms_confirmation_format" msgid="7229149977515784269">"讯息已发送至 <xliff:g id="PHONE_NUMBER">%s</xliff:g>。"</string>
+    <string name="respond_via_sms_confirmation_format" msgid="7229149977515784269">"短信已发送至 <xliff:g id="PHONE_NUMBER">%s</xliff:g>。"</string>
     <string name="description_image_button_one" msgid="5502718871331943463">"一"</string>
     <string name="description_image_button_two" msgid="4903738528222924522">"二"</string>
     <string name="description_image_button_three" msgid="5570985408463782329">"三"</string>
