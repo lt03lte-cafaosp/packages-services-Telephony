@@ -153,6 +153,7 @@ public class CallNotifier extends Handler
     protected CallLogger mCallLogger;
     protected CallModeler mCallModeler;
     protected boolean mSilentRingerRequested;
+    protected boolean mNewRingingConnectionProcessDone = false;
 
     // ToneGenerator instance for playing SignalInfo tones
     private ToneGenerator mSignalInfoToneGenerator;
@@ -294,6 +295,7 @@ public class CallNotifier extends Handler
                 }
                 onNewRingingConnection((AsyncResult) msg.obj);
                 mSilentRingerRequested = false;
+                mNewRingingConnectionProcessDone = true;
                 break;
 
             case CallStateMonitor.PHONE_INCOMING_RING:
@@ -303,6 +305,7 @@ public class CallNotifier extends Handler
                     PhoneBase pb =  (PhoneBase)((AsyncResult)msg.obj).result;
 
                     if ((pb.getState() == PhoneConstants.State.RINGING)
+                            && mNewRingingConnectionProcessDone
                             && (mSilentRingerRequested == false)) {
                         if (DBG) log("RINGING... (PHONE_INCOMING_RING event)");
                         mRinger.ring();
@@ -827,6 +830,9 @@ public class CallNotifier extends Handler
             if (DBG) log("stopRing()... (OFFHOOK state)");
             mRinger.stopRing();
         }
+        if (state != PhoneConstants.State.RINGING) {
+            mNewRingingConnectionProcessDone = false;
+        }
 
         if (fgPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
             Connection c = fgPhone.getForegroundCall().getLatestConnection();
@@ -1052,6 +1058,7 @@ public class CallNotifier extends Handler
         showUssdResponseDialog();
 
         mVoicePrivacyState = false;
+        mNewRingingConnectionProcessDone = false;
         Connection c = (Connection) r.result;
         if (c != null) {
             log("onDisconnect: cause = " + c.getDisconnectCause()
