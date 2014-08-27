@@ -118,6 +118,7 @@ public class MSimCallNotifier extends CallNotifier {
 
                     if ((pb.getState() == PhoneConstants.State.RINGING)
                             && (mSilentRingerRequested == false)
+                            && mNewRingingConnectionProcessDone
                             && !mCM.hasActiveFgCallAnyPhone()) {
                         if (DBG) log("RINGING... (PHONE_INCOMING_RING event)");
                         mRinger.ring();
@@ -458,6 +459,9 @@ public class MSimCallNotifier extends CallNotifier {
             if (DBG) log("stopRing()... (OFFHOOK state)");
             mRinger.stopRing();
         }
+        if (state != PhoneConstants.State.RINGING) {
+            mNewRingingConnectionProcessDone = false;
+        }
 
         manageMSimInCallTones(false);
 
@@ -552,6 +556,7 @@ public class MSimCallNotifier extends CallNotifier {
         showUssdResponseDialog();
 
         mVoicePrivacyState = false;
+        mNewRingingConnectionProcessDone = false;
         Connection c = (Connection) r.result;
         int subscription = c.getCall().getPhone().getSubscription();
         if (c != null) {
