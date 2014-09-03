@@ -650,6 +650,21 @@ public class CallModeler extends Handler {
         dest.setVideoPauseState(src.getVideoPauseState());
     }
 
+    private boolean hasCallDetailsChanged(com.android.internal.telephony.CallDetails src,
+           com.android.services.telephony.common.CallDetails dest, String errorInfo) {
+        boolean changed = false;
+
+        if (dest.getCallType() != src.call_type ||
+                dest.getCallDomain() != src.call_domain ||
+                dest.getCallSubState() != src.callsubstate ||
+                (TextUtils.isEmpty(dest.getErrorInfo()) ||
+                !((dest.getErrorInfo()).equals(errorInfo))) ||
+                dest.getVideoPauseState() != src.getVideoPauseState()) {
+           changed = true;
+        }
+        return changed;
+    }
+
     /**
      * Updates the Call properties to match the state of the connection object
      * that it represents.
@@ -668,6 +683,9 @@ public class CallModeler extends Handler {
             setNewState(call, newState, connection);
             changed = true;
         }
+
+        changed = hasCallDetailsChanged(connection.getCallDetails(), call.getCallDetails(),
+                connection.errorInfo);
 
         mapCallDetails(call, connection);
 
