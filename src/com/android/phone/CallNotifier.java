@@ -153,6 +153,7 @@ public class CallNotifier extends Handler
     protected CallLogger mCallLogger;
     protected CallModeler mCallModeler;
     protected boolean mSilentRingerRequested;
+    protected boolean mNewRingingConnectionProcessDone = false;
 
     // ToneGenerator instance for playing SignalInfo tones
     private ToneGenerator mSignalInfoToneGenerator;
@@ -292,6 +293,7 @@ public class CallNotifier extends Handler
                 }
                 onNewRingingConnection((AsyncResult) msg.obj);
                 mSilentRingerRequested = false;
+                mNewRingingConnectionProcessDone = true;
                 break;
 
             case CallStateMonitor.PHONE_INCOMING_RING:
@@ -301,6 +303,7 @@ public class CallNotifier extends Handler
                     PhoneBase pb =  (PhoneBase)((AsyncResult)msg.obj).result;
 
                     if ((pb.getState() == PhoneConstants.State.RINGING)
+                            && mNewRingingConnectionProcessDone
                             && (mSilentRingerRequested == false)) {
                         if (DBG) log("RINGING... (PHONE_INCOMING_RING event)");
                         mRinger.ring();
@@ -825,6 +828,9 @@ public class CallNotifier extends Handler
             if (DBG) log("stopRing()... (OFFHOOK state)");
             mRinger.stopRing();
         }
+        if (state != PhoneConstants.State.RINGING) {
+            mNewRingingConnectionProcessDone = false;
+        }
 
         if (fgPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
             Connection c = fgPhone.getForegroundCall().getLatestConnection();
@@ -1050,6 +1056,7 @@ public class CallNotifier extends Handler
         showUssdResponseDialog();
 
         mVoicePrivacyState = false;
+        mNewRingingConnectionProcessDone = false;
         Connection c = (Connection) r.result;
         if (c != null) {
             log("onDisconnect: cause = " + c.getDisconnectCause()
@@ -1774,6 +1781,8 @@ public class CallNotifier extends Handler
      * Plays a Call waiting tone if it is present in the second incoming call.
      */
     protected void onCdmaCallWaiting(AsyncResult r) {
+        // make previous call as miss call
+        handlePendingCdmaWaitingCall();
         // Remove any previous Call waiting timers in the queue
         removeMessages(CALLWAITING_CALLERINFO_DISPLAY_DONE);
         removeMessages(CALLWAITING_ADDCALL_DISABLE_TIMEOUT);
@@ -1814,6 +1823,21 @@ public class CallNotifier extends Handler
         }
 
         mCallModeler.onCdmaCallWaiting(infoCW);
+    }
+
+    /**
+     * check whether there is a pending waiting call, if yes, make the call as miss call.
+     */
+    private void handlePendingCdmaWaitingCall() {
+        final Call ringingCall = mCM.getFirstActiveRingingCall();
+        Connection c = ringingCall.getEarliestConnection();
+        if (ringingCall.getState() == Call.State.WAITING && ringingCall.getConnections().size() > 1
+                && c != null) {
+            mCallLogger.logCall(c, Calls.MISSED_TYPE);
+            showMissedCallNotification(c, c.getCreateTime());
+            PhoneUtils.hangup(c);
+            mCallModeler.onCdmaCallWaitingReject();
+        }
     }
 
     /**
