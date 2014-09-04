@@ -137,6 +137,8 @@ public class MSimPhoneGlobals extends PhoneGlobals {
             // Get the default phone
             phone = MSimPhoneFactory.getDefaultPhone();
 
+            PrimarySubSelectionController.init(this);
+
             // Start TelephonyDebugService After the default phone is created.
             Intent intent = new Intent(this, TelephonyDebugService.class);
             startService(intent);
