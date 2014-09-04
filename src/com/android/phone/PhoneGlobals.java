@@ -805,6 +805,12 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
                         mImsService.queryImsServiceStatus(
                                 EVENT_QUERY_SERVICE_STATUS, new Messenger(mHandler));
                     }
+                    Phone phone = PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
+                    if (phone != null &&
+                            phone.getServiceState().getState()
+                                == ServiceState.STATE_IN_SERVICE) {
+                        notificationMgr.updateImsRegistration(true);
+                    }
                 } catch (RemoteException e) {
                     Log.e(LOG_TAG, "Remote Exception in mImsService.registerCallback");
                 }
@@ -816,6 +822,7 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
             sImsVoiceSrvStatus = PhoneUtils.IMS_SRV_STATUS_NOT_SUPPORTED;
             sImsVideoSrvStatus = PhoneUtils.IMS_SRV_STATUS_NOT_SUPPORTED;
             mImsService = null;
+            notificationMgr.updateImsRegistration(false);
         }
     };
 
@@ -847,6 +854,7 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
         }
 
         public void imsRegStateChanged(int imsRegState) {
+            notificationMgr.updateImsRegistration(imsRegState == 1);
         }
 
         public void imsRegStateChangeReqFailed() {
