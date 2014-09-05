@@ -1074,6 +1074,10 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
         return getInstance().phone;
     }
 
+    static Phone getImsPhone() {
+        return getInstance().mImsPhone;
+    }
+
     // gets the Phone correspoding to a subscription
     Phone getPhone(int subscription) {
         // PhoneGlobals: discard the subscription.

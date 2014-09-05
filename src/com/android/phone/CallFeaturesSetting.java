@@ -328,7 +328,8 @@ public class CallFeaturesSetting extends PreferenceActivity
         CommandsInterface.CF_REASON_UNCONDITIONAL,
         CommandsInterface.CF_REASON_BUSY,
         CommandsInterface.CF_REASON_NO_REPLY,
-        CommandsInterface.CF_REASON_NOT_REACHABLE
+        CommandsInterface.CF_REASON_NOT_REACHABLE,
+        CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER
     };
 
     private class VoiceMailProviderSettings {
