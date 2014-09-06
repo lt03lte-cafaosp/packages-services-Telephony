@@ -406,6 +406,7 @@ public class BluetoothPhoneService extends Service {
         // get foreground call state
         int oldNumActive = mNumActive;
         int oldNumHeld = mNumHeld;
+        int phoneType;
         Call.State oldRingingCallState = mRingingCallState;
         Call.State oldForegroundCallState = mForegroundCallState;
         CallNumber oldRingNumber = mRingNumber;
@@ -430,8 +431,8 @@ public class BluetoothPhoneService extends Service {
         Call ringingCall = mCM.getFirstActiveRingingCall();
         mRingingCallState = ringingCall.getState();
         mRingNumber = getCallNumber(connection, ringingCall);
-
-        if (mCM.getDefaultPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
+        phoneType = mCM.getPhoneInCall().getPhoneType();
+        if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
             mNumHeld = getNumHeldCdma();
             PhoneGlobals app = PhoneGlobals.getInstance();
             if (app.cdmaPhoneCallState != null) {
@@ -485,10 +486,11 @@ public class BluetoothPhoneService extends Service {
             }
         } else {
             mNumHeld = getNumHeldUmts();
+            log("UMTS held calls = " + mNumHeld);
         }
 
         boolean callsSwitched = false;
-        if (mCM.getDefaultPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA &&
+        if (phoneType == PhoneConstants.PHONE_TYPE_CDMA &&
             mCdmaThreeWayCallState == CdmaPhoneCallState.PhoneCallState.CONF_CALL) {
             callsSwitched = mCdmaCallsSwapped;
         } else {
@@ -497,6 +499,7 @@ public class BluetoothPhoneService extends Service {
                 (mNumHeld == 1 && ! (backgroundCall.getEarliestConnectTime() ==
                     mBgndEarliestConnectionTime));
             mBgndEarliestConnectionTime = backgroundCall.getEarliestConnectTime();
+            log("Call switch value on UMTS held calls = " + callsSwitched);
         }
         log("update the call states, active: " + mNumActive + "held" + mNumHeld);
 
@@ -525,14 +528,15 @@ public class BluetoothPhoneService extends Service {
             }
             return;
         }
-        Phone phone = mCM.getDefaultPhone();
-        int phoneType = phone.getPhoneType();
+        int phoneType = mCM.getPhoneInCall().getPhoneType();
 
         // TODO(BT) handle virtual call
 
         if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
             listCurrentCallsCdma();
-        } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
+        } else if ((phoneType == PhoneConstants.PHONE_TYPE_GSM) ||
+                (phoneType == PhoneConstants.PHONE_TYPE_IMS)) {
+            log("Update CLCC response on UMTS calls");
             listCurrentCallsGsm();
         } else {
             Log.e(TAG, "Unexpected phone type: " + phoneType);
@@ -1257,12 +1261,11 @@ public class BluetoothPhoneService extends Service {
                     Log.e(TAG, " BluetoothDsdaService class not found exception " + e);
                 }
             }
-            Phone phone = mCM.getDefaultPhone();
-            int phoneType = phone.getPhoneType();
-            log("processChld: " + chld + " for Phone type: " + phoneType);
+            Phone phone = mCM.getPhoneInCall();
+            int phoneType =  phone.getPhoneType();
             Call ringingCall = mCM.getFirstActiveRingingCall();
             Call backgroundCall = mCM.getFirstActiveBgCall();
-
+            log("processChld on PhoneType: " + phoneType);
             if (chld == CHLD_TYPE_RELEASEHELD) {
                 if (ringingCall.isRinging()) {
                     return PhoneUtils.hangupRingingCall(ringingCall);
@@ -1283,7 +1286,8 @@ public class BluetoothPhoneService extends Service {
                         PhoneUtils.hangup(PhoneGlobals.getInstance().mCM);
                     }
                     return true;
-                } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
+                } else if ((phoneType == PhoneConstants.PHONE_TYPE_GSM) ||
+                        (phoneType == PhoneConstants.PHONE_TYPE_IMS)) {
                     if (ringingCall.isRinging() && (mNumHeld > 0 && mNumActive == 0)) {
                        if (VDBG) log("CHLD:1 Answer the Call");
                        return PhoneUtils.answerCall(ringingCall);
@@ -1319,7 +1323,8 @@ public class BluetoothPhoneService extends Service {
                     }
                     Log.e(TAG, "CDMA fail to do hold active and accept held");
                     return false;
-                } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
+                } else if ((phoneType == PhoneConstants.PHONE_TYPE_GSM) ||
+                        (phoneType == PhoneConstants.PHONE_TYPE_IMS)) {
                     if (ringingCall.isRinging() && (mNumHeld > 0 && mNumActive == 0)) {
                        PhoneUtils.answerCall(ringingCall);
                     } else {
@@ -1347,7 +1352,8 @@ public class BluetoothPhoneService extends Service {
                     }
                     Log.e(TAG, "GSG no call to add conference");
                     return false;
-                } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
+                } else if ((phoneType == PhoneConstants.PHONE_TYPE_GSM) ||
+                        (phoneType == PhoneConstants.PHONE_TYPE_IMS)) {
                     log("processChld fr CHLD = 3 for GSM, operate only on single sub");
                     if (mCM.hasActiveFgCall() && mCM.hasActiveBgCall()) {
                         PhoneUtils.mergeCalls();
