@@ -46,6 +46,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.UserHandle;
 import android.os.Vibrator;
+import android.os.RemoteException;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -152,6 +153,9 @@ public class CallFeaturesSetting extends PreferenceActivity
     public static final String FWD_SETTING_REASON = "#Reason";
     public static final String FWD_SETTING_NUMBER = "#Number";
     public static final String FWD_SETTING_TIME = "#Time";
+
+    //add IMS Registration related perference
+    private static final String IMS_REGISTRATION = "ims_registration";
 
     // Key identifying the default vocie mail provider
     public static final String DEFAULT_VM_PROVIDER_KEY = "";
@@ -267,6 +271,9 @@ public class CallFeaturesSetting extends PreferenceActivity
     private PreferenceScreen mIPPrefix;
 
     private EditPhoneNumberPreference mSubMenuVoicemailSettings;
+
+    //Ims Registration
+    public static ListPreference ImsRegistration;
 
     private Runnable mRingtoneLookupRunnable;
     private final Handler mRingtoneLookupComplete = new Handler() {
@@ -647,6 +654,13 @@ public class CallFeaturesSetting extends PreferenceActivity
             boolean doVibrate = (Boolean) objValue;
             Settings.System.putInt(mPhone.getContext().getContentResolver(),
                     Constants.SETTINGS_VIBRATE_WHEN_ACCEPTED, doVibrate ? 1 : 0);
+        } else if (preference == ImsRegistration) {
+            if (DBG) log("Update IMS Registration");
+            String value = (objValue == null) ? "" : objValue.toString();
+            ImsRegistration.setSummary(value);
+            if (DBG) log("onPreferencechange value is " + value);
+            ImsRegistration.setValue(value);
+            PhoneGlobals.updateImsRegistration(ImsRegistration);
         } else if (preference == mVoicemailProviders) {
             final String newProviderKey = (String) objValue;
             if (DBG) {
@@ -1879,6 +1893,17 @@ public class CallFeaturesSetting extends PreferenceActivity
 
     private void createImsSettings() {
         addPreferencesFromResource(R.xml.ims_settings_category);
+        //add for IMS registration
+        ImsRegistration = (ListPreference) findPreference(IMS_REGISTRATION);
+        ImsRegistration.setOnPreferenceChangeListener(this);
+        //Disable the menu option initially. Enable it only when ims service is available
+        if (PhoneGlobals.mImsService != null){
+            ImsRegistration.setEnabled(true);
+            PhoneGlobals.loadImsRegistration(ImsRegistration,
+                    PhoneGlobals.getIMSRegistrationState());
+        } else {
+            ImsRegistration.setEnabled(true);
+        }
     }
 
     // Gets the call options for SIP depending on whether SIP is allowed only

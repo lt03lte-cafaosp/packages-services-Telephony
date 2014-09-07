@@ -791,6 +791,8 @@
     <string name="disconnect_data_confirm">"这个动作会暂时关闭数据连接。您确定要这样么？"</string>
 
     <!-- IMS settings related strings -->
+    <!-- Title displayed IMS account settings in the sip settings category. [CHAR LIMIT=NONE] -->
+    <string name="ims_settings">4G通话设置</string>
     <string name="ims_edit_title">IMS 账户详情</string>
     <string name="ims_accounts_title">IMS 账户</string>
     <string name="ims_domain_address_title">IMS 服务器</string>
@@ -807,4 +809,14 @@
     <string name="dialing">"呼叫中"</string>
     <string name="preferred_lte">"启用4G单数据"</string>
     <string name="preferred_lte_summary">"启用4G单数据时，语音和短信功能将不能使用"</string>
+    <!-- IMS registration preference -->
+    <string translatable="false" name="ims_reg_state">IMSRegState</string>
+    <string name="ims_reg_title">4G通话优先</string>
+    <!-- Default IMS Registration State. -->
+    <string translatable="false" name="default_ims_reg_state">Register/Deregister IMS</string>
+    <!-- IMS Registration State change request failed. -->
+    <string name="ims_registration_state_changed_fail">设置通话优先选项失败</string> 
+    <string name="ims_registered_summary">在网络允许时，优先发起4G高清通话</string>
+    <string name="ims_deregistered_summary">总是优先发起普通通话</string>
+    <!-- End of IMS settings related strings -->
 </resources>

@@ -59,6 +59,7 @@ import android.os.UserHandle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.preference.ListPreference;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
 import android.provider.Settings.System;
@@ -69,6 +70,7 @@ import android.util.Log;
 import android.util.Slog;
 import android.view.KeyEvent;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallManager;
@@ -148,6 +150,14 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
     public static final int MMI_INITIATE = 51;
     public static final int MMI_COMPLETE = 52;
     public static final int MMI_CANCEL = 53;
+
+    //IMS register state
+    // These values are from the message Registration in imsIF.proto
+    private static final String IMS_REG_STATE_REGISTERED = "4G call";
+    private static final String IMS_REG_STATE_DEREGISTERED = "2G/3G call";
+    public static final int IMS_REG_STATE_REGISTER = 1;
+    public static final int IMS_REG_STATE_DEREGISTER = 2;
+    public static boolean mIsImsListenerRegistered = false;
 
     public static final int CALL_WAITING = 7;
     // Don't use message codes larger than 99 here; those are reserved for
@@ -802,6 +812,7 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
                     int result = mImsService.registerCallback(imsServListener);
                     if (result == 0) {
                         Log.d(LOG_TAG, "Callback registered successfully");
+                        mIsImsListenerRegistered = true;
                         mImsService.queryImsServiceStatus(
                                 EVENT_QUERY_SERVICE_STATUS, new Messenger(mHandler));
                     }
@@ -825,6 +836,69 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
             notificationMgr.updateImsRegistration(false);
         }
     };
+
+    /*
+     * Get IMS Registration state
+     */
+    public static int getIMSRegistrationState() {
+        int imsRegState = IMS_REG_STATE_DEREGISTER;
+        try {
+            imsRegState = mImsService.getRegistrationState();
+        } catch (RemoteException e) {
+            Log.d(LOG_TAG, "getIMSRegistrationState Exception");
+        }
+        Log.d(LOG_TAG, "getIMSRegistrationState: " + imsRegState);
+        return imsRegState;
+    }
+
+    /*
+     * Load IMS Registration state
+     */
+    public static void loadImsRegistration(ListPreference ImsRegistration, int imsRegState) {
+        ImsRegistration.setEnabled(true);
+
+        Log.d(LOG_TAG, "loadImsRegistration: imsRegState = " + imsRegState);
+        if (imsRegState == IMS_REG_STATE_REGISTER) {
+            Log.d(LOG_TAG, "loadImsRegistration: setval IMS_REG_STATE_REGISTERED");
+            ImsRegistration.setValue(IMS_REG_STATE_REGISTERED);
+            ImsRegistration.setSummary(R.string.ims_registered_summary);
+        } else {
+            Log.d(LOG_TAG, "loadImsRegistration: setval IMS_REG_STATE_DEREGISTERED");
+            ImsRegistration.setValue(IMS_REG_STATE_DEREGISTERED);
+            ImsRegistration.setSummary(R.string.ims_deregistered_summary);
+        }
+    }
+
+    /*
+     * Set IMS Registration state
+     */
+    public static void setIMSRegistrationState(int imsRegState) {
+        Log.d(LOG_TAG, "setIMSRegistrationState: " + imsRegState);
+        try {
+            mImsService.setRegistrationState(imsRegState);
+        } catch (RemoteException e) {
+            Log.d(LOG_TAG, "setIMSRegistrationState Exception");
+        }
+    }
+
+    /*
+     * Update IMS Registration state
+     */
+    public static void updateImsRegistration(ListPreference ImsRegistration) {
+        // Register IMS Service Listener
+        if (mIsImsListenerRegistered == false) {
+            Log.d(LOG_TAG, "updateImsRegistration fail as IMS Service Listener not registered.");
+        }
+        Log.d(LOG_TAG, "updateImsRegistration Called with value - " + ImsRegistration.getValue());
+        ImsRegistration.setEnabled(false);
+        if (IMS_REG_STATE_REGISTERED.equalsIgnoreCase(ImsRegistration.getValue())) {
+            ImsRegistration.setSummary("Registering...");
+            setIMSRegistrationState(IMS_REG_STATE_REGISTER);
+        } else {
+            ImsRegistration.setSummary("Deregistering...");
+            setIMSRegistrationState(IMS_REG_STATE_DEREGISTER);
+        }
+    }
 
     public static int getImsServiceStatus (int service) {
         int status = PhoneUtils.IMS_SRV_STATUS_NOT_SUPPORTED;
@@ -855,9 +929,26 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
 
         public void imsRegStateChanged(int imsRegState) {
             notificationMgr.updateImsRegistration(imsRegState == 1);
+            if (CallFeaturesSetting.ImsRegistration != null){
+                loadImsRegistration(CallFeaturesSetting.ImsRegistration,
+                        getIMSRegistrationState());
+            } else if (MSimCallFeaturesSetting.ImsRegistration != null) {
+                loadImsRegistration(MSimCallFeaturesSetting.ImsRegistration,
+                        getIMSRegistrationState());
+            }
         }
 
         public void imsRegStateChangeReqFailed() {
+            Log.e(LOG_TAG, "imsRegStateChangeReqFailed!");
+            Toast.makeText(getApplicationContext(),
+                    R.string.ims_registration_state_changed_fail, Toast.LENGTH_LONG).show();
+            if (CallFeaturesSetting.ImsRegistration != null){
+                loadImsRegistration(MSimCallFeaturesSetting.ImsRegistration,
+                        getIMSRegistrationState());
+            } else if (MSimCallFeaturesSetting.ImsRegistration != null) {
+                loadImsRegistration(MSimCallFeaturesSetting.ImsRegistration,
+                        getIMSRegistrationState());
+            }
         }
     };
 

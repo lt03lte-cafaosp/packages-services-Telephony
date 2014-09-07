@@ -141,4 +141,10 @@
         <item>China_Mobile</item>
         <item>roamingTextSearching</item>
     </string-array>
+
+   <!-- IMS Registration values -->
+   <string-array translatable="false" name="ims_registration_states">
+      <item>4G call</item>
+      <item>2G/3G call</item>
+   </string-array>
 </resources>
