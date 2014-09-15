@@ -74,7 +74,7 @@ public class GsmUmtsOptions {
 
         if (needDisableSub2Apn(mSubscription)) {
             log("disable sub2 apn");
-            mPrefScreen.removePreference(mButtonAPNExpand);
+            mButtonAPNExpand.setEnabled(false);
         } else {
             mButtonAPNExpand.getIntent().putExtra(SUBSCRIPTION_KEY,
                     mSubscription);
