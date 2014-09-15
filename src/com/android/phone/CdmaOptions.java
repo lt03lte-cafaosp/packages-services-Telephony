@@ -46,9 +46,11 @@ public class CdmaOptions {
     private static final String BUTTON_CDMA_SYSTEM_SELECT_KEY = "cdma_system_select_key";
     private static final String BUTTON_CDMA_SUBSCRIPTION_KEY = "cdma_subscription_key";
     private static final String BUTTON_CDMA_ACTIVATE_DEVICE_KEY = "cdma_activate_device_key";
+    private static final String BUTTON_OPERATOR_SELECTION_EXPAND_KEY = "button_carrier_sel_key";
 
     private PreferenceActivity mPrefActivity;
     private PreferenceScreen mPrefScreen;
+    private PreferenceScreen mButtonOperatorSelectionExpand;
     private Phone mPhone;
     private int mSubscription = 0;
 
@@ -98,6 +100,10 @@ public class CdmaOptions {
             mPrefScreen.removePreference(mPrefScreen
                                 .findPreference(BUTTON_CDMA_SUBSCRIPTION_KEY));
         }
+
+        mButtonOperatorSelectionExpand =
+                (PreferenceScreen) mPrefScreen.findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY);
+        mButtonOperatorSelectionExpand.setEnabled(false);
 
         final boolean voiceCapable = mPrefActivity.getResources().getBoolean(
                 com.android.internal.R.bool.config_voice_capable);
