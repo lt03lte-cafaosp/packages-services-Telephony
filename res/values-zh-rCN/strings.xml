@@ -627,4 +627,19 @@
     <string name="dtmf_tone_enable_title" msgid="827601042915852989">"拨号键盘触摸音效"</string>
     <string name="dial_pad_autocomplete" msgid="494525952035761075">"拨号键盘自动补全"</string>
     <string name="preference_category_ringtone" msgid="5197960752529332721">"铃声和振动"</string>
+    <string name="multi_sim_settings_title">"双卡设置"</string>
+    <string name="lte_switch_unavailable">4G/3G卡切换不可用</string>
+    <string name="lte_recognize_summary">检测到两张 4G/3G SIM卡，你需要设置默认的4G/3G SIM卡：</string>
+    <string name="lte_select_summary">所选择卡将识别为4G/3G卡，另外一张为2G卡</string>
+    <string name="lte_checkbox_text">当默认4G/3G SIM卡变化，同时切换移动数据到选择卡</string>
+    <string name="select_ok">确认</string>
+    <string name="lte_select_title">默认4G/3G SIM卡</string>
+    <string name="lte_recognition_title">SIM卡识别</string>
+    <string name="reg_failed">注册失败</string>
+    <string name="reg_suc">注册成功</string>
+    <string name="reg_failed_msg">默认4G/3G SIM卡识别失败， %1$s将被识别为2G卡。</string>
+    <string name="lte_set">设置</string>
+    <string name="lte_setting">正在设置默认4G/3G SIM 卡</string>
+    <string name="select_continue">继续</string>
+    <string name="select_cancel">取消</string>
 </resources>
