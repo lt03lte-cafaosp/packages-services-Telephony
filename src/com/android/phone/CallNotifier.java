@@ -1768,6 +1768,8 @@ public class CallNotifier extends Handler
      * Plays a Call waiting tone if it is present in the second incoming call.
      */
     protected void onCdmaCallWaiting(AsyncResult r) {
+        // make previous call as miss call
+        handlePendingCdmaWaitingCall();
         // Remove any previous Call waiting timers in the queue
         removeMessages(CALLWAITING_CALLERINFO_DISPLAY_DONE);
         removeMessages(CALLWAITING_ADDCALL_DISABLE_TIMEOUT);
@@ -1808,6 +1810,21 @@ public class CallNotifier extends Handler
         }
 
         mCallModeler.onCdmaCallWaiting(infoCW);
+    }
+
+    /**
+     * check whether there is a pending waiting call, if yes, make the call as miss call.
+     */
+    private void handlePendingCdmaWaitingCall() {
+        final Call ringingCall = mCM.getFirstActiveRingingCall();
+        Connection c = ringingCall.getEarliestConnection();
+        if (ringingCall.getState() == Call.State.WAITING && ringingCall.getConnections().size() > 1
+                && c != null) {
+            mCallLogger.logCall(c, Calls.MISSED_TYPE);
+            showMissedCallNotification(c, c.getCreateTime());
+            PhoneUtils.hangup(c);
+            mCallModeler.onCdmaCallWaitingReject();
+        }
     }
 
     /**
