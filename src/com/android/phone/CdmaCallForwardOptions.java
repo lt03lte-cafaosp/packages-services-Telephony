@@ -48,7 +48,6 @@ public class CdmaCallForwardOptions extends PreferenceActivity {
     private static final String LOG_TAG = "CdmaCallForwardOptions";
     private final boolean DBG = (PhoneGlobals.DBG_LEVEL >= 2);
 
-    public static final String SUBSCRIPTION = "Subscription";
     public static final String CDMA_SUPP_CALL = "Cdma_Supp";
 
     private static final String NUM_PROJECTION[] = {Phone.NUMBER};
@@ -141,7 +140,7 @@ public class CdmaCallForwardOptions extends PreferenceActivity {
                     mPreferences.get(i).init(this, mSubscription, mCallOptionSettings
                             .getActivateNumber());
                 }
-                mDeactPreScreens.get(i).getIntent().putExtra(SUBSCRIPTION, mSubscription)
+                mDeactPreScreens.get(i).getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription)
                         .putExtra(CDMA_SUPP_CALL, true);
                 Log.d(LOG_TAG, "call option on type: " + i + " Getting deact num ="
                         + mCallOptionSettings.getDeactivateNumber());
