@@ -47,12 +47,12 @@ import android.widget.Toast;
 
 import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.TelephonyProperties;
+import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 
 public class CdmaCallForwardEditPreference extends EditPhoneNumberPreference {
     private static final String LOG_TAG = "CdmaCallForwardEditPreference";
     private static final boolean DBG = (PhoneGlobals.DBG_LEVEL >= 2);
 
-    public static final String SUBSCRIPTION = "Subscription";
     public static final String CDMA_SUPP_CALL = "Cdma_Supp";
 
     private static final int CATEGORY_NORMAL = 1;
@@ -114,7 +114,7 @@ public class CdmaCallForwardEditPreference extends EditPhoneNumberPreference {
             Intent intent = new Intent(Intent.ACTION_CALL_PRIVILEGED);
             intent.setData(Uri.fromParts("tel", mPrefixNumber + number, null));
             intent.putExtra(CDMA_SUPP_CALL, true);
-            intent.putExtra(SUBSCRIPTION, mSubscription);
+            intent.putExtra(SUBSCRIPTION_KEY, mSubscription);
             mForeground.startActivityForResult(intent, CDMA_SUPP_CALL_CFG_ID);
         } else {
             super.onDialogClosed(positiveResult);
