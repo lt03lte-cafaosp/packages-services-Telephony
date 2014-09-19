@@ -21,6 +21,7 @@ import android.telephony.TelephonyManager;
 import com.android.internal.telephony.CallStateException;
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallerInfo;
+import com.android.internal.telephony.CallDetails;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
@@ -42,8 +43,8 @@ import static com.android.internal.telephony.MSimConstants.INVALID_SUBSCRIPTION;
  */
 class CallLogger {
     private static final String LOG_TAG = CallLogger.class.getSimpleName();
-    private static final boolean DBG = (PhoneGlobals.DBG_LEVEL >= 1) &&
-        (SystemProperties.getInt("ro.debuggable", 0) == 1);
+    private static final boolean DBG = true;//(PhoneGlobals.DBG_LEVEL >= 1) &&
+        //(SystemProperties.getInt("ro.debuggable", 0) == 1);
     private static final boolean VDBG = (PhoneGlobals.DBG_LEVEL >= 2);
 
     private PhoneGlobals mApplication;
@@ -63,9 +64,12 @@ class CallLogger {
     public void logCall(Connection c, int callLogType) {
 
         //call log type for ims
-        final int INCOMING_IMS_TYPE = 21;
-        final int OUTGOING_IMS_TYPE = 22;
-        final int MISSED_IMS_TYPE = 23;
+        final int INCOMING_IMS_VOICE_TYPE = 21;
+        final int OUTGOING_IMS_VOICE_TYPE = 22;
+        final int MISSED_IMS_VOICE_TYPE = 23;
+        final int INCOMING_IMS_VIDEO_TYPE = 31;
+        final int OUTGOING_IMS_VIDEO_TYPE = 32;
+        final int MISSED_IMS_VIDEO_TYPE = 33;
 
         final String number = c.getAddress();
         final long date = c.getCreateTime();
@@ -105,18 +109,36 @@ class CallLogger {
             if (DBG) {
                 log("CallLogger: logCall: callLogType in =" + callLogType);
                 log("CallLogger: logCall: phoneType =" + phone.getPhoneType());
+                log("CallLogger: logCall: callType =" + c.getCallDetails().call_type);
             }
+            int callType = c.getCallDetails().call_type;
+            String VIDEO_CALL_DURATION_KEY = "video_call_duration_key";
+            String videoCallDuration= c.getCallDetails().getValueForKeyFromExtras(c.getCallDetails().extras, VIDEO_CALL_DURATION_KEY);
+            if (DBG) log("CallLogger: logCall, call modified, conn testlog = " + videoCallDuration);
+
             if (SystemProperties.getBoolean("net.lte.VT_LOOPBACK_ENABLE", false) ||
                 phone.getPhoneType() == PhoneConstants.PHONE_TYPE_IMS){
                 switch(callLogType){
                     case Calls.INCOMING_TYPE:
-                        callLogType = INCOMING_IMS_TYPE;
+                        if (callType == CallDetails.CALL_TYPE_VT){
+                            callLogType = INCOMING_IMS_VIDEO_TYPE;
+                        } else if (callType == CallDetails.CALL_TYPE_VOICE){
+                            callLogType = INCOMING_IMS_VOICE_TYPE;
+                        }
                         break;
                     case Calls.OUTGOING_TYPE:
-                        callLogType = OUTGOING_IMS_TYPE;
+                        if (callType == CallDetails.CALL_TYPE_VT){
+                            callLogType = OUTGOING_IMS_VIDEO_TYPE;
+                        } else if (callType == CallDetails.CALL_TYPE_VOICE){
+                            callLogType = OUTGOING_IMS_VOICE_TYPE;
+                        }
                         break;
                     case Calls.MISSED_TYPE:
-                        callLogType = MISSED_IMS_TYPE;
+                        if (callType == CallDetails.CALL_TYPE_VT){
+                            callLogType = MISSED_IMS_VIDEO_TYPE;
+                        } else if (callType == CallDetails.CALL_TYPE_VOICE){
+                            callLogType = MISSED_IMS_VOICE_TYPE;
+                        }
                         break;
                 }
             }
@@ -128,10 +150,10 @@ class CallLogger {
             if (MSimTelephonyManager.getDefault().getSimState(c.getCall()
                     .getPhone().getSubscription()) == TelephonyManager.SIM_STATE_ABSENT) {
                 logCall(ci, logNumber, presentation, callLogType, date, duration,
-                        INVALID_SUBSCRIPTION, durationType);
+                        INVALID_SUBSCRIPTION, durationType, videoCallDuration);
             } else {
                 logCall(ci, logNumber, presentation, callLogType, date, duration, c.getCall()
-                        .getPhone().getSubscription(), durationType);
+                        .getPhone().getSubscription(), durationType, videoCallDuration);
             }
         }
     }
@@ -163,6 +185,12 @@ class CallLogger {
      */
     public void logCall(CallerInfo ci, String number, int presentation, int callType, long start,
                         long duration, int subscription, int durationType) {
+        logCall(ci, number, presentation, callType, start, duration,
+                        subscription, durationType, null);
+    }
+
+    public void logCall(CallerInfo ci, String number, int presentation, int callType, long start,
+                        long duration, int subscription, int durationType, String videoCallDuration) {
         final boolean isEmergencyNumber = PhoneNumberUtils.isLocalEmergencyNumber(number,
                 mApplication);
 
@@ -182,9 +210,9 @@ class CallLogger {
                 log("sending Calllog entry: " + ci + ", " + PhoneUtils.toLogSafePhoneNumber(number)
                     + "," + presentation + ", " + callType + ", " + start + ", " + duration);
             }
-
+            log("- videocallduration: " + videoCallDuration);
             CallLogAsync.AddCallArgs args = new CallLogAsync.AddCallArgs(mApplication, ci, number,
-                    presentation, callType, start, duration, subscription, durationType);
+                    presentation, callType, start, duration, subscription, durationType, videoCallDuration);
             mCallLog.addCall(args);
         }
     }
