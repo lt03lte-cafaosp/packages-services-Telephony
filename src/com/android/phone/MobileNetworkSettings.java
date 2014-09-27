@@ -542,7 +542,7 @@ public class MobileNetworkSettings extends PreferenceActivity
             setIMS(ltePref.isChecked());
 
             ImsManager imsMan = ImsManager.getInstance(getBaseContext(),
-                    SubscriptionManager.getDefaultVoiceSubId());
+                    SubscriptionManager.getDefaultVoicePhoneId());
             if (imsMan != null) {
 
                 try {
