@@ -805,6 +805,12 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
                         mImsService.queryImsServiceStatus(
                                 EVENT_QUERY_SERVICE_STATUS, new Messenger(mHandler));
                     }
+                    Phone phone = PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
+                    if (phone != null &&
+                            phone.getServiceState().getState()
+                                == ServiceState.STATE_IN_SERVICE) {
+                        notificationMgr.updateImsRegistration(true);
+                    }
                 } catch (RemoteException e) {
                     Log.e(LOG_TAG, "Remote Exception in mImsService.registerCallback");
                 }
@@ -816,6 +822,7 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
             sImsVoiceSrvStatus = PhoneUtils.IMS_SRV_STATUS_NOT_SUPPORTED;
             sImsVideoSrvStatus = PhoneUtils.IMS_SRV_STATUS_NOT_SUPPORTED;
             mImsService = null;
+            notificationMgr.updateImsRegistration(false);
         }
     };
 
@@ -847,11 +854,39 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
         }
 
         public void imsRegStateChanged(int imsRegState) {
+            notificationMgr.updateImsRegistration(imsRegState == 1);
         }
 
         public void imsRegStateChangeReqFailed() {
         }
     };
+
+    public static boolean isIMSRegisterd(){
+        boolean IMSRegisterd = false;
+        int IMSRegistrationState = 0;
+        try {
+            //here have a problem for csvt mode.
+            IMSRegistrationState = PhoneGlobals.mImsService.getRegistrationState();
+        } catch (Exception e) {
+            Log.e(LOG_TAG,
+                    "Exception in getRegistrationState(), IMSRegistrationState = "
+                    + IMSRegistrationState);
+        }
+        switch (IMSRegistrationState){
+            case 1:
+                IMSRegisterd = true;
+                break;
+            case 2:
+                IMSRegisterd = false;
+                break;
+            default:
+                Log.e(LOG_TAG, "getRegistrationState() failed");
+                break;
+        }
+        Log.v(LOG_TAG, "isIMSRegisterd= " + IMSRegisterd + ",IMSRegistrationState= "
+                + IMSRegistrationState);
+        return IMSRegisterd;
+    }
 
     public boolean isCsvtActive(){
         boolean result = false;

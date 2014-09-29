@@ -98,6 +98,7 @@ public class NotificationMgr {
     static final int DATA_DISCONNECTED_ROAMING_NOTIFICATION = 7;
     static final int SELECTED_OPERATOR_FAIL_NOTIFICATION = 8;
     static final int HEADSET_PLUGIN_NOTIFICATION = 9;
+    static final int IMS_REGISTERED_NOTIFICATION = 10;
     static final int MISSED_VIDEOCALL_NOTIFICATION = 100;
 
     /** The singleton NotificationMgr instance. */
@@ -973,6 +974,26 @@ public class NotificationMgr {
         }
     }
 
+    void updateImsRegistration(boolean registered) {
+        if (registered) {
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.setClassName("com.android.phone",
+                    "com.android.phone.CallFeaturesSetting");
+            PendingIntent pIntent = PendingIntent.getActivity(mContext, 0, intent, 0);
+            Notification notification = new Notification.Builder(mContext)
+                    .setSmallIcon(R.drawable.ims_state)
+                    .setContentTitle(mContext.getText(R.string.ims_registration))
+                    .setContentIntent(pIntent).build();
+
+            notification.flags |= Notification.FLAG_ONGOING_EVENT;
+            mNotificationManager.notify(
+                    IMS_REGISTERED_NOTIFICATION,
+                    notification);
+        } else {
+            mNotificationManager.cancel(IMS_REGISTERED_NOTIFICATION);
+        }
+    }
     /**
      * Shows the "data disconnected due to roaming" notification, which
      * appears when you lose data connectivity because you're roaming and

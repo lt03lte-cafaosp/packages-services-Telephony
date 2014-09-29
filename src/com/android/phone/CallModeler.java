@@ -54,6 +54,10 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.lang.System;
+import java.lang.String;;
+import java.util.Date;
+
 
 /**
  * Creates a Call model from Call state and data received from the telephony
@@ -86,8 +90,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class CallModeler extends Handler {
 
     private static final String TAG = CallModeler.class.getSimpleName();
-    private static final boolean DBG =
-            (PhoneGlobals.DBG_LEVEL >= 1) && (SystemProperties.getInt("ro.debuggable", 0) == 1);
+    private static final boolean DBG = true;
+            //(PhoneGlobals.DBG_LEVEL >= 1) && (SystemProperties.getInt("ro.debuggable", 0) == 1);
 
     private static final int CALL_ID_START_VALUE = 1;
 
@@ -101,6 +105,10 @@ public class CallModeler extends Handler {
     private Connection mCdmaIncomingConnection;
     private Connection mCdmaOutgoingConnection;
     private SuppServiceNotification mSuppSvcNotification;
+    private boolean videocallstarted = false;
+    private long videocallstarttime = 0;
+    private long videocallDuration = 0;
+    private String VIDEO_CALL_DURATION_KEY = "video_call_duration_key";
 
     public CallModeler(CallStateMonitor callStateMonitor, CallManager callManager,
             CallGatewayManager callGatewayManager) {
@@ -418,6 +426,7 @@ public class CallModeler extends Handler {
      * @param out List to populate with Calls that have been updated.
      */
     private void doUpdate(boolean fullUpdate, List<Call> out) {
+        if (DBG) Log.d(TAG, "doUpdate, fullUpdate = " + fullUpdate);
         final List<com.android.internal.telephony.Call> telephonyCalls = Lists.newArrayList();
         telephonyCalls.addAll(mCallManager.getRingingCalls());
         telephonyCalls.addAll(mCallManager.getForegroundCalls());
@@ -458,6 +467,11 @@ public class CallModeler extends Handler {
                 // For disconnecting calls, we still need to send the update to the UI but we do
                 // not create a new call if the call did not exist.
                 final boolean shouldCreate = shouldUpdate && !isDisconnecting;
+                if (DBG) {
+                    Log.d(TAG, "shouldUpdate = " + shouldUpdate);
+                    Log.d(TAG, "isDisconnecting = " + isDisconnecting);
+                    Log.d(TAG, "shouldCreate = " + shouldCreate);
+                }
 
                 // New connections return a Call with INVALID state, which does not translate to
                 // a state in the internal.telephony.Call object.  This ensures that staleness
@@ -639,9 +653,48 @@ public class CallModeler extends Handler {
         boolean changed = false;
 
         final int newState = translateStateFromTelephony(connection, isForConference);
+        final int oldState = call.getState();
+        final int oldCallType = call.getCallDetails().getCallType();
+        final int newCallType = connection.getCallDetails().call_type;
 
         if (call.getState() != newState) {
+            if (DBG) Log.d(TAG, "updateCallFromConnection, call.getState() = "+ call.getState()
+                + ", newState = " + newState
+                + ", changed = true");
             setNewState(call, newState, connection);
+            changed = true;
+            if (newState == Call.State.ACTIVE && oldState != Call.State.ONHOLD){
+                //for a new call, init the videocallDuration = 0;
+                videocallDuration = 0;
+                videocallstarted = false;
+                if (newCallType == CallDetails.CALL_TYPE_VT){
+                    //frist start for a single call;
+                    startVideoCallTimer();
+                }
+            }
+            if (oldState == Call.State.ACTIVE && newState != Call.State.ONHOLD){
+                if (oldCallType == CallDetails.CALL_TYPE_VT){
+                    stopVideoCallTimer();
+                }
+                updateVideoCallDuration(videocallDuration/1000,connection);
+            }
+        }
+
+        /*
+            * call type chaned for modify call,
+            * back up for the old calldetails to save the call modify records.
+            */
+        if (oldCallType != newCallType && oldState== Call.State.ACTIVE
+                && oldCallType != CallDetails.CALL_TYPE_UNKNOWN) {
+            if (DBG) Log.d(TAG, "updateCallFromConnection, oldCallType = "+ oldCallType
+                + ", newCallType = " + newCallType
+                + ", changed = true, call modified");
+            if (newCallType == CallDetails.CALL_TYPE_VOICE && videocallstarted){
+                stopVideoCallTimer();
+            }
+            if (newCallType == CallDetails.CALL_TYPE_VT && !videocallstarted){
+                startVideoCallTimer();
+            }
             changed = true;
         }
 
@@ -680,7 +733,7 @@ public class CallModeler extends Handler {
                 changed = true;
             }
 
-            // Name
+            // Name  //cdu, only here change, means call has being modified
             final String oldCnapName = call.getCnapName();
             if (TextUtils.isEmpty(oldCnapName) || !oldCnapName.equals(connection.getCnapName())) {
                 call.setCnapName(connection.getCnapName());
@@ -729,6 +782,54 @@ public class CallModeler extends Handler {
         }
 
         return changed;
+    }
+
+    private void startVideoCallTimer(){
+        if (!videocallstarted){
+            if(DBG) Log.d(TAG, "updateCallFromConnection, startVideoCallTimer");
+            videocallstarttime = System.currentTimeMillis();
+            videocallstarted = true;
+        } else {
+            Log.d(TAG, "updateCallFromConnection, startVideoCallTimer, no need to started");
+        }
+    }
+
+    //stop video call timer and accumulate the video call time period!
+    private void stopVideoCallTimer(){
+        if (videocallstarted) {
+            if(DBG) Log.d(TAG, "updateCallFromConnection, stopVideoCallTimer");
+            long videocallDuration_tmp = System.currentTimeMillis() - videocallstarttime;
+            videocallDuration= videocallDuration + videocallDuration_tmp;
+            videocallstarted = false;
+            videocallstarttime = 0;
+        } else {
+            Log.d(TAG, "updateCallFromConnection, stopVideoCallTimer, no need to stop!");
+        }
+    }
+
+    //update video call duration to calldetails.extras
+    private void updateVideoCallDuration(long videocallDuration, Connection connection){
+        if(DBG) Log.d(TAG, "updateVideoCallDuration, videocallDuration = " + videocallDuration);
+        if(videocallDuration == 0){
+            Log.d(TAG, "updateVideoCallDuration, no video call, do not update ");
+            return;
+        }
+        String [] callExtras = connection.getCallDetails().extras;
+        String [] callExtras_VTDuration = null;
+        String videocallDurationExtra = VIDEO_CALL_DURATION_KEY + "=" + videocallDuration;
+        if (callExtras != null){
+            callExtras_VTDuration = new String[callExtras.length + 1];
+            for(int i=0; i<callExtras.length; i++){
+                callExtras_VTDuration[i] = callExtras[i];
+            }
+            callExtras_VTDuration[callExtras.length] = videocallDurationExtra;
+        }
+        connection.getCallDetails().setExtras(callExtras_VTDuration);
+        if (DBG) {
+            String testlog_conn = connection.getCallDetails()
+					.getValueForKeyFromExtras(connection.getCallDetails().extras, VIDEO_CALL_DURATION_KEY);
+            Log.d(TAG, "updateCallFromConnection, conn testlog = " + testlog_conn);
+        }
     }
 
     /**

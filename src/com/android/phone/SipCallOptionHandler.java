@@ -64,6 +64,11 @@ import com.android.internal.telephony.MSimConstants;
 
 import java.util.List;
 
+import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
+import android.telephony.MSimTelephonyManager;
+import android.telephony.TelephonyManager;
+import com.android.internal.telephony.MSimConstants;
+
 /**
  * Activity that selects the proper phone type for an outgoing call.
  *
@@ -80,7 +85,7 @@ public class SipCallOptionHandler extends Activity implements
     static final String TAG = "SipCallOptionHandler";
     private static final boolean DBG =
             (PhoneGlobals.DBG_LEVEL >= 1) && (SystemProperties.getInt("ro.debuggable", 0) == 1);
-    private static final boolean IMS_DBG = Log.isLoggable("IMS", Log.DEBUG);
+    private static final boolean IMS_DBG = false;//Log.isLoggable("IMS", Log.DEBUG);
 
     static final int DIALOG_SELECT_PHONE_TYPE = 0;
     static final int DIALOG_SELECT_OUTGOING_SIP_PHONE = 1;
@@ -89,7 +94,8 @@ public class SipCallOptionHandler extends Activity implements
     static final int DIALOG_NO_VOIP = 4;
     static final int DIALOG_NO_VOLTE = 5;
     static final int DIALOG_NO_VT = 6;
-    static final int DIALOG_SIZE = 7;
+    static final int DIALOG_NO_IMSVT = 7;
+    static final int DIALOG_SIZE = 8;
 
     private Intent mIntent;
     private List<SipProfile> mProfileList;
@@ -103,7 +109,9 @@ public class SipCallOptionHandler extends Activity implements
     private TextView mUnsetPriamryHint;
     private boolean mUseSipPhone = false;
     private boolean mMakePrimary = false;
+    private static final String IMS_VIDEOCALL_KEY = "ims_videocall";
     private int mImsCallType;
+    private int NoSimOnLTE = 10;
 
     /**
      * Specify if IMS calls should be originated with PS domain
@@ -188,8 +196,51 @@ public class SipCallOptionHandler extends Activity implements
         mCallOption = mSipSharedPreferences.getSipCallOption();
         if (DBG) Log.v(TAG, "Call option: " + mCallOption);
 
-        mImsSharedPreferences = new ImsSharedPreferences(this);
-        mImsCallType = mImsSharedPreferences.getCallType();
+        //mImsSharedPreferences = new ImsSharedPreferences(this);
+        //mImsCallType = mImsSharedPreferences.getCallType();
+        boolean isIMSVTCall = mIntent.getBooleanExtra(IMS_VIDEOCALL_KEY, false);
+        if (DBG) {
+            Log.e(TAG, "Call intent: " + mIntent + "extras" + mIntent.getExtras());
+            Log.e(TAG, "isIMSVTCall = " + isIMSVTCall);
+            Log.e(TAG, "isMultiSimEnabled() = "
+                    + MSimTelephonyManager.getDefault().isMultiSimEnabled());
+            Log.e(TAG, "currentSubscription =  " + mIntent.getIntExtra(SUBSCRIPTION_KEY, -1));
+            Log.e(TAG, "isIMSRegisterd = " + PhoneGlobals.isIMSRegisterd());
+        }
+        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()){
+            if (PhoneGlobals.isIMSRegisterd()){
+                int SubscriptionOnLTE = getSubscriptionOnLTE();
+                if (SubscriptionOnLTE == NoSimOnLTE ){
+                    Log.e(TAG, "ims registered and not on LTE, wrong!!!!!");
+                    return;
+                }
+                if (isIMSVTCall){
+                    mIntent.putExtra(SUBSCRIPTION_KEY, SubscriptionOnLTE);
+                    mImsCallType = Phone.CALL_TYPE_VT;
+                } else {
+                    int currentSubscription = mIntent.getIntExtra(SUBSCRIPTION_KEY, -1);
+                    if (currentSubscription == SubscriptionOnLTE){
+                        mImsCallType = Phone.CALL_TYPE_VOICE;
+                    }
+                }
+            } else if (isIMSVTCall) {
+                //current network does not suppor IMS VT Call
+                showDialog(DIALOG_NO_IMSVT);
+                return;
+            }
+        } else {
+            if (PhoneGlobals.isIMSRegisterd()){
+                if (isIMSVTCall){
+                    mImsCallType = Phone.CALL_TYPE_VT;
+                } else {
+                    mImsCallType = Phone.CALL_TYPE_VOICE;
+                }
+            } else if (isIMSVTCall) {
+                //current network does not suppor IMS VT Call
+                showDialog(DIALOG_NO_IMSVT);
+                return;
+            }
+        }
         if (IMS_DBG) {
             Log.v(TAG, " IMS call type: " + mImsCallType);
         }
@@ -358,6 +409,15 @@ public class SipCallOptionHandler extends Activity implements
                     .setOnCancelListener(this)
                     .create();
             break;
+        case DIALOG_NO_IMSVT:
+            dialog = new AlertDialog.Builder(this)
+                    .setTitle(R.string.no_vt_support_in_current_network_title)
+                    .setMessage(R.string.no_vt_support_in_current_network)
+                    .setPositiveButton(android.R.string.ok, this)
+                    .setNegativeButton(android.R.string.cancel, this)
+                    .setOnCancelListener(this)
+                    .create();
+            break;
         default:
             dialog = null;
         }
@@ -414,6 +474,10 @@ public class SipCallOptionHandler extends Activity implements
                 || (dialog == mDialogs[DIALOG_NO_VOLTE])) {
             finish();
             return;
+        } else if (dialog == mDialogs[DIALOG_NO_IMSVT]) {
+            if (id == DialogInterface.BUTTON_POSITIVE){
+                Log.e(TAG, "IMS Vt not supported, place cs voice call");
+            }
         } else {
             if (id == DialogInterface.BUTTON_POSITIVE) {
                 // Redirect to sip settings and drop the call.
@@ -460,7 +524,8 @@ public class SipCallOptionHandler extends Activity implements
 
     private boolean useImsPhone() {
         boolean useIms = false;
-        if (!mUseSipPhone && mImsCallType != Phone.CALL_TYPE_UNKNOWN) {
+        if (!mUseSipPhone && mImsCallType != Phone.CALL_TYPE_UNKNOWN
+                    && PhoneGlobals.isIMSRegisterd()) {
             CallManager cm = PhoneGlobals.getInstance().mCM;
             // If a 1x call exists, place current call on CDMA even though IMS is available
             // If airplane mode is on then use default phone for call
@@ -602,4 +667,25 @@ public class SipCallOptionHandler extends Activity implements
         }
         return null;
     }
+
+    public int getSubscriptionOnLTE(){
+        int NetWorkType = TelephonyManager.NETWORK_TYPE_LTE;
+        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()){
+            NetWorkType = MSimTelephonyManager.getDefault().getNetworkType(MSimConstants.SUB1);
+            if (NetWorkType == TelephonyManager.NETWORK_TYPE_LTE){
+                return MSimConstants.SUB1;
+            }
+            NetWorkType = MSimTelephonyManager.getDefault().getNetworkType(MSimConstants.SUB2);
+            if (NetWorkType == TelephonyManager.NETWORK_TYPE_LTE){
+                return MSimConstants.SUB2;
+            }
+        } else {
+            NetWorkType = TelephonyManager.getDefault().getNetworkType();
+            if (NetWorkType == TelephonyManager.NETWORK_TYPE_LTE){
+                return MSimConstants.SUB1;
+            }
+        }
+        return NoSimOnLTE;
+    }
+
 }

@@ -1620,6 +1620,8 @@
     <string name="no_volte">Unable to make IMS call</string>
     <!-- Title of the alert dialog to notify user that there is VT is not allowed when TTY mode is ON. [CHAR LIMIT=40] -->
     <string name="no_vt_allowed">To place a video call, turn off the TTY mode</string>
+    <string name="no_vt_support_in_current_network_title">Connection Failed</string>
+    <string name="no_vt_support_in_current_network">The 4G network is not available. Dial a voice call instead?</string>
 
     <!-- Option for whether the SIP service should send keepalive messages. [CHAR LIMIT=40] -->
     <string translatable="true" name="sip_system_decide">Automatic</string>
@@ -2060,4 +2062,5 @@
     <string name="dialing">Calling</string>
     <string name="preferred_lte">"Enable 4G data only"</string>
     <string name="preferred_lte_summary">"When enable 4G data only, voice and SMS will not work"</string>
+    <string name="ims_registration">ims registred</string>
 </resources>

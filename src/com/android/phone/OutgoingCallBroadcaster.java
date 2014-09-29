@@ -118,6 +118,8 @@ public class OutgoingCallBroadcaster extends Activity
             "org.codeaurora.extra.DIAL_CONFERENCE_URI";
 
     public static final String ADD_PARTICIPANT_KEY = "add_participant";
+
+    private static final String IMS_VIDEOCALL_KEY = "ims_videocall";
     // Dialog IDs
     private static final int DIALOG_NOT_VOICE_CAPABLE = 1;
 
@@ -196,6 +198,8 @@ public class OutgoingCallBroadcaster extends Activity
             String number;
             String originalUri;
             boolean isConferenceUri = intent.getBooleanExtra(EXTRA_DIAL_CONFERENCE_URI, false);
+            boolean isIMSVTCall = intent.getBooleanExtra(IMS_VIDEOCALL_KEY, false);
+            if (DBG) Log.v(TAG, "doReceive: isIMSVTCall= " + isIMSVTCall);
 
             alreadyCalled = intent.getBooleanExtra(
                     OutgoingCallBroadcaster.EXTRA_ALREADY_CALLED, false);
@@ -339,6 +343,8 @@ public class OutgoingCallBroadcaster extends Activity
             Log.i(TAG, "- uri: " + uri);
             Log.i(TAG, "- number: " + number);
         }
+        boolean isIMSVTCall = intent.getBooleanExtra(IMS_VIDEOCALL_KEY, false);
+        if (VDBG) Log.v(TAG, "startSipCallOptionHandler: isIMSVTCall= " + isIMSVTCall);
 
         // Create a copy of the original CALL intent that started the whole
         // outgoing-call sequence.  This intent will ultimately be passed to
@@ -350,6 +356,9 @@ public class OutgoingCallBroadcaster extends Activity
         newIntent.putExtra(PhoneConstants.IP_CALL, mIPCall);
         CallGatewayManager.checkAndCopyPhoneProviderExtras(intent, newIntent);
         PhoneUtils.copyImsExtras(intent, newIntent);
+        if(isIMSVTCall){
+            newIntent.putExtra(IMS_VIDEOCALL_KEY, isIMSVTCall);
+        }
 
         // Finally, launch the SipCallOptionHandler, with the copy of the
         // original CALL intent stashed away in the EXTRA_NEW_CALL_INTENT
@@ -384,8 +393,11 @@ public class OutgoingCallBroadcaster extends Activity
             final Configuration configuration = getResources().getConfiguration();
             Log.v(TAG, "onCreate: this = " + this + ", icicle = " + icicle);
             Log.v(TAG, " - getIntent() = " + intent);
+            Log.v(TAG, " - extras = " + intent.getExtras());
             Log.v(TAG, " - configuration = " + configuration);
         }
+        boolean isIMSVTCall = intent.getBooleanExtra(IMS_VIDEOCALL_KEY, false);
+        Log.v(TAG, "onCreate: isIMSVTCall= " + isIMSVTCall);
 
         if (icicle != null) {
             // A non-null icicle means that this activity is being
@@ -734,11 +746,15 @@ public class OutgoingCallBroadcaster extends Activity
             broadcastIntent.putExtra(EXTRA_ORIGINAL_URI, uri.toString());
             broadcastIntent.putExtra(EXTRA_DIAL_CONFERENCE_URI,
                     intent.getBooleanExtra((EXTRA_DIAL_CONFERENCE_URI), false));
+            broadcastIntent.putExtra(IMS_VIDEOCALL_KEY,
+                    intent.getBooleanExtra(IMS_VIDEOCALL_KEY, false));
 
             // Need to raise foreground in-call UI as soon as possible while allowing 3rd party app
             // to intercept the outgoing call.
             broadcastIntent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
             if (DBG) Log.v(TAG, " - Broadcasting intent: " + broadcastIntent + ".");
+            boolean isIMSVTCall = intent.getBooleanExtra(IMS_VIDEOCALL_KEY, false);
+            if (DBG) Log.v(TAG, "processMSimIntent: isIMSVTCall= " + isIMSVTCall);
 
             // Set a timer so that we can prepare for unexpected delay introduced by the broadcast.
             // If it takes too much time, the timer will show "waiting" spinner.
