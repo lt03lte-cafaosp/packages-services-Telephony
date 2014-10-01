@@ -3316,9 +3316,12 @@ public class PhoneUtils {
         final PhoneGlobals app = PhoneGlobals.getInstance();
         Phone phone = getImsPhone(app.getCallManager());
         if (phone != null) {
-            Log.d(LOG_TAG, "addParticipant");
+            Log.d(LOG_TAG, "addParticipant dialString=" + dialString);
+            String[] dialNumbers = dialString.split(";");
             try {
-                phone.addParticipant(dialString, clir, callType, extras);
+                for (String dialNumber : dialNumbers){
+                    phone.addParticipant(dialNumber, clir, callType, extras);
+                }
             } catch (CallStateException e) {
                 Log.e("PhoneUtils", "Exception in addParticipant" + e);
             }
