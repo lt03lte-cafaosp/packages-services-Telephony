@@ -1648,6 +1648,8 @@
     <!-- End of SIP settings related strings -->
 
     <!-- IMS settings related strings -->
+    <!-- Title displayed IMS account settings in the sip settings category. [CHAR LIMIT=NONE] -->
+    <string name="ims_settings">4G Call Settings</string>
     <!-- Title of the ims editor screen. [CHAR LIMIT=NONE] -->
     <string name="ims_edit_title">IMS account details</string>
     <!-- Title displayed IMS account settings in the sip settings category. [CHAR LIMIT=NONE] -->
@@ -1674,6 +1676,15 @@
     <string name="remove_ims_account">Remove account</string>
     <string name="ims_call_type_voice">Voice</string>
     <string name="ims_call_type_video">Video</string>
+    <!-- IMS registration preference -->
+    <string translatable="false" name="ims_reg_state">IMSRegState</string>
+    <string name="ims_reg_title">Call priority</string>
+    <!-- Default IMS Registration State. -->
+    <string translatable="false" name="default_ims_reg_state">4G call</string>
+    <!-- IMS Registration State change request failed. -->
+    <string name="ims_registration_state_changed_fail">Register unsuccessfully. The network is not avaiable.</string>
+    <string name="ims_registered_summary">4G call</string>
+    <string name="ims_deregistered_summary">2G/3G call</string>
     <!-- End of IMS settings related strings -->
 
     <!-- Dialog title to notify user that Voice calling is not supported
@@ -2062,5 +2073,6 @@
     <string name="dialing">Calling</string>
     <string name="preferred_lte">"Enable 4G data only"</string>
     <string name="preferred_lte_summary">"When enable 4G data only, voice and SMS will not work"</string>
-    <string name="ims_registration">ims registred</string>
+    <string name="ims_registration">4G Call</string>
+    <string name="ims_registration_details">You can make HD calls</string>
 </resources>

@@ -29,6 +29,7 @@ import android.content.Intent;
 import android.media.AudioManager;
 import android.net.sip.SipManager;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -99,6 +100,9 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private static final String SIP_SETTINGS_CATEGORY_KEY =
             "sip_settings_category_key";
 
+    //add IMS Registration related perference
+    private static final String IMS_REGISTRATION = "ims_registration";
+
     // preferred TTY mode
     // Phone.TTY_MODE_xxx
     static final int preferredTtyMode = Phone.TTY_MODE_OFF;
@@ -128,6 +132,9 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private PreferenceScreen mEmergencyCall;
     private int mNumPhones;
     private SubscriptionManager mSubManager;
+
+    //Ims Registration
+    public static ListPreference ImsRegistration;
 
     /*
      * Click Listeners, handle click based on objects attached to UI.
@@ -201,6 +208,13 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
             boolean doVibrate = (Boolean) objValue;
             Settings.System.putInt(mPhone.getContext().getContentResolver(),
                     Constants.SETTINGS_VIBRATE_WHEN_ACCEPTED, doVibrate ? 1 : 0);
+        } else if (preference == ImsRegistration) {
+                if (DBG) log("Update IMS Registration");
+                String value = (objValue == null) ? "" : objValue.toString();
+                ImsRegistration.setSummary(value);
+                if (DBG) log("onPreferencechange value is " + value);
+                ImsRegistration.setValue(value);
+                PhoneGlobals.updateImsRegistration(ImsRegistration);
         } else if (preference == mButtonSipCallOptions) {
             handleSipCallOptionsChange(objValue);
         }
@@ -426,6 +440,17 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
 
     private void createImsSettings() {
         addPreferencesFromResource(R.xml.ims_settings_category);
+        //add for IMS registration
+        ImsRegistration = (ListPreference) findPreference(IMS_REGISTRATION);
+        ImsRegistration.setOnPreferenceChangeListener(this);
+        //Disable the menu option initially. Enable it only when ims service is available
+        if (PhoneGlobals.mImsService != null){
+            ImsRegistration.setEnabled(true);
+            PhoneGlobals.loadImsRegistration(ImsRegistration,
+                    PhoneGlobals.getIMSRegistrationState());
+        } else {
+            ImsRegistration.setEnabled(true);
+        }
     }
 
     // Gets the call options for SIP depending on whether SIP is allowed only
