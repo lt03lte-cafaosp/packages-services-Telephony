@@ -25,6 +25,7 @@ import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.android.internal.telephony.Call.ConfUser;
 import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.MSimConstants;
@@ -51,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -109,6 +111,7 @@ public class CallModeler extends Handler {
     private long videocallstarttime = 0;
     private long videocallDuration = 0;
     private String VIDEO_CALL_DURATION_KEY = "video_call_duration_key";
+    private int mConfVersion = -1;
 
     public CallModeler(CallStateMonitor callStateMonitor, CallManager callManager,
             CallGatewayManager callGatewayManager) {
@@ -626,6 +629,34 @@ public class CallModeler extends Handler {
         call.getCallDetails().setMpty(PhoneUtils.isConferenceCall(connection.getCall()));
     }
 
+    private boolean checkAndMapConfDetails(Call call, Connection connection){
+        Log.i(TAG, "checkAndMapConfDetailszzz call=" + call);
+        int version = -1;
+        if (connection.getCall().getConfStateInfo() != null &&
+                connection.getCall().getConfStateInfo().usersMap != null ) {
+            Log.i(TAG, "Conference participant list");
+            version = connection.getCall().getConfStateInfo().version;
+            Log.i(TAG, "confVersion updated to " + version + ";current version=" + version);
+            Map<String, List<String>> confDetails = new HashMap<String, List<String>>();
+            for (Entry<String, ConfUser> entry :
+                    connection.getCall().getConfStateInfo().usersMap.entrySet()) {
+                ConfUser user = (ConfUser)entry.getValue();
+                Log.i(TAG, "User: " + user.uri + " : " + user.displayText+
+                    " : " + user.status);
+                List list = new ArrayList<String>();
+                list.add(CallDetails.CONFERENCE_DETATILS_URI + "=" + user.uri);
+                list.add(CallDetails.CONFERENCE_DETATILS_DISPLAY_TEXT + "=" + user.displayText);
+                list.add(CallDetails.CONFERENCE_DETATILS_STATE + "=" + user.status);
+                confDetails.put(user.uri, list);
+            }
+            call.getCallDetails().setConfDetailsFromMap(confDetails);
+        }
+		Log.i(TAG, "after checkAndMapConfDetailszzz call=" + call);
+        boolean result = mConfVersion != version;
+        mConfVersion = version;
+        return result;
+    }
+
     /**
      * copy CallDetails of connection to CallDetails of Call
      * @param src
@@ -699,6 +730,10 @@ public class CallModeler extends Handler {
         }
 
         mapCallDetails(call, connection);
+
+        if(checkAndMapConfDetails(call, connection)){
+             changed = true ;
+        }
 
         final Call.DisconnectCause newDisconnectCause =
                 translateDisconnectCauseFromTelephony(connection.getDisconnectCause());
