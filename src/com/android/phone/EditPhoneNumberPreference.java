@@ -121,6 +121,7 @@ public class EditPhoneNumberPreference extends EditTextPreference
     private int mStartTimeMinute = 0;
     private int mEndTimeHour = 8;
     private int mEndTimeMinute = 0;
+	private int timeformateAMPM = 0;
     private String mTimePeriodString;
     private boolean mChecked;
 
@@ -643,8 +644,10 @@ public class EditPhoneNumberPreference extends EditTextPreference
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         String selectedItem = parent.getItemAtPosition(position).toString();
-        Log.d(TAG, "onItemSelected, selectedItem = "
-                + selectedItem + ", position = " + position);
+        Log.d(TAG, "onItemSelected"
+			    + ", selectedItem = " + selectedItem
+				+ ", position = " + position
+				+ ", parent" + parent);
         //Toast.makeText(mParentActivity, "your option is " + selectedItem, 2000).show();
         setSelectionTimePreiod(mStartTimeHour, mTimeStartHourSpinner,
                 mStartTimeMinute, mTimeStartMinuteSpinner, mTimeStartFormate);
@@ -762,25 +765,29 @@ public class EditPhoneNumberPreference extends EditTextPreference
     private void setSelectionTimePreiod(int hour, Spinner hourSpinner,
             int minute, Spinner minuteSpinner, Spinner timeFormate){
         minute = (int) minuteSpinner.getSelectedItemId();
+		Log.d(TAG, "setSelectionTimePreiod, minute = "+minute);
         int hourposion = (int) hourSpinner.getSelectedItemId();
+		Log.d(TAG, "setSelectionTimePreiod, hourposion = "+hourposion);
         if (is24Hour()){
             hour = (int) hourSpinner.getSelectedItemId();
         } else {
             int selectedFormate = (int) timeFormate.getSelectedItemId();
+            Log.d(TAG, "setSelectionTimePreiod, selectedFormate = "+selectedFormate);
             if (timeFormate.getSelectedItemId() == 0){
-                hour = (int) hourSpinner.getSelectedItemId();
+                hour = hourposion;
             } else if (timeFormate.getSelectedItemId() ==1){
-                hour = 12 + (int) hourSpinner.getSelectedItemId();
+                hour = 12 + hourposion;
             }
         }
+        Log.d(TAG, "setSelectionTimePreiod, hour = "+ hour + ", minute = " + minute);
     }
 
     private void dumpTimePeriodInfo(){
-        Log.e(TAG, "dumpTimePeriodIfo"
+        Log.e(TAG, "dumpTimePeriodIfo: "
             + "mStartTimeHour = " + mStartTimeHour
-            + "mStartTimeMinute = " + mStartTimeMinute
-            + "mEndTimeHour = " + mEndTimeHour
-            + "mEndTimeMinute = " + mEndTimeMinute
-            + "mTimePeriodString = " + mTimePeriodString);
+            + ", mStartTimeMinute = " + mStartTimeMinute
+            + ", mEndTimeHour = " + mEndTimeHour
+            + ", mEndTimeMinute = " + mEndTimeMinute
+            + ", mTimePeriodString = " + mTimePeriodString);
     }
 }

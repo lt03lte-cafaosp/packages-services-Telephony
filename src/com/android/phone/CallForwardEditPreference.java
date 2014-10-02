@@ -85,6 +85,8 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
                             MyHandler.MESSAGE_GET_CF, null));
             } else {
                 if (reason == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER){
+                    if (DBG)
+                        Log.d(LOG_TAG, "IMS is not registered, can not query for CFUT");
                     return;
                 }
                 phone.getCallForwardingOption(reason,
@@ -131,7 +133,6 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
             final int EndHour = getEndTimeHour();
             final int EndMinute = getEndTimeMinute();
             if (DBG) Log.d(LOG_TAG, "callForwardInfo=" + callForwardInfo);
-
             boolean isCFSettingChanged = true;
             if (action == CommandsInterface.CF_ACTION_REGISTRATION
                     && callForwardInfo != null
@@ -150,6 +151,11 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
                     isCFSettingChanged = false;
                 }
             }
+            if (DBG) Log.d(LOG_TAG, "onDialogClosed: " 
+                    + ", reason=" + reason
+                    + ", action=" + action
+                    + ", number=" + number
+                    + ", isCFSettingChanged" + isCFSettingChanged);
             if (isCFSettingChanged) {
                 // set to network
                 if (DBG) Log.d(LOG_TAG, "reason=" + reason + ", action=" + action
@@ -162,8 +168,16 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
                 // the interface of Phone.setCallForwardingOption has error:
                 // should be action, reason...
                 if (PhoneGlobals.isIMSRegisterd()){
+                    Log.d(LOG_TAG, "onDialogClosed, set CallForwarding on UT");
                     PhoneBase pb = (PhoneBase) PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
                     if (reason == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER){
+                        if (DBG) {
+                            Log.d(LOG_TAG, "onDialogClosed, setCallForwardingTimerOption"
+                                + ", StartHour=" + StartHour
+                                + ", StartMinute=" + StartMinute
+                                + ", EndHour=" + EndHour
+                                + ", EndMinute=" + EndMinute);
+                        }
                         pb.setCallForwardingTimerOption(StartHour,
                             StartMinute,
                             EndHour,
