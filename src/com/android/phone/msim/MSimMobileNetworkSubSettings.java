@@ -481,6 +481,10 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             Log.d(LOG_TAG, "failed to update lte button", e);
         }
 
+        if (mButtonPreferredNetworkMode != null) {
+            UpdatePreferredNetworkModeSummary(getPreferredNetworkMode(), getAcqValue());
+        }
+
         mButtonPreferredLte.setEnabled(enabled);
         mButtonPreferredLte.setChecked(checked);
     }
