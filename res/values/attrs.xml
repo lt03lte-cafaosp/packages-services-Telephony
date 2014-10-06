@@ -48,7 +48,7 @@
             <!-- not_reachable -->
             <enum name="not_reachable" value="3" />
             <!-- unconditional_time -->
-            <enum name="unconditional_time" value="4" />
+            <enum name="unconditional_time" value="6" />
         </attr>
     </declare-styleable>
 </resources>
