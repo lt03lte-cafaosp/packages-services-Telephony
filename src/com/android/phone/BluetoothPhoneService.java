@@ -436,7 +436,7 @@ public class BluetoothPhoneService extends Service {
         mRingingCallState = ringingCall.getState();
         mRingNumber = getCallNumber(connection, ringingCall);
 
-        if (mCM.getDefaultPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
+        if (mCM.getPhoneInCall().getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
             mNumHeld = getNumHeldCdma();
             PhoneGlobals app = PhoneGlobals.getInstance();
             if (app.cdmaPhoneCallState != null) {
@@ -493,7 +493,7 @@ public class BluetoothPhoneService extends Service {
         }
 
         boolean callsSwitched = false;
-        if (mCM.getDefaultPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA &&
+        if (mCM.getPhoneInCall().getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA &&
             mCdmaThreeWayCallState == CdmaPhoneCallState.PhoneCallState.CONF_CALL) {
             callsSwitched = mCdmaCallsSwapped;
         } else {
@@ -530,7 +530,7 @@ public class BluetoothPhoneService extends Service {
             }
             return;
         }
-        Phone phone = mCM.getDefaultPhone();
+        Phone phone = mCM.getPhoneInCall();
         int phoneType = phone.getPhoneType();
 
         // TODO(BT) handle virtual call
@@ -1297,7 +1297,7 @@ public class BluetoothPhoneService extends Service {
                     Log.e(TAG, " BluetoothDsdaService class not found exception " + e);
                 }
             }
-            Phone phone = mCM.getDefaultPhone();
+            Phone phone = mCM.getPhoneInCall();
             int phoneType = phone.getPhoneType();
             log("processChld: " + chld + " for Phone type: " + phoneType);
             Call ringingCall = mCM.getFirstActiveRingingCall();
