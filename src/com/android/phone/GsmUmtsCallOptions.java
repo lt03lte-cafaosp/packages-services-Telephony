@@ -46,6 +46,7 @@ public class GsmUmtsCallOptions extends PreferenceActivity {
 
     @Override
     protected void onCreate(Bundle icicle) {
+        if (DBG) Log.d(LOG_TAG, "onCreate()");
         super.onCreate(icicle);
 
         addPreferencesFromResource(R.xml.gsm_umts_call_options);

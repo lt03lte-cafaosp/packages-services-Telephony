@@ -462,16 +462,31 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         if (mButtonPreferredLte == null) {
             return;
         }
+        boolean checked = false;
+        boolean enabled = false;
         try {
-            mButtonPreferredLte.setEnabled(PhoneUtils.isLTE(MSimTelephonyManager
+            enabled = PhoneUtils.isLTE(MSimTelephonyManager
                     .getIntAtIndex(getContentResolver(), Settings.Global.PREFERRED_NETWORK_MODE,
-                            mSubscription)));
-            mButtonPreferredLte.setChecked(MSimTelephonyManager.getIntAtIndex(getContentResolver(),
+                            mSubscription));
+        } catch (SettingNotFoundException e) {
+            Log.d(LOG_TAG, "failed to update lte button", e);
+
+        }
+
+        try {
+            checked = MSimTelephonyManager.getIntAtIndex(getContentResolver(),
                     Constants.SETTING_TDD_DATA_ONLY_USER_REF, mSubscription)
-                    == Constants.SETTING_ON);
+                    == Constants.SETTING_ON;
         } catch (SettingNotFoundException e) {
             Log.d(LOG_TAG, "failed to update lte button", e);
         }
+
+        if (mButtonPreferredNetworkMode != null) {
+            UpdatePreferredNetworkModeSummary(getPreferredNetworkMode(), getAcqValue());
+        }
+
+        mButtonPreferredLte.setEnabled(enabled);
+        mButtonPreferredLte.setChecked(checked);
     }
 
     @Override

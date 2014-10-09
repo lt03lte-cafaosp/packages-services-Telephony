@@ -266,6 +266,32 @@
     <string name="sum_cfu_disabled">Disabled</string>
 
     <!-- Call forwarding settings screen, setting option name -->
+    <string name="labelCFUT">Always forward based on time</string>
+    <!-- Call forwarding dialog box, text field label -->
+    <string name="messageCFUT">Always use this number</string>
+    <!-- Call forwarding settings screen, setting summary text when forwarding all calls -->
+    <string name="sum_cfut_enabled_indicator">Forwarding all calls</string>
+    <!-- Call forwarding settings screen, setting summary text the Always forward is set -->
+    <string name="sum_cfut_enabled">Forwarding all calls to <xliff:g id="phonenumber" example="555-1212">{0}</xliff:g></string>
+    <!-- Call forwarding settings screen, Always forward is enabled but the number is unavailable -->
+    <string name="sum_cfut_enabled_no_number">Number is unavailable</string>
+    <!-- Call forwarding settings screen, setting summary text when Always forward is disabled -->
+    <string name="sum_cfut_disabled">Disabled</string>
+
+    <string name="set_time_period">Set time period</string>
+    <string name="all_day">All day</string>
+    <string name="time_interval_char">: </string>
+    <string name="time_start">From</string>
+    <string name="time_start_hour">time start hour</string>
+    <string name="time_start_minute">time start minute</string>
+    <string name="time_end">To</string>
+    <string name="time_end_hour">time end hour</string>
+    <string name="time_end_minute">time end minute</string>
+    <string name="time_formate_am">AM</string>
+    <string name="time_formate_pm">PM</string>
+    <string name="cf_mobile_date">Please turn on mobile data and make sure that WLAN is off</string>
+
+    <!-- Call forwarding settings screen, setting option name -->
     <string name="labelCFB">Forward when busy</string>
     <!-- Call forwarding dialog box, text field label -->
     <string name="messageCFB">Number when busy</string>
@@ -1648,6 +1674,8 @@
     <!-- End of SIP settings related strings -->
 
     <!-- IMS settings related strings -->
+    <!-- Title displayed IMS account settings in the sip settings category. [CHAR LIMIT=NONE] -->
+    <string name="ims_settings">4G Call Settings</string>
     <!-- Title of the ims editor screen. [CHAR LIMIT=NONE] -->
     <string name="ims_edit_title">IMS account details</string>
     <!-- Title displayed IMS account settings in the sip settings category. [CHAR LIMIT=NONE] -->
@@ -1674,6 +1702,15 @@
     <string name="remove_ims_account">Remove account</string>
     <string name="ims_call_type_voice">Voice</string>
     <string name="ims_call_type_video">Video</string>
+    <!-- IMS registration preference -->
+    <string translatable="false" name="ims_reg_state">IMSRegState</string>
+    <string name="ims_reg_title">Call priority</string>
+    <!-- Default IMS Registration State. -->
+    <string translatable="false" name="default_ims_reg_state">4G call</string>
+    <!-- IMS Registration State change request failed. -->
+    <string name="ims_registration_state_changed_fail">Register unsuccessfully. The network is not avaiable.</string>
+    <string name="ims_registered_summary">4G call</string>
+    <string name="ims_deregistered_summary">2G/3G call</string>
     <!-- End of IMS settings related strings -->
 
     <!-- Dialog title to notify user that Voice calling is not supported
@@ -2062,5 +2099,6 @@
     <string name="dialing">Calling</string>
     <string name="preferred_lte">"Enable 4G data only"</string>
     <string name="preferred_lte_summary">"When enable 4G data only, voice and SMS will not work"</string>
-    <string name="ims_registration">ims registred</string>
+    <string name="ims_registration">4G Call</string>
+    <string name="ims_registration_details">You can make HD calls</string>
 </resources>

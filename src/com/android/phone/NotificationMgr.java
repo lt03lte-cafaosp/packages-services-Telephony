@@ -975,6 +975,8 @@ public class NotificationMgr {
     }
 
     void updateImsRegistration(boolean registered) {
+        SystemProperties.set(
+                "persist.radio.ims.registered", (registered ? "1":"0"));
         if (registered) {
             Intent intent = new Intent(Intent.ACTION_MAIN);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -984,6 +986,7 @@ public class NotificationMgr {
             Notification notification = new Notification.Builder(mContext)
                     .setSmallIcon(R.drawable.ims_state)
                     .setContentTitle(mContext.getText(R.string.ims_registration))
+                    .setContentText(mContext.getText(R.string.ims_registration_details))
                     .setContentIntent(pIntent).build();
 
             notification.flags |= Notification.FLAG_ONGOING_EVENT;
