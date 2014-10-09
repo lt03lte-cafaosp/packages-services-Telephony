@@ -128,6 +128,8 @@ public class PhoneUtils {
     /** check status then decide whether answerCall */
     private static final int MSG_CHECK_STATUS_ANSWERCALL = 100;
 
+    /** check the result of addParicipant**/
+    private static final int MSG_ADD_PARTICIPANT_DONE = 101;
     /** poll phone DISCONNECTING status interval */
     private static final int DISCONNECTING_POLLING_INTERVAL_MS = 200;
 
@@ -139,6 +141,14 @@ public class PhoneUtils {
 
     /** Noise suppression status as selected by user */
     private static boolean sIsNoiseSuppressionEnabled = true;
+
+    private static List<String> mAddParticipantList = new ArrayList<String>();
+
+    private static int mClir;
+
+    private static int mCallType;
+
+    private static String[] mExtras;
 
     private static class FgRingCalls {
         private Call fgCall;
@@ -277,6 +287,20 @@ public class PhoneUtils {
                         setMuteInternal(cm.getFgPhone(), false);
                     }
 
+                    break;
+                case MSG_ADD_PARTICIPANT_DONE:
+                    AsyncResult result = (AsyncResult)msg.obj;
+                    if ((result != null)&&(result.exception != null)){
+                        Log.e(LOG_TAG, "addParticipant exception = " + result.exception);
+                        mAddParticipantList.clear();
+                    } else {
+                        mAddParticipantList.remove(0);
+                        log("mAddParticipantList = " + mAddParticipantList);
+                        if (mAddParticipantList.size() > 0) {
+                            addParticipant(mAddParticipantList.get(0), mClir, mCallType, mExtras,
+                                    mConnectionHandler.obtainMessage(MSG_ADD_PARTICIPANT_DONE));
+                        }
+                    }
                     break;
             }
         }
@@ -3316,13 +3340,51 @@ public class PhoneUtils {
         final PhoneGlobals app = PhoneGlobals.getInstance();
         Phone phone = getImsPhone(app.getCallManager());
         if (phone != null) {
-            Log.d(LOG_TAG, "addParticipant");
-            try {
-                phone.addParticipant(dialString, clir, callType, extras);
-            } catch (CallStateException e) {
-                Log.e("PhoneUtils", "Exception in addParticipant" + e);
+            Log.d(LOG_TAG, "addParticipant dialString=" + dialString);
+            String[] dialNumbers = dialString.split(";");
+            if ((dialNumbers != null) && (dialNumbers.length > 1)) {
+                addParticipantList(dialNumbers, clir, callType, extras);
+            } else {
+                try {
+                    phone.addParticipant(dialString, clir, callType, extras);
+                } catch (CallStateException e) {
+                    Log.e("PhoneUtils", "Exception in addParticipant" + e);
+                }
             }
         }
+    }
+
+    private static void addParticipant(String dialString, int clir, int callType, String[] extras,
+            Message msg) {
+        final PhoneGlobals app = PhoneGlobals.getInstance();
+        Phone phone = getImsPhone(app.getCallManager());
+        if (phone != null) {
+            Log.d(LOG_TAG, "addParticipantwithMsg dialString=" + dialString);
+            try {
+                phone.addParticipant(dialString, clir, callType, extras, msg);
+            } catch (CallStateException e) {
+                Log.e("PhoneUtils", "Exception in addParticipantMsg" + e);
+            }
+        }
+    }
+
+    private static void addParticipantList(String[] dialList, int clir, int callType,
+            String[] extras) {
+        if ((dialList == null)||(dialList.length < 2)){
+            Log.e(LOG_TAG, "dialList not accepted");
+            return;
+        }
+        mAddParticipantList.clear();
+        for (String number : dialList) {
+            mAddParticipantList.add(number);
+        }
+        mClir = clir;
+        mCallType = callType;
+        mExtras = extras;
+        log("addParticipantList mAddParticipantList= " + mAddParticipantList + ";mClir = " + mClir
+                + ";mCallType = " + mCallType);
+        addParticipant(mAddParticipantList.get(0), mClir, mCallType, mExtras,
+                mConnectionHandler.obtainMessage(MSG_ADD_PARTICIPANT_DONE));
     }
 
     public static void hangupWithReason(int callId, String userUri,

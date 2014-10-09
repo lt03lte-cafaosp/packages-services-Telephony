@@ -18,6 +18,10 @@
 -->
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:phone="http://schemas.android.com/apk/res/com.android.phone">
+    <PreferenceCategory
+        android:key="ims_settings_category_key"
+        android:title="@string/ims_settings"
+        android:persistent="false">
         <PreferenceScreen
                 android:key="ims_account_settings_key"
                 android:title="@string/ims_accounts_title"
@@ -27,4 +31,13 @@
                     android:targetPackage="com.android.phone"
                     android:targetClass="com.android.phone.ims.ImsEditor" />
         </PreferenceScreen>
+        <ListPreference
+            android:dialogTitle="@string/ims_reg_title"
+            android:entries="@array/ims_registration_states"
+            android:entryValues="@array/ims_registration_states"
+            android:key="ims_registration"
+            android:persistent="false"
+            android:summary="@string/default_ims_reg_state"
+            android:title="@string/ims_reg_title" />
+    </PreferenceCategory>
 </PreferenceScreen>

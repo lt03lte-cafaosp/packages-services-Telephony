@@ -28,12 +28,13 @@
 
 package com.android.services.telephony.common;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import android.util.Log;
 import android.os.Parcel;
 import android.os.Parcelable;
-
 /**
  * CallDetails class takes care of all the additional details like call type and
  * domain needed for IMS calls. This class is not relevant for non-IMS calls
@@ -138,11 +139,16 @@ public class CallDetails implements Parcelable {
     public static final String EXTRAS_IS_CONFERENCE_URI = "isConferenceUri";
     public static final String EXTRAS_PARENT_CALL_ID = "parentCallId";
 
+    public static final String CONFERENCE_DETATILS_URI = "CONF_URI";
+    public static final String CONFERENCE_DETATILS_DISPLAY_TEXT = "CONF_DISPLAY_TEXT";
+    public static final String CONFERENCE_DETATILS_STATE = "CONF_STATUS";
+
     private int mCallType;
     private int mCallDomain;
     private String[] mExtras;
     private String mErrorInfo;
     private String[] mConfParList;
+    private Map<String, String[]> mConfDetails;
     private boolean mIsMpty;
     private static String LOG_TAG = "CallDetails";
 
@@ -253,12 +259,39 @@ public class CallDetails implements Parcelable {
         }
     }
 
+    public void setConfDetailsFromMap(Map<String, List<String>> confMap){
+        if (mConfDetails != null){
+            mConfDetails.clear();
+        }else{
+            mConfDetails = new HashMap<String, String[]>();
+        }
+        for (Entry<String,List<String>> userEntry: confMap.entrySet()){
+            String uri = userEntry.getKey();
+            List<String> list = userEntry.getValue();
+            String[] userDetail = null;
+            if (list != null){
+                userDetail = new String[list.size()];
+                for (int i = 0; i < list.size(); i++){
+                    userDetail[i] = list.get(i);
+                    Log.d(LOG_TAG, "uri=" + uri + ";Detail=" + userDetail[i]);
+                }
+            } else {
+                Log.e(LOG_TAG, "no userdetail for uri: " + uri);
+            }
+            mConfDetails.put(uri, userDetail);
+        }
+    }
+
     public String[] getExtras() {
         return mExtras;
     }
 
     public String[] getConfParticipantList() {
         return mConfParList;
+    }
+
+    public Map<String, String[]> getConfDetails(){
+        return mConfDetails;
     }
 
     public void writeToParcel(Parcel dest, int flag) {
@@ -268,6 +301,14 @@ public class CallDetails implements Parcelable {
         dest.writeString(mErrorInfo);
         dest.writeStringArray(mConfParList);
         dest.writeByte((byte) (mIsMpty ? 1 : 0));
+        int confDetailLen = mConfDetails == null ? 0 : mConfDetails.size();
+        dest.writeInt(confDetailLen);
+        if (confDetailLen > 0) {
+            for (Entry<String, String[]> userEntry : mConfDetails.entrySet()) {
+                dest.writeString(userEntry.getKey());
+                dest.writeStringArray(userEntry.getValue());
+            }
+        }
     }
 
     public void readFromParcel(Parcel in) {
@@ -277,6 +318,13 @@ public class CallDetails implements Parcelable {
         mErrorInfo = in.readString();
         mConfParList = in.readStringArray();
         mIsMpty = in.readByte() != 0;
+        int confDetailLen = in.readInt();
+        mConfDetails = new HashMap<String, String[]>();
+        for (int i = 0; i < confDetailLen; i++) {
+            String userUri = in.readString();
+            String[] userDetails = in.readStringArray();
+            mConfDetails.put(userUri, userDetails);
+        }
     }
 
     public static String[] getExtrasFromMap(Map<String, String> newExtras) {
@@ -339,6 +387,6 @@ public class CallDetails implements Parcelable {
                 + " erroinfo" + mErrorInfo
                 + " mConfParList" + uri
                 + " multiparty" + mIsMpty
-                + " " + extrasResult);
+                + " " + extrasResult + "mConfDetails:" + mConfDetails);
     }
 }
