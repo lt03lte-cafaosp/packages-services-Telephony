@@ -955,6 +955,10 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
     public static boolean isIMSRegisterd(){
         boolean IMSRegisterd = false;
         int IMSRegistrationState = 0;
+        boolean CSVTSupported = SystemProperties.getBoolean("persist.radio.csvt.enabled", false);
+        if (CSVTSupported) {
+            return false;
+        }
         try {
             //here have a problem for csvt mode.
             IMSRegistrationState = PhoneGlobals.mImsService.getRegistrationState();
