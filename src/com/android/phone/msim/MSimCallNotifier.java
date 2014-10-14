@@ -48,6 +48,7 @@ import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.TelephonyCapabilities;
+import com.android.phone.PhoneUtils;
 
 /**
  * Phone app module that listens for phone state changes and various other
@@ -246,6 +247,7 @@ public class MSimCallNotifier extends CallNotifier {
     protected void onNewRingingConnection(AsyncResult r) {
         Connection c = (Connection) r.result;
         int subscription = c.getCall().getPhone().getSubscription();
+        PhoneUtils.setActiveSubscription(subscription);
 
         log("onNewRingingConnection(): state = " + mCM.getState() + ", conn = { " + c + " }" +
                 " subscription = " + subscription);
