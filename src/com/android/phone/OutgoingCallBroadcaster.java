@@ -738,6 +738,10 @@ public class OutgoingCallBroadcaster extends Activity
                     intent.getBooleanExtra((EXTRA_DIAL_CONFERENCE_URI), false));
             broadcastIntent.putExtra(EXTRA_SKIP_SCHEMA_PARSING,
                     intent.getBooleanExtra((EXTRA_SKIP_SCHEMA_PARSING), false));
+            broadcastIntent.putExtra(EXTRA_CALL_TYPE,
+                    intent.getIntExtra((EXTRA_CALL_TYPE), Phone.CALL_TYPE_INVALID));
+            broadcastIntent.putExtra(EXTRA_CALL_DOMAIN,
+                    intent.getIntExtra((EXTRA_CALL_DOMAIN), Phone.CALL_DOMAIN_CS));
 
             // Need to raise foreground in-call UI as soon as possible while allowing 3rd party app
             // to intercept the outgoing call.
