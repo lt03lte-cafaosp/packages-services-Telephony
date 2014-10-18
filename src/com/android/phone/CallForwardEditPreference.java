@@ -133,6 +133,7 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
             final int EndHour = getEndTimeHour();
             final int EndMinute = getEndTimeMinute();
             if (DBG) Log.d(LOG_TAG, "callForwardInfo=" + callForwardInfo);
+
             boolean isCFSettingChanged = true;
             if (action == CommandsInterface.CF_ACTION_REGISTRATION
                     && callForwardInfo != null
@@ -151,7 +152,7 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
                     isCFSettingChanged = false;
                 }
             }
-            if (DBG) Log.d(LOG_TAG, "onDialogClosed: " 
+            if (DBG) Log.d(LOG_TAG, "onDialogClosed: "
                     + ", reason=" + reason
                     + ", action=" + action
                     + ", number=" + number
@@ -169,7 +170,8 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
                 // should be action, reason...
                 if (PhoneGlobals.isIMSRegisterd()){
                     Log.d(LOG_TAG, "onDialogClosed, set CallForwarding on UT");
-                    PhoneBase pb = (PhoneBase) PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
+                    PhoneBase pb =
+                        (PhoneBase) PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
                     if (reason == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER){
                         if (DBG) {
                             Log.d(LOG_TAG, "onDialogClosed, setCallForwardingTimerOption"
@@ -223,10 +225,17 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
         setPhoneNumber(callForwardInfo.number);
         //for cfu time based case, need to set time.
         if (callForwardInfo.reason == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER
-                || callForwardInfo.reason == CommandsInterface.CF_REASON_UNCONDITIONAL){
-            if (DBG) Log.e(LOG_TAG, "handleCallForwardResult, for CF_REASON_UNCONDITIONAL.");
+                /*|| callForwardInfo.reason == CommandsInterface.CF_REASON_UNCONDITIONAL*/){
+            if (DBG){
+                Log.e(LOG_TAG, "handleCallForwardResult, reason " + callForwardInfo.reason
+                        + ", number " + callForwardInfo.number
+                        + ", startHour " + callForwardInfo.startHour
+                        + ", startMinute " + callForwardInfo.startMinute
+                        + ", endHour " + callForwardInfo.endHour
+                        + ", endMinute " + callForwardInfo.endMinute);
+            }
             setPhoneNumberWithTimePeriod(callForwardInfo.number,
-                    callForwardInfo.startHour, callForwardInfo.endMinute,
+                    callForwardInfo.startHour, callForwardInfo.startMinute,
                     callForwardInfo.endHour, callForwardInfo.endMinute);
         }
     }
@@ -237,7 +246,7 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
             CharSequence summaryOn;
             String number = getRawPhoneNumber();
             if (reason == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER
-                || reason == CommandsInterface.CF_REASON_UNCONDITIONAL){
+                /*|| reason == CommandsInterface.CF_REASON_UNCONDITIONAL*/){
                 number = getRawPhoneNumberWithTime();
             }
             if (number != null && number.length() > 0) {
@@ -353,9 +362,16 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
                 if (DBG) Log.d(LOG_TAG, "handleSetCFResponse: ar.exception=" + ar.exception);
                 // setEnabled(false);
             }
-            if (DBG) Log.d(LOG_TAG, "handleSetCFResponse: re get");
+            if (DBG) Log.d(LOG_TAG, "handleSetCFResponse: re get, reason = " + reason);
+            if (reason == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER){
+                PhoneBase pb =
+                    (PhoneBase) PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
+                pb.getCallForwardingOption(reason,
+                    obtainMessage(MESSAGE_GET_CF, msg.arg1, MESSAGE_SET_CF, ar.exception));
+            } else {
             phone.getCallForwardingOption(reason,
                     obtainMessage(MESSAGE_GET_CF, msg.arg1, MESSAGE_SET_CF, ar.exception));
+            }
         }
     }
 }
