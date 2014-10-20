@@ -896,6 +896,17 @@ public class PhoneUtils {
             initiallyIdle = app.mCM.getState() == PhoneConstants.State.IDLE;
         }
 
+        if (isCallOnImsEnabled() && (PhoneNumberUtils.isLocalEmergencyNumber(number, app)
+                || PhoneNumberUtils.isPotentialLocalEmergencyNumber(number, app))) {
+            Phone imsPhone = getImsPhone(app.mCM);
+            if (imsPhone.getSubscription() == phone.getSubscription()) {
+                Log.d(LOG_TAG, "Emergency call on ims phone: " + imsPhone.getSubscription());
+                phone = imsPhone;
+            } else {
+                Log.d(LOG_TAG, "Emergency call on CS phone: " + phone.getSubscription());
+            }
+        }
+
         try {
             connection = app.mCM.dial(phone, numberToDial, callType, extras);
         } catch (CallStateException ex) {
