@@ -2068,6 +2068,10 @@ public class PhoneUtils {
         int numActiveConnections = 0;
         for (Connection conn : connections) {
             if (DBG) log("  - CONN: " + conn + ", state = " + conn.getState());
+            if (conn.getCallDetails().call_domain
+                    == com.android.services.telephony.common.CallDetails.CALL_DOMAIN_PS) {
+                return true;
+            }
             if (conn.getState() == Call.State.ACTIVE) numActiveConnections++;
             if (numActiveConnections > 1) {
                 return true;
