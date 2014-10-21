@@ -128,10 +128,10 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
                     CommandsInterface.CF_ACTION_DISABLE;
             int time = (reason != CommandsInterface.CF_REASON_NO_REPLY) ? 0 : 20;
             final String number = getPhoneNumber();
-            final int StartHour = getStartTimeHour();
-            final int StartMinute = getStartTimeMinute();
-            final int EndHour = getEndTimeHour();
-            final int EndMinute = getEndTimeMinute();
+            final int editStartHour = isAllDayChecked()? 0 : getStartTimeHour();
+            final int editStartMinute = isAllDayChecked()? 0 : getStartTimeMinute();
+            final int editEndHour = isAllDayChecked()? 0 : getEndTimeHour();
+            final int editEndMinute = isAllDayChecked()? 0 : getEndTimeMinute();
             if (DBG) Log.d(LOG_TAG, "callForwardInfo=" + callForwardInfo);
 
             boolean isCFSettingChanged = true;
@@ -140,12 +140,16 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
                     && callForwardInfo.status == 1
                     && number.equals(callForwardInfo.number)) {
                 if (reason == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER
-                        || reason == CommandsInterface.CF_REASON_UNCONDITIONAL){
+                        /*|| reason == CommandsInterface.CF_REASON_UNCONDITIONAL*/){
                     // need to check if the time period for CFUT is changed
-                    isCFSettingChanged = !(callForwardInfo.startHour == StartHour
-                            && callForwardInfo.startHour == StartMinute
-                            && callForwardInfo.endHour == EndHour
-                            && callForwardInfo.endMinute == EndMinute);
+                    if (isAllDayChecked()){
+                        isCFSettingChanged = isTimerValid(callForwardInfo);
+                    } else {
+                        isCFSettingChanged = callForwardInfo.startHour != editStartHour
+                                || callForwardInfo.startHour != editStartMinute
+                                || callForwardInfo.endHour != editEndHour
+                                || callForwardInfo.endMinute != editEndMinute;
+                    }
                 } else {
                     // no change, do nothing
                     if (DBG) Log.d(LOG_TAG, "no change, do nothing");
@@ -175,15 +179,15 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
                     if (reason == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER){
                         if (DBG) {
                             Log.d(LOG_TAG, "onDialogClosed, setCallForwardingTimerOption"
-                                + ", StartHour=" + StartHour
-                                + ", StartMinute=" + StartMinute
-                                + ", EndHour=" + EndHour
-                                + ", EndMinute=" + EndMinute);
+                                + ", StartHour=" + editStartHour
+                                + ", StartMinute=" + editStartMinute
+                                + ", EndHour=" + editEndHour
+                                + ", EndMinute=" + editEndMinute);
                         }
-                        pb.setCallForwardingTimerOption(StartHour,
-                            StartMinute,
-                            EndHour,
-                            EndMinute,
+                        pb.setCallForwardingTimerOption(editStartHour,
+                            editStartMinute,
+                            editEndHour,
+                            editEndMinute,
                             action,
                             reason,
                             number,
@@ -228,12 +232,15 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
                 /*|| callForwardInfo.reason == CommandsInterface.CF_REASON_UNCONDITIONAL*/){
             if (DBG){
                 Log.e(LOG_TAG, "handleCallForwardResult, reason " + callForwardInfo.reason
+                        + ", status " + callForwardInfo.status
                         + ", number " + callForwardInfo.number
                         + ", startHour " + callForwardInfo.startHour
                         + ", startMinute " + callForwardInfo.startMinute
                         + ", endHour " + callForwardInfo.endHour
                         + ", endMinute " + callForwardInfo.endMinute);
             }
+            //set all day not checked if cfut is enabled
+            setAllDayCheckBox(!isTimerValid(callForwardInfo));
             setPhoneNumberWithTimePeriod(callForwardInfo.number,
                     callForwardInfo.startHour, callForwardInfo.startMinute,
                     callForwardInfo.endHour, callForwardInfo.endMinute);
@@ -373,5 +380,11 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
                     obtainMessage(MESSAGE_GET_CF, msg.arg1, MESSAGE_SET_CF, ar.exception));
             }
         }
+    }
+
+    //used to check if timer infor is valid
+    private boolean isTimerValid(CallForwardInfo cfinfo) {
+        return cfinfo.startHour != 0 || cfinfo.startMinute != 0
+                  || cfinfo.endHour != 0 || cfinfo.endMinute != 0;
     }
 }

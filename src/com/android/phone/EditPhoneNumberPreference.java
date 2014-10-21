@@ -117,12 +117,19 @@ public class EditPhoneNumberPreference extends EditTextPreference
 
     //relevant (parsed) value of the mText
     private String mPhoneNumber;
-    private int mStartTimeHour = 1;
-    private int mStartTimeMinute = 10;
-    private int mEndTimeHour = 2;
-    private int mEndTimeMinute = 20;
-    private int timeformateAMPM = 0;
+    private int mValidStartTimeHour = 0;
+    private int mValidStartTimeMinute = 0;
+    private int mValidEndTimeHour = 0;
+    private int mValidEndTimeMinute = 0;
+
+    private int mStartTimeHour = 22;
+    private int mStartTimeMinute = 0;
+    private int mStartTimeAPMP = 0;
+    private int mEndTimeHour = 8;
+    private int mEndTimeMinute = 0;
+    private int mEndTimeAMPM = 0;
     private String mTimePeriodString;
+    private boolean mTimePeriodAllDayChecked = true;
     private boolean mChecked;
 
 
@@ -365,7 +372,8 @@ public class EditPhoneNumberPreference extends EditTextPreference
                 (mButtonClicked == DialogInterface.BUTTON_NEUTRAL)){
             String number = getEditText().getText().toString();
             if (mPrefId == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER
-                    /*|| mPrefId == CommandsInterface.CF_REASON_UNCONDITIONAL*/){
+                    || mPrefId == CommandsInterface.CF_REASON_UNCONDITIONAL){
+                mTimePeriodAllDayChecked = isAllDayChecked();
                 setPhoneNumberWithTimePeriod(number,
                     mStartTimeHour, mStartTimeMinute, mEndTimeHour, mEndTimeMinute);
                 Log.e(TAG, "onDialogClosed, phonenumber = " + number
@@ -431,6 +439,10 @@ public class EditPhoneNumberPreference extends EditTextPreference
         return mEndTimeMinute;
     }
 
+    public boolean isAllDayChecked() {
+        return mTimePeriodAllDay.isChecked();
+    }
+
     /** The phone number including any formatting characters */
     protected String getRawPhoneNumber() {
         return mPhoneNumber;
@@ -451,6 +463,10 @@ public class EditPhoneNumberPreference extends EditTextPreference
         return this;
     }
 
+    public void setAllDayCheckBox(boolean checked){
+        mTimePeriodAllDayChecked = checked;
+    }
+
     //set the phone number with time period info.
     //frist using this method to process the info from network
     //second using this method after set new info
@@ -467,20 +483,25 @@ public class EditPhoneNumberPreference extends EditTextPreference
     //set the phone number with time period info.
     public void setTimePeriodInfo(int starthour, int startminute,
             int endhour, int endminute) {
-        mStartTimeHour = starthour;
-        mStartTimeMinute = startminute;
-        mEndTimeHour = endhour;
-        mEndTimeMinute = endminute;
-        if (mStartTimeHour == 0 && mStartTimeMinute == 0
-                && mEndTimeHour == 23 && mEndTimeMinute == 59){
+        mValidStartTimeHour = starthour;
+        mValidStartTimeMinute = startminute;
+        mValidEndTimeHour = endhour;
+        mValidEndTimeMinute = endminute;
+        if ((mStartTimeHour == 0 && mStartTimeMinute == 0
+                && mEndTimeHour == 0 && mEndTimeMinute == 0)
+                || mTimePeriodAllDayChecked){
             mTimePeriodString = " all day";
         } else {
             String fomatedStartTimeString = formateTime(mStartDate,
                     mStartTimeHour, mStartTimeMinute);
             String fomatedEndTimeString = formateTime(mEndDate,
                     mEndTimeHour, mEndTimeMinute);
-            mTimePeriodString = " from" + fomatedStartTimeString
+            mTimePeriodString = " from " + fomatedStartTimeString
                     + " to " + fomatedEndTimeString;
+            if (mEndTimeHour*60 + mEndTimeMinute
+                    < mStartTimeHour*60 + mStartTimeMinute){
+                mTimePeriodString = mTimePeriodString + " next day";
+            }
         }
     }
 
@@ -658,6 +679,9 @@ public class EditPhoneNumberPreference extends EditTextPreference
         Log.e(TAG, "initTimeSettingsView, mPrefId = " + mPrefId);
         //all day default for time period
         mTimePeriodAllDay = (CheckBox) view.findViewById(R.id.all_day);
+        mTimePeriodAllDay.setChecked(mTimePeriodAllDayChecked);
+        Log.d(TAG, "initTimeSettingsView, mTimePeriodAllDayChecked = "
+                + mTimePeriodAllDayChecked);
         mTimePeriodAllDay.setOnCheckedChangeListener(new CompoundButton
                 .OnCheckedChangeListener(){
                     @Override
@@ -683,7 +707,9 @@ public class EditPhoneNumberPreference extends EditTextPreference
 
         //set end time formate
         mTimeStartFormate = (Spinner) view.findViewById(R.id.time_start_formate);
+        mTimeStartFormate.setOnItemSelectedListener(this);
         mTimeEndFormate = (Spinner) view.findViewById(R.id.time_end_formate);
+        mTimeEndFormate.setOnItemSelectedListener(this);
         time24hour = ArrayAdapter.createFromResource(getContext(),
                 R.array.hour_24_items, android.R.layout.simple_spinner_item);
         time24hour.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -699,23 +725,23 @@ public class EditPhoneNumberPreference extends EditTextPreference
             mTimeEndTextView.setVisibility(View.VISIBLE);
             mStartTimeSetting.setVisibility(View.VISIBLE);
             mEndTimeSetting.setVisibility(View.VISIBLE);
-            mTimeStartMinuteSpinner.setSelection(mStartTimeMinute);
-            mTimeEndMinuteSpinner.setSelection(mEndTimeMinute);
+            mTimeStartMinuteSpinner.setSelection(mValidStartTimeMinute);
+            mTimeEndMinuteSpinner.setSelection(mValidEndTimeMinute);
             if (is24Hour()){
                 mTimeStartFormate.setVisibility(View.GONE);
                 mTimeEndFormate.setVisibility(View.GONE);
                 mTimeStartHourSpinner.setAdapter(time24hour);
                 mTimeEndHourSpinner.setAdapter(time24hour);
-                mTimeStartHourSpinner.setSelection(mStartTimeHour);
-                mTimeEndHourSpinner.setSelection(mEndTimeHour);
+                mTimeStartHourSpinner.setSelection(mValidStartTimeHour);
+                mTimeEndHourSpinner.setSelection(mValidEndTimeHour);
             } else {
                 mTimeStartFormate.setVisibility(View.VISIBLE);
                 mTimeEndFormate.setVisibility(View.VISIBLE);
 
                 mTimeStartHourSpinner.setAdapter(time12hour);
                 mTimeEndHourSpinner.setAdapter(time12hour);
-                showTimeWith24Formate(mStartTimeHour, mTimeStartHourSpinner, mTimeStartFormate);
-                showTimeWith24Formate(mEndTimeHour, mTimeEndHourSpinner, mTimeEndFormate);
+                showTimeWith24Formate(mValidStartTimeHour, mTimeStartHourSpinner, mTimeStartFormate);
+                showTimeWith24Formate(mValidEndTimeHour, mTimeEndHourSpinner, mTimeEndFormate);
             }
             onAllDayChecked(mTimePeriodAllDay.isChecked());
         }
@@ -762,18 +788,18 @@ public class EditPhoneNumberPreference extends EditTextPreference
 
     private void setSelectionStartTimePreiod( ){
         mStartTimeMinute = (int) mTimeStartMinuteSpinner.getSelectedItemId();
-        Log.d(TAG, "setSelectionTimePreiod, minute = "+mStartTimeMinute);
-        int hourposion = (int) mTimeStartHourSpinner.getSelectedItemId();
-        Log.d(TAG, "setSelectionTimePreiod, hourposion = "+hourposion);
+        Log.d(TAG, "setSelectionTimePreiod, mStartTimeMinute = "+mStartTimeMinute);
+        int starthourposion = (int) mTimeStartHourSpinner.getSelectedItemId();
+        Log.d(TAG, "setSelectionTimePreiod, starthourposion = "+starthourposion);
         if (is24Hour()){
-            mStartTimeHour = (int) mTimeStartHourSpinner.getSelectedItemId();
+            mStartTimeHour = starthourposion;
         } else {
-            int selectedFormate = (int) mTimeStartFormate.getSelectedItemId();
-            Log.d(TAG, "setSelectionTimePreiod, selectedFormate = "+selectedFormate);
-            if (mTimeStartFormate.getSelectedItemId() == 0){
-                mStartTimeHour = hourposion;
-            } else if (mTimeStartFormate.getSelectedItemId() ==1){
-                mStartTimeHour = 12 + hourposion;
+            mStartTimeAPMP = (int) mTimeStartFormate.getSelectedItemId();
+            Log.d(TAG, "setSelectionTimePreiod, mStartTimeAPMP = " + mStartTimeAPMP);
+            if (mStartTimeAPMP == 0){
+                mStartTimeHour = starthourposion;
+            } else if (mStartTimeAPMP ==1){
+                mStartTimeHour = 12 + starthourposion;
             }
         }
         Log.d(TAG, "setSelectionTimePreiod, mStartTimeHour = "
@@ -783,17 +809,17 @@ public class EditPhoneNumberPreference extends EditTextPreference
     private void setSelectionEndTimePreiod(){
         mEndTimeMinute = (int) mTimeEndMinuteSpinner.getSelectedItemId();
         Log.d(TAG, "setSelectionTimePreiod, mEndTimeMinute = "+mEndTimeMinute);
-        int hourposion = (int) mTimeEndHourSpinner.getSelectedItemId();
-        Log.d(TAG, "setSelectionTimePreiod, endhourposion = "+hourposion);
+        int endhourposion = (int) mTimeEndHourSpinner.getSelectedItemId();
+        Log.d(TAG, "setSelectionTimePreiod, endhourposion = "+ endhourposion);
         if (is24Hour()){
             mEndTimeHour = (int) mTimeEndHourSpinner.getSelectedItemId();
         } else {
-            int selectedFormate = (int) mTimeEndFormate.getSelectedItemId();
-            Log.d(TAG, "setSelectionTimePreiod, selectedend time Formate = "+selectedFormate);
-            if (mTimeEndFormate.getSelectedItemId() == 0){
-                mEndTimeHour = hourposion;
-            } else if (mTimeEndFormate.getSelectedItemId() ==1){
-                mEndTimeHour = 12 + hourposion;
+            mEndTimeAMPM = (int) mTimeEndFormate.getSelectedItemId();
+            Log.d(TAG, "setSelectionTimePreiod, mEndTimeAMPM = " + mEndTimeAMPM);
+            if (mEndTimeAMPM == 0){
+                mEndTimeHour = endhourposion;
+            } else if (mEndTimeAMPM ==1){
+                mEndTimeHour = 12 + endhourposion;
             }
         }
         Log.d(TAG, "setSelectionTimePreiod, mEndTimeHour = "
