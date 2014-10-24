@@ -172,8 +172,7 @@ public class NetworkSetting extends PreferenceActivity
             if (DBG) log("connection created, binding local service.");
             mNetworkQueryService = ((NetworkQueryService.LocalBinder) service).getService();
             // as soon as it is bound, run a query.
-            if (getApplicationContext().getResources().getBoolean(
-                    R.bool.config_disable_data_manual_plmn) && !isMultiSimModeDsda()) {
+            if (isDataDisableRequired()) {
                 mSearchButton.setEnabled(false);
                 Message onCompleteMsg = mHandler.obtainMessage(EVENT_NETWORK_DATA_MANAGER_DONE);
                 mDataManager.updateDataState(false, onCompleteMsg);
@@ -209,8 +208,7 @@ public class NetworkSetting extends PreferenceActivity
         boolean handled = false;
 
         if (preference == mSearchButton) {
-            if (getApplicationContext().getResources().getBoolean(
-                    R.bool.config_disable_data_manual_plmn) && !isMultiSimModeDsda()) {
+            if (isDataDisableRequired()) {
                 mSearchButton.setEnabled(false);
                 Message onCompleteMsg = mHandler.obtainMessage(EVENT_NETWORK_DATA_MANAGER_DONE);
                 mDataManager.updateDataState(false, onCompleteMsg);
@@ -286,8 +284,7 @@ public class NetworkSetting extends PreferenceActivity
         startService (intent);
         bindService (new Intent(this, NetworkQueryService.class), mNetworkQueryServiceConnection,
                 Context.BIND_AUTO_CREATE);
-        if (getApplicationContext().getResources().getBoolean(
-                R.bool.config_disable_data_manual_plmn) && !isMultiSimModeDsda()) {
+        if (isDataDisableRequired()) {
             mDataManager = new NetworkSettingDataManager(getApplicationContext());
         }
     }
@@ -558,10 +555,16 @@ public class NetworkSetting extends PreferenceActivity
         mRatMap.put(String.valueOf(ServiceState.RIL_RADIO_TECHNOLOGY_TD_SCDMA), "3G");
     }
 
-    private boolean isMultiSimModeDsda() {
-        return (MSimTelephonyManager.getDefault()
-                .getMultiSimConfiguration()
-                == MSimTelephonyManager.MultiSimVariants.DSDA);
+    private boolean isDataDisableRequired() {
+        boolean isRequired = getApplicationContext().getResources().getBoolean(
+                         R.bool.config_disable_data_manual_plmn);
+        if((MSimTelephonyManager.getDefault().getMultiSimConfiguration()
+                == MSimTelephonyManager.MultiSimVariants.DSDA) &&
+                (MSimTelephonyManager.getDefault().getDefaultDataSubscription()
+                != mPhone.getSubscription())){
+                         isRequired = false;
+        }
+        return isRequired;
     }
 
     private void log(String msg) {

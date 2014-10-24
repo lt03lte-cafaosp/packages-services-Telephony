@@ -117,11 +117,11 @@ public class EditPhoneNumberPreference extends EditTextPreference
 
     //relevant (parsed) value of the mText
     private String mPhoneNumber;
-    private int mStartTimeHour = 22;
-    private int mStartTimeMinute = 0;
-    private int mEndTimeHour = 8;
-    private int mEndTimeMinute = 0;
-	private int timeformateAMPM = 0;
+    private int mStartTimeHour = 1;
+    private int mStartTimeMinute = 10;
+    private int mEndTimeHour = 2;
+    private int mEndTimeMinute = 20;
+    private int timeformateAMPM = 0;
     private String mTimePeriodString;
     private boolean mChecked;
 
@@ -364,8 +364,8 @@ public class EditPhoneNumberPreference extends EditTextPreference
         if ((mButtonClicked == DialogInterface.BUTTON_POSITIVE) ||
                 (mButtonClicked == DialogInterface.BUTTON_NEUTRAL)){
             String number = getEditText().getText().toString();
-            if (mPrefId == CommandsInterface.CF_REASON_UNCONDITIONAL
-                    || mPrefId == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER){
+            if (mPrefId == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER
+                    /*|| mPrefId == CommandsInterface.CF_REASON_UNCONDITIONAL*/){
                 setPhoneNumberWithTimePeriod(number,
                     mStartTimeHour, mStartTimeMinute, mEndTimeHour, mEndTimeMinute);
                 Log.e(TAG, "onDialogClosed, phonenumber = " + number
@@ -620,8 +620,8 @@ public class EditPhoneNumberPreference extends EditTextPreference
 
     //retrieve the state of this preference in the form of an encoded string
     protected String getStringValue() {
-        if (mPrefId == CommandsInterface.CF_REASON_UNCONDITIONAL
-                || mPrefId == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER){
+        if (mPrefId == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER
+                /*|| mPrefId == CommandsInterface.CF_REASON_UNCONDITIONAL*/){
             return ((isToggled() ? VALUE_ON : VALUE_OFF) + VALUE_SEPARATOR + getPhoneNumber()
                     + mTimePeriodString);
         }
@@ -645,14 +645,12 @@ public class EditPhoneNumberPreference extends EditTextPreference
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         String selectedItem = parent.getItemAtPosition(position).toString();
         Log.d(TAG, "onItemSelected"
-			    + ", selectedItem = " + selectedItem
-				+ ", position = " + position
-				+ ", parent" + parent);
+                + ", selectedItem = " + selectedItem
+                + ", position = " + position
+                + ", parent" + parent);
         //Toast.makeText(mParentActivity, "your option is " + selectedItem, 2000).show();
-        setSelectionTimePreiod(mStartTimeHour, mTimeStartHourSpinner,
-                mStartTimeMinute, mTimeStartMinuteSpinner, mTimeStartFormate);
-        setSelectionTimePreiod(mEndTimeHour, mTimeEndHourSpinner,
-                mEndTimeMinute, mTimeEndMinuteSpinner, mTimeEndFormate);
+        setSelectionStartTimePreiod();
+        setSelectionEndTimePreiod();
         dumpTimePeriodInfo();
     }
 
@@ -692,9 +690,9 @@ public class EditPhoneNumberPreference extends EditTextPreference
         time12hour = ArrayAdapter.createFromResource(getContext(),
                 R.array.hour_12_items, android.R.layout.simple_spinner_item);
         time12hour.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        if (/*PhoneGlobals.isIMSRegisterd()
-                && */( mPrefId == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER
-                || mPrefId == CommandsInterface.CF_REASON_UNCONDITIONAL )) {
+        if ((mPrefId == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER
+                /*|| mPrefId == CommandsInterface.CF_REASON_UNCONDITIONAL*/)
+                /*&& PhoneGlobals.isIMSRegisterd() */) {
             Log.e(TAG, "show time setting field");
             mTimePeriodAllDay.setVisibility(View.VISIBLE);
             mTimeStartTextView.setVisibility(View.VISIBLE);
@@ -762,24 +760,44 @@ public class EditPhoneNumberPreference extends EditTextPreference
         }
     }
 
-    private void setSelectionTimePreiod(int hour, Spinner hourSpinner,
-            int minute, Spinner minuteSpinner, Spinner timeFormate){
-        minute = (int) minuteSpinner.getSelectedItemId();
-		Log.d(TAG, "setSelectionTimePreiod, minute = "+minute);
-        int hourposion = (int) hourSpinner.getSelectedItemId();
-		Log.d(TAG, "setSelectionTimePreiod, hourposion = "+hourposion);
+    private void setSelectionStartTimePreiod( ){
+        mStartTimeMinute = (int) mTimeStartMinuteSpinner.getSelectedItemId();
+        Log.d(TAG, "setSelectionTimePreiod, minute = "+mStartTimeMinute);
+        int hourposion = (int) mTimeStartHourSpinner.getSelectedItemId();
+        Log.d(TAG, "setSelectionTimePreiod, hourposion = "+hourposion);
         if (is24Hour()){
-            hour = (int) hourSpinner.getSelectedItemId();
+            mStartTimeHour = (int) mTimeStartHourSpinner.getSelectedItemId();
         } else {
-            int selectedFormate = (int) timeFormate.getSelectedItemId();
+            int selectedFormate = (int) mTimeStartFormate.getSelectedItemId();
             Log.d(TAG, "setSelectionTimePreiod, selectedFormate = "+selectedFormate);
-            if (timeFormate.getSelectedItemId() == 0){
-                hour = hourposion;
-            } else if (timeFormate.getSelectedItemId() ==1){
-                hour = 12 + hourposion;
+            if (mTimeStartFormate.getSelectedItemId() == 0){
+                mStartTimeHour = hourposion;
+            } else if (mTimeStartFormate.getSelectedItemId() ==1){
+                mStartTimeHour = 12 + hourposion;
             }
         }
-        Log.d(TAG, "setSelectionTimePreiod, hour = "+ hour + ", minute = " + minute);
+        Log.d(TAG, "setSelectionTimePreiod, mStartTimeHour = "
+                + mStartTimeHour + ", mStartTimeMinute = " + mStartTimeMinute);
+    }
+
+    private void setSelectionEndTimePreiod(){
+        mEndTimeMinute = (int) mTimeEndMinuteSpinner.getSelectedItemId();
+        Log.d(TAG, "setSelectionTimePreiod, mEndTimeMinute = "+mEndTimeMinute);
+        int hourposion = (int) mTimeEndHourSpinner.getSelectedItemId();
+        Log.d(TAG, "setSelectionTimePreiod, endhourposion = "+hourposion);
+        if (is24Hour()){
+            mEndTimeHour = (int) mTimeEndHourSpinner.getSelectedItemId();
+        } else {
+            int selectedFormate = (int) mTimeEndFormate.getSelectedItemId();
+            Log.d(TAG, "setSelectionTimePreiod, selectedend time Formate = "+selectedFormate);
+            if (mTimeEndFormate.getSelectedItemId() == 0){
+                mEndTimeHour = hourposion;
+            } else if (mTimeEndFormate.getSelectedItemId() ==1){
+                mEndTimeHour = 12 + hourposion;
+            }
+        }
+        Log.d(TAG, "setSelectionTimePreiod, mEndTimeHour = "
+                + mEndTimeHour + ", mEndTimeMinute = " + mEndTimeMinute);
     }
 
     private void dumpTimePeriodInfo(){
