@@ -887,8 +887,13 @@ public class PhoneUtils {
 
         if (isCallOnImsEnabled() && (PhoneNumberUtils.isLocalEmergencyNumber(number, app)
                 || PhoneNumberUtils.isPotentialLocalEmergencyNumber(number, app))) {
-            Log.d(LOG_TAG, "IMS is enabled , place emergency call on ims phone");
-            phone = getImsPhone(app.mCM);
+            Phone imsPhone = getImsPhone(app.mCM);
+            if (imsPhone.getSubscription() == phone.getSubscription()) {
+                Log.d(LOG_TAG, "Emergency call on ims phone: " + imsPhone.getSubscription());
+                phone = imsPhone;
+            } else {
+                Log.d(LOG_TAG, "Emergency call on CS phone: " + phone.getSubscription());
+            }
         }
 
         try {

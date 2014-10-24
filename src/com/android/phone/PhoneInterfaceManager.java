@@ -55,7 +55,9 @@ import com.android.internal.telephony.ITelephonyListener;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.uicc.IccIoResult;
+import com.android.internal.telephony.uicc.IccRecords;
 import com.android.internal.telephony.uicc.IccUtils;
+import com.android.internal.telephony.uicc.UiccController;
 import com.android.internal.telephony.CommandException;
 import com.android.services.telephony.common.Call;
 
@@ -1164,6 +1166,34 @@ public class PhoneInterfaceManager extends ITelephony.Stub implements CallModele
         } catch (Exception e) {
             Log.e(LOG_TAG, "Error during toggleHold().", e);
         }
+    }
+
+    /**
+     * get operator numeric value from icc records
+     */
+    public String getIccOperatorNumeric() {
+        String iccOperatorNumeric = null;
+        int netType = getDataNetworkType();
+        int family = UiccController.getFamilyFromRadioTechnology(netType);
+        if (UiccController.APP_FAM_UNKNOWN == family) {
+            int phoneType = getActivePhoneType();
+            switch (phoneType) {
+                case PhoneConstants.PHONE_TYPE_GSM:
+                    family = UiccController.APP_FAM_3GPP;
+                    break;
+                case PhoneConstants.PHONE_TYPE_CDMA:
+                    family = UiccController.APP_FAM_3GPP2;
+                    break;
+            }
+        }
+
+        if (UiccController.APP_FAM_UNKNOWN != family) {
+            IccRecords iccRecords = UiccController.getInstance().getIccRecords(family);
+            if (iccRecords != null) {
+                iccOperatorNumeric = iccRecords.getOperatorNumeric();
+            }
+        }
+        return iccOperatorNumeric;
     }
 
     @Override
