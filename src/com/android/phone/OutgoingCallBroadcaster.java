@@ -678,8 +678,12 @@ public class OutgoingCallBroadcaster extends Activity
              * TODO: Pass Calltype from UI for OEMs that support video emergency calls
              */
             if (PhoneUtils.isCallOnImsEnabled()) {
-                Log.d(TAG, "IMS is enabled , place IMS emergency call");
-                PhoneUtils.convertCallToIms(intent, Phone.CALL_TYPE_VOICE);
+                if (!MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+                    Log.d(TAG, "IMS is enabled on SS, place IMS emergency call");
+                    PhoneUtils.convertCallToIms(intent, Phone.CALL_TYPE_VOICE);
+                } else {
+                    Log.d(TAG, "IMS is enabled in Multisim, taken care later");
+                }
                 emergencyOnIms = true;
             }
 
