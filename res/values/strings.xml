@@ -1709,6 +1709,7 @@
     <string translatable="false" name="default_ims_reg_state">4G call</string>
     <!-- IMS Registration State change request failed. -->
     <string name="ims_registration_state_changed_fail">Register unsuccessfully. The network is not avaiable.</string>
+    <string name="ims_registration_state_changed_de_fail">Deregister unsuccessfully. The network is not avaiable.</string>
     <string name="ims_registered_summary">4G call</string>
     <string name="ims_deregistered_summary">2G/3G call</string>
     <!-- End of IMS settings related strings -->

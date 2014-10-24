@@ -158,6 +158,8 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
     public static final int IMS_REG_STATE_REGISTER = 1;
     public static final int IMS_REG_STATE_DEREGISTER = 2;
     public static boolean mIsImsListenerRegistered = false;
+    public static final int IMS_REGISTER_FAILED = 101;
+    public static final int IMS_DEREGISTER_FAILED = 102;
 
     public static final int CALL_WAITING = 7;
     // Don't use message codes larger than 99 here; those are reserved for
@@ -429,6 +431,39 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
                     mPhoneServiceClient = invokeMethod(
                             "com.qualcomm.qti.phonefeature.PhoneServiceClient",
                             "getServiceBinder", mProxy, null, null);
+                    break;
+            }
+        }
+    };
+
+    public static Handler mIMSHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case IMS_REGISTER_FAILED:
+                    Log.e(LOG_TAG, "ims Register fail");
+                    Toast.makeText(sMe.getApplicationContext(),
+                            R.string.ims_registration_state_changed_fail,
+                            Toast.LENGTH_LONG).show();
+                    if (CallFeaturesSetting.ImsRegistration != null){
+                        loadImsRegistration(CallFeaturesSetting.ImsRegistration,
+                                getIMSRegistrationState());
+                    } else if (MSimCallFeaturesSetting.ImsRegistration != null) {
+                        loadImsRegistration(MSimCallFeaturesSetting.ImsRegistration,
+                                getIMSRegistrationState());
+                    }
+                    break;
+                case IMS_DEREGISTER_FAILED:
+                    Log.e(LOG_TAG, "ims deregister fail");
+                    Toast.makeText(sMe.getApplicationContext(),
+                            R.string.ims_registration_state_changed_de_fail,
+                            Toast.LENGTH_LONG).show();
+                    if (CallFeaturesSetting.ImsRegistration != null){
+                        loadImsRegistration(CallFeaturesSetting.ImsRegistration,
+                                getIMSRegistrationState());
+                    } else if (MSimCallFeaturesSetting.ImsRegistration != null) {
+                        loadImsRegistration(MSimCallFeaturesSetting.ImsRegistration,
+                                getIMSRegistrationState());
+                    }
                     break;
             }
         }
@@ -891,11 +926,16 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
         }
         Log.d(LOG_TAG, "updateImsRegistration Called with value - " + ImsRegistration.getValue());
         ImsRegistration.setEnabled(false);
-        if (IMS_REG_STATE_REGISTERED.equalsIgnoreCase(ImsRegistration.getValue())) {
+        if (IMS_REG_STATE_REGISTERED.equalsIgnoreCase(ImsRegistration.getValue())
+			    && (getIMSRegistrationState() != 1)) {
             ImsRegistration.setSummary("Registering...");
+            Message message = mIMSHandler.obtainMessage(IMS_REGISTER_FAILED, 1);
+            mIMSHandler.sendMessageDelayed(message, 5000);
             setIMSRegistrationState(IMS_REG_STATE_REGISTER);
-        } else {
+        } else if (getIMSRegistrationState() != 2) {
             ImsRegistration.setSummary("Deregistering...");
+            Message message = mIMSHandler.obtainMessage(IMS_DEREGISTER_FAILED, 1);
+            mIMSHandler.sendMessageDelayed(message, 5000);
             setIMSRegistrationState(IMS_REG_STATE_DEREGISTER);
         }
     }
@@ -936,6 +976,8 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
                 loadImsRegistration(MSimCallFeaturesSetting.ImsRegistration,
                         getIMSRegistrationState());
             }
+            mIMSHandler.removeMessages(IMS_REGISTER_FAILED);
+            mIMSHandler.removeMessages(IMS_DEREGISTER_FAILED);
         }
 
         public void imsRegStateChangeReqFailed() {
@@ -943,7 +985,7 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
             Toast.makeText(getApplicationContext(),
                     R.string.ims_registration_state_changed_fail, Toast.LENGTH_LONG).show();
             if (CallFeaturesSetting.ImsRegistration != null){
-                loadImsRegistration(MSimCallFeaturesSetting.ImsRegistration,
+                loadImsRegistration(CallFeaturesSetting.ImsRegistration,
                         getIMSRegistrationState());
             } else if (MSimCallFeaturesSetting.ImsRegistration != null) {
                 loadImsRegistration(MSimCallFeaturesSetting.ImsRegistration,
@@ -955,6 +997,10 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
     public static boolean isIMSRegisterd(){
         boolean IMSRegisterd = false;
         int IMSRegistrationState = 0;
+        boolean CSVTSupported = SystemProperties.getBoolean("persist.radio.csvt.enabled", false);
+        if (CSVTSupported) {
+            return false;
+        }
         try {
             //here have a problem for csvt mode.
             IMSRegistrationState = PhoneGlobals.mImsService.getRegistrationState();
