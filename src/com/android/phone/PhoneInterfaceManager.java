@@ -167,9 +167,16 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         public Object argument;
         /** The result of the request that is run on the main thread */
         public Object result;
+        /** The subscriber id that this request applies to. Null if default. */
+        public Object argument2;
 
         public MainThreadRequest(Object argument) {
             this.argument = argument;
+        }
+
+        public MainThreadRequest(Object argument, Object argument2) {
+            this.argument = argument;
+            this.argument2 = argument2;
         }
     }
 
@@ -268,6 +275,9 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                 case CMD_TRANSMIT_APDU_LOGICAL_CHANNEL:
                     request = (MainThreadRequest) msg.obj;
                     iccArgument = (IccAPDUArgument) request.argument;
+                    if (request.argument2 != null) {
+                        uiccCard = getPhone((long)request.argument2).getUiccCard();
+                    }
                     if (uiccCard == null) {
                         loge("iccTransmitApduLogicalChannel: No UICC");
                         request.result = new IccIoResult(0x6F, 0, (byte[])null);
@@ -308,6 +318,9 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                 case CMD_TRANSMIT_APDU_BASIC_CHANNEL:
                     request = (MainThreadRequest) msg.obj;
                     iccArgument = (IccAPDUArgument) request.argument;
+                    if (request.argument2 != null) {
+                        uiccCard = getPhone((long)request.argument2).getUiccCard();
+                    }
                     if (uiccCard == null) {
                         loge("iccTransmitApduBasicChannel: No UICC");
                         request.result = new IccIoResult(0x6F, 0, (byte[])null);
@@ -347,6 +360,9 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                 case CMD_EXCHANGE_SIM_IO:
                     request = (MainThreadRequest) msg.obj;
                     iccArgument = (IccAPDUArgument) request.argument;
+                    if (request.argument2 != null) {
+                        uiccCard = getPhone((long)request.argument2).getUiccCard();
+                    }
                     if (uiccCard == null) {
                         loge("iccExchangeSimIO: No UICC");
                         request.result = new IccIoResult(0x6F, 0, (byte[])null);
@@ -385,6 +401,9 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
 
                 case CMD_SEND_ENVELOPE:
                     request = (MainThreadRequest) msg.obj;
+                    if (request.argument2 != null) {
+                        uiccCard = getPhone((long)request.argument2).getUiccCard();
+                    }
                     if (uiccCard == null) {
                         loge("sendEnvelopeWithStatus: No UICC");
                         request.result = new IccIoResult(0x6F, 0, (byte[])null);
@@ -420,6 +439,9 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
 
                 case CMD_OPEN_CHANNEL:
                     request = (MainThreadRequest) msg.obj;
+                    if (request.argument2 != null) {
+                        uiccCard = getPhone((long)request.argument2).getUiccCard();
+                    }
                     if (uiccCard == null) {
                         loge("iccOpenLogicalChannel: No UICC");
                         request.result = new IccIoResult(0x6F, 0, (byte[])null);
@@ -475,6 +497,9 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
 
                 case CMD_CLOSE_CHANNEL:
                     request = (MainThreadRequest) msg.obj;
+                    if (request.argument2 != null) {
+                        uiccCard = getPhone((long)request.argument2).getUiccCard();
+                    }
                     if (uiccCard == null) {
                         loge("iccCloseLogicalChannel: No UICC");
                         request.result = new IccIoResult(0x6F, 0, (byte[])null);
@@ -604,6 +629,9 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
 
                 case CMD_SIM_GET_ATR:
                     request = (MainThreadRequest) msg.obj;
+                    if (request.argument2 != null) {
+                        uiccCard = getPhone((long)request.argument2).getUiccCard();
+                    }
                     if (uiccCard == null) {
                         loge("getAtr: No UICC");
                         request.result = "";
@@ -681,7 +709,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
             throw new RuntimeException("This method will deadlock if called from the main thread.");
         }
 
-        MainThreadRequest request = new MainThreadRequest(argument);
+        MainThreadRequest request = new MainThreadRequest(argument, argument2);
         Message msg = mMainThreadHandler.obtainMessage(command, request);
         msg.sendToTarget();
 
