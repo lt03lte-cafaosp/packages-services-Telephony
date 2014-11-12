@@ -873,6 +873,7 @@ public class CallModeler extends Handler {
     private int getCapabilitiesFor(Connection connection, Call call, boolean isForConference) {
         final boolean callIsActive = (call.getState() == Call.State.ACTIVE);
         final Phone phone = connection.getCall().getPhone();
+        final PhoneGlobals app = PhoneGlobals.getInstance();
 
         boolean canAddCall = false;
         boolean canMergeCall = false;
@@ -884,8 +885,9 @@ public class CallModeler extends Handler {
         final boolean supportHold;
         final boolean canHold;
 
-        final boolean genericConf = isForConference &&
-                (connection.getCall().getPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA);
+        final boolean genericConf = phone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA
+                && (isForConference || app.cdmaPhoneCallState.getCurrentCallState()
+                == CdmaPhoneCallState.PhoneCallState.THRWAY_ACTIVE);
         if (!MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
             supportHold = PhoneUtils.okToSupportHold(mCallManager);
             canHold = (supportHold ? PhoneUtils.okToHoldCall(mCallManager) : false);
