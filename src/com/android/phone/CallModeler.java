@@ -761,9 +761,9 @@ public class CallModeler extends Handler {
         final boolean supportHold;
         final boolean canHold;
 
-        final boolean genericConf = (isForConference || app.cdmaPhoneCallState.getCurrentCallState()
-                 == CdmaPhoneCallState.PhoneCallState.THRWAY_ACTIVE) && phone
-                .getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA;
+        final boolean genericConf = phone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA
+                && (isForConference || app.cdmaPhoneCallState.getCurrentCallState()
+                == CdmaPhoneCallState.PhoneCallState.THRWAY_ACTIVE);
         if (!MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
             supportHold = PhoneUtils.okToSupportHold(mCallManager);
             canHold = (supportHold ? PhoneUtils.okToHoldCall(mCallManager) : false);
