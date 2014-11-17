@@ -50,7 +50,9 @@ import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.msim.ITelephonyMSim;
 import com.android.internal.telephony.uicc.IccIoResult;
+import com.android.internal.telephony.uicc.IccRecords;
 import com.android.internal.telephony.uicc.IccUtils;
+import com.codeaurora.telephony.msim.MSimUiccController;
 import com.codeaurora.telephony.msim.SubscriptionManager;
 
 import java.util.ArrayList;
@@ -728,6 +730,34 @@ public class MSimPhoneInterfaceManager extends ITelephonyMSim.Stub {
 
     public int getIccPin1RetryCount(int subscription) {
         return getPhone(subscription).getIccCard().getIccPin1RetryCount();
+    }
+
+    /**
+     * get operator numeric value from icc records
+     */
+    public String getIccOperatorNumeric(int subId) {
+        String iccOperatorNumeric = null;
+        int netType = getDataNetworkType(subId);
+        int family = MSimUiccController.getFamilyFromRadioTechnology(netType);
+        if (MSimUiccController.APP_FAM_UNKNOWN == family) {
+            int phoneType = getActivePhoneType(subId);
+            switch (phoneType) {
+                case PhoneConstants.PHONE_TYPE_GSM:
+                    family = MSimUiccController.APP_FAM_3GPP;
+                    break;
+                case PhoneConstants.PHONE_TYPE_CDMA:
+                    family = MSimUiccController.APP_FAM_3GPP2;
+                    break;
+            }
+        }
+
+        if (MSimUiccController.APP_FAM_UNKNOWN != family) {
+            IccRecords iccRecords = MSimUiccController.getInstance().getIccRecords(subId, family);
+            if (iccRecords != null) {
+                iccOperatorNumeric = iccRecords.getOperatorNumeric();
+            }
+        }
+        return iccOperatorNumeric;
     }
 
     /**
