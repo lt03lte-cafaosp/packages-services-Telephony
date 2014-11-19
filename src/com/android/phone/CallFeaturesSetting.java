@@ -22,11 +22,13 @@ import android.app.ActivityOptions;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnKeyListener;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ActivityInfo;
@@ -66,6 +68,7 @@ import com.android.internal.telephony.CallForwardInfo;
 import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
+import com.android.internal.telephony.TelephonyIntents;
 import com.android.phone.common.util.SettingsUtil;
 import com.android.phone.settings.AccountSelectionPreference;
 import com.android.services.telephony.sip.SipUtil;
@@ -210,6 +213,7 @@ public class CallFeaturesSetting extends PreferenceActivity
 
     private static final int MSG_UPDATE_VOICEMAIL_RINGTONE_SUMMARY = 1;
 
+
     public static final String HAC_KEY = "HACSetting";
     public static final String HAC_VAL_ON = "ON";
     public static final String HAC_VAL_OFF = "OFF";
@@ -227,7 +231,6 @@ public class CallFeaturesSetting extends PreferenceActivity
     private static final int FW_SET_RESPONSE_ERROR = 501;
     private static final int FW_GET_RESPONSE_ERROR = 502;
 
-
     // dialog identifiers for voicemail
     private static final int VOICEMAIL_DIALOG_CONFIRM = 600;
     private static final int VOICEMAIL_FWD_SAVING_DIALOG = 601;
@@ -243,6 +246,9 @@ public class CallFeaturesSetting extends PreferenceActivity
     private static final int MSG_FW_GET_EXCEPTION = 402;
     private static final int MSG_VM_OK = 600;
     private static final int MSG_VM_NOCHANGE = 700;
+
+    // dialog identifiers for TTY
+    private static final int TTY_SET_RESPONSE_ERROR = 800;
 
     // voicemail notification vibration string constants
     private static final String VOICEMAIL_VIBRATION_ALWAYS = "always";
@@ -471,6 +477,12 @@ public class CallFeaturesSetting extends PreferenceActivity
         mForeground = false;
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mReceiver);
+    }
+
     /**
      * We have to pull current settings from the network for all kinds of
      * voicemail providers so we can tell whether we have to update them,
@@ -496,6 +508,10 @@ public class CallFeaturesSetting extends PreferenceActivity
         } else if (preference == mButtonDTMF) {
             return true;
         } else if (preference == mButtonTTY) {
+            if(mPhone.isImsVtCallPresent()) {
+                // TTY Mode change is not allowed during a VT call
+                showDialogIfForeground(TTY_SET_RESPONSE_ERROR);
+            }
             return true;
         } else if (preference == mButtonAutoRetry) {
             android.provider.Settings.Global.putInt(mPhone.getContext().getContentResolver(),
@@ -1439,7 +1455,7 @@ public class CallFeaturesSetting extends PreferenceActivity
     protected Dialog onCreateDialog(int id) {
         if ((id == VM_RESPONSE_ERROR) || (id == VM_NOCHANGE_ERROR) ||
             (id == FW_SET_RESPONSE_ERROR) || (id == FW_GET_RESPONSE_ERROR) ||
-                (id == VOICEMAIL_DIALOG_CONFIRM)) {
+                (id == VOICEMAIL_DIALOG_CONFIRM) || (id == TTY_SET_RESPONSE_ERROR)) {
 
             AlertDialog.Builder b = new AlertDialog.Builder(this);
 
@@ -1475,6 +1491,12 @@ public class CallFeaturesSetting extends PreferenceActivity
                     b.setPositiveButton(R.string.alert_dialog_yes, this);
                     b.setNegativeButton(R.string.alert_dialog_no, this);
                     break;
+                case TTY_SET_RESPONSE_ERROR:
+                    titleId = R.string.tty_mode_option_title;
+                    msgId = R.string.tty_mode_not_allowed_vt_call;
+                    b.setIconAttribute(android.R.attr.alertDialogIcon);
+                    b.setPositiveButton(R.string.ok, this);
+                    break;
                 default:
                     msgId = R.string.exception_error;
                     // Set Button 3, tells the activity that the error is
@@ -1505,7 +1527,6 @@ public class CallFeaturesSetting extends PreferenceActivity
                     R.string.reading_settings)));
             return dialog;
         }
-
 
         return null;
     }
@@ -1608,6 +1629,12 @@ public class CallFeaturesSetting extends PreferenceActivity
         // ACTION_ADD_VOICEMAIL action.
         mShowVoicemailPreference = (icicle == null) &&
                 getIntent().getAction().equals(ACTION_ADD_VOICEMAIL);
+
+        //Register for intent broadcasts
+        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED);
+        intentFilter.addAction(TelephonyIntents.ACTION_SIM_STATE_CHANGED);
+
+        registerReceiver(mReceiver, intentFilter);
     }
 
     private void initPhoneAccountPreferences() {
@@ -1645,6 +1672,8 @@ public class CallFeaturesSetting extends PreferenceActivity
             addPreferencesFromResource(R.xml.call_feature_setting);
         }
         initPhoneAccountPreferences();
+
+        setScreenState();
 
         // get buttons
         PreferenceScreen prefSet = getPreferenceScreen();
@@ -1888,6 +1917,26 @@ public class CallFeaturesSetting extends PreferenceActivity
         // Look up the voicemail ringtone name asynchronously and update its preference.
         new Thread(mVoicemailRingtoneLookupRunnable).start();
     }
+
+    private void setScreenState() {
+        int simState = TelephonyManager.getDefault().getSimState();
+        getPreferenceScreen().setEnabled(simState != TelephonyManager.SIM_STATE_ABSENT);
+    }
+
+    /**
+     * Receiver for ACTION_AIRPLANE_MODE_CHANGED and ACTION_SIM_STATE_CHANGED.
+     */
+    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+            if (action.equals(Intent.ACTION_AIRPLANE_MODE_CHANGED) ||
+                    action.equals(TelephonyIntents.ACTION_SIM_STATE_CHANGED)) {
+                setScreenState();
+            }
+        }
+    };
 
     // Migrate settings from BUTTON_VOICEMAIL_NOTIFICATION_VIBRATE_WHEN_KEY to
     // BUTTON_VOICEMAIL_NOTIFICATION_VIBRATE_KEY, if the latter does not exist.

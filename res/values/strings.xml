@@ -1011,6 +1011,8 @@
     <string name="ipcall_dialog_title">IP call setting</string>
     <string name="ipcall_dialog_edit_hint">Please input the IP prefix</string>
 
+    <!-- TTY Mode change is NOT allowed during a VT call -->
+    <string name="tty_mode_not_allowed_vt_call">TTY Mode change is not allowed during a VT call</string>
     <!-- FDN list screen: menu item label -->
     <string name="menu_add">Add contact</string>
     <!-- FDN list screen: menu item label -->
@@ -1390,6 +1392,11 @@
 
     <!-- Title for the dialog used to display CDMA DisplayInfo -->
     <string name="network_message">Network message</string>
+
+    <!-- Shown in "Managed Roaming" dialog when registration is denied with rejCode 10. -->
+    <string name="managed_roaming_title">Managed Roaming</string>
+    <string name="managed_roaming_title_sub">Managed Roaming (SUB<xliff:g id="index" example="1">%d</xliff:g>)</string>
+    <string name="managed_roaming_dialog_content">Network with Limited Service found. Do you want to initiate a Network Search?</string>
 
     <!-- OTA-specific strings -->
     <!-- Title shown on OTA screen -->
