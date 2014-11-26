@@ -71,6 +71,9 @@
     <!-- "Audio mode" popup menu: Item label to select the bluetooth headset [CHAR LIMIT=25] -->
     <string name="audio_mode_bluetooth">Bluetooth</string>
 
+    <string name="headset_plugin_view_text">Headset is plugged in.</string>
+    <string name="headset_plugin_view_title">Headset</string>
+
     <!-- post dial -->
     <!-- In-call screen: body text of the dialog that appears when we encounter
          the "wait" character in a phone number to be dialed; this dialog asks the
