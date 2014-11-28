@@ -151,6 +151,7 @@ public class CallDetails implements Parcelable {
     private Map<String, String[]> mConfDetails;
     private boolean mIsMpty;
     private static String LOG_TAG = "CallDetails";
+    private int mConfVersion = -1;
 
     public CallDetails() {
         mCallType = CALL_TYPE_UNKNOWN;
@@ -282,6 +283,11 @@ public class CallDetails implements Parcelable {
         }
     }
 
+    public void setConfVersion(int version){
+        Log.d(LOG_TAG, "setConfVersion mConfversion = " + mConfVersion
+        + "version = " + version);
+        mConfVersion = version;
+	}
     public String[] getExtras() {
         return mExtras;
     }
@@ -293,6 +299,11 @@ public class CallDetails implements Parcelable {
     public Map<String, String[]> getConfDetails(){
         return mConfDetails;
     }
+
+    public int getConfVersion(){
+        Log.d(LOG_TAG, "getConfVersion mConfversion = " + mConfVersion);
+        return mConfVersion;
+	}
 
     public void writeToParcel(Parcel dest, int flag) {
         dest.writeInt(mCallType);

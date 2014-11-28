@@ -111,7 +111,6 @@ public class CallModeler extends Handler {
     private long videocallstarttime = 0;
     private long videocallDuration = 0;
     private String VIDEO_CALL_DURATION_KEY = "video_call_duration_key";
-    private int mConfVersion = -1;
 
     public CallModeler(CallStateMonitor callStateMonitor, CallManager callManager,
             CallGatewayManager callGatewayManager) {
@@ -630,13 +629,13 @@ public class CallModeler extends Handler {
     }
 
     private boolean checkAndMapConfDetails(Call call, Connection connection){
-        Log.i(TAG, "checkAndMapConfDetailszzz call=" + call);
+        Log.i(TAG, "enter checkAndMapConfDetails call=" + call);
         int version = -1;
         if (connection.getCall().getConfStateInfo() != null &&
                 connection.getCall().getConfStateInfo().usersMap != null ) {
             Log.i(TAG, "Conference participant list");
             version = connection.getCall().getConfStateInfo().version;
-            Log.i(TAG, "confVersion updated to " + version + ";current version=" + version);
+            Log.i(TAG, "confVersion updated to " + version);
             Map<String, List<String>> confDetails = new HashMap<String, List<String>>();
             for (Entry<String, ConfUser> entry :
                     connection.getCall().getConfStateInfo().usersMap.entrySet()) {
@@ -651,9 +650,11 @@ public class CallModeler extends Handler {
             }
             call.getCallDetails().setConfDetailsFromMap(confDetails);
         }
-		Log.i(TAG, "after checkAndMapConfDetailszzz call=" + call);
-        boolean result = mConfVersion != version;
-        mConfVersion = version;
+        Log.i(TAG, "after checkAndMapConfDetails call=" + call);
+        boolean result = call.getCallDetails().getConfVersion()!= version;
+        if (version != -1){
+            call.getCallDetails().setConfVersion(version);
+        }
         return result;
     }
 
