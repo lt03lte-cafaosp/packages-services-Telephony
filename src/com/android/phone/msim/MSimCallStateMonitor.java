@@ -54,12 +54,10 @@ class MSimCallStateMonitor extends CallStateMonitor {
         super.registerForNotifications();
 
         for (Phone phone : callManager.getAllPhones()) {
-            if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
-                Log.d(LOG_TAG, "register for cdma call waiting " + phone.getSubscription());
-                callManager.registerForCallWaiting(this, PHONE_CDMA_CALL_WAITING,
-                        phone.getSubscription());
-                break;
-            }
+            Log.d(LOG_TAG, "register for cdma call waiting " + phone.getSubscription());
+            callManager.registerForCallWaiting(this, PHONE_CDMA_CALL_WAITING,
+                    phone.getSubscription());
+            break;
         }
         callManager.registerForSubscriptionChange(this, PHONE_ACTIVE_SUBSCRIPTION_CHANGE, null);
     }
