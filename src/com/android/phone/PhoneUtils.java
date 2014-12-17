@@ -2065,6 +2065,10 @@ public class PhoneUtils {
         if (connections == null) {
                return false;
         }
+        //In IMS, real conference call can have only one ACTIVE connection.
+        if (call.getPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_IMS) {
+            return true;
+        }
         int numActiveConnections = 0;
         for (Connection conn : connections) {
             if (DBG) log("  - CONN: " + conn + ", state = " + conn.getState());
