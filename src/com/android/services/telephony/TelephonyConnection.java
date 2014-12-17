@@ -984,7 +984,7 @@ abstract class TelephonyConnection extends Connection {
                         mSsNotification = null;
                     } else {
                         setDisconnected(DisconnectCauseUtil.toTelecomDisconnectCause(
-                                mOriginalConnection.getDisconnectCause()));
+                                mOriginalConnection.getDisconnectCause(), 0xFF, 0xFF));
                     }
                     close();
                     break;
