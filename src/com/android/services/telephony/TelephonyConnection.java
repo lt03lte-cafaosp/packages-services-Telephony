@@ -1063,7 +1063,7 @@ abstract class TelephonyConnection extends Connection {
                         break;
                     } else {
                         setDisconnected(DisconnectCauseUtil.toTelecomDisconnectCause(
-                                mOriginalConnection.getDisconnectCause()));
+                                mOriginalConnection.getDisconnectCause(), 0xFF, 0xFF));
                     }
                     resetDisconnectCause();
                     close();
