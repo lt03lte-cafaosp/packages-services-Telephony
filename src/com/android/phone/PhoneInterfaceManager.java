@@ -120,6 +120,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     private static final int EVENT_TRANSMIT_APDU_BASIC_CHANNEL_DONE = 30;
     private static final int CMD_EXCHANGE_SIM_IO = 31;
     private static final int EVENT_EXCHANGE_SIM_IO_DONE = 32;
+    private static final int CMD_GET_ATR = 33;
+    private static final int EVENT_GET_ATR_DONE = 34;
 
     /** The singleton instance. */
     private static PhoneInterfaceManager sInstance;
@@ -372,6 +374,32 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                     }
                     break;
 
+                case CMD_GET_ATR:
+                    request = (MainThreadRequest) msg.obj;
+                    if (uiccCard == null) {
+                        loge("iccGetAtr: No UICC");
+                        synchronized (request) {
+                            request.notifyAll();
+                        }
+                    } else {
+                        onCompleted = obtainMessage(EVENT_GET_ATR_DONE, request);
+                        uiccCard.iccGetAtr(onCompleted);
+                    }
+                    break;
+     
+                case EVENT_GET_ATR_DONE:
+                    ar = (AsyncResult) msg.obj;
+                    request = (MainThreadRequest) ar.userObj;
+                    if (ar.exception == null && ar.result != null) {
+                        request.result = (String) ar.result;
+                    } else {
+                        request.result = "";
+                    }
+                    synchronized (request) {
+                        request.notifyAll();
+                    }
+                    break;
+     
                 case CMD_SEND_ENVELOPE:
                     request = (MainThreadRequest) msg.obj;
                     if (uiccCard == null) {
@@ -1695,6 +1723,23 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         return result;
     }
 
+    @Override
+    public String iccGetAtr() throws RemoteException {
+        enforceModifyPermissionOrCarrierPrivilege();
+     
+        if (DBG) {
+            log("iccGetAtr");
+        }
+     
+        String response = (String) sendRequest(CMD_GET_ATR, null);
+     
+        if (DBG) {
+            log("iccGetAtr [R]: " + response);
+        }
+     
+        return response;
+    }
+     
     @Override
     public String sendEnvelopeWithStatus(String content) {
         enforceModifyPermissionOrCarrierPrivilege();
