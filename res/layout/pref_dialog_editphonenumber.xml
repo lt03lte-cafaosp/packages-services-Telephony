@@ -132,7 +132,7 @@
             style="@style/cfbt_value"
             android:visibility="gone"
             android:id="@+id/time_end_formate"
-            android:prompt="@string/time_start_minute"
+            android:prompt="@string/time_end_minute"
             android:entries="@array/time_formate_items"/>
     </LinearLayout>
 
