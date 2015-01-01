@@ -496,6 +496,13 @@ abstract class TelephonyConnection extends Connection {
         }
     }
 
+    /**
+     * Creates a clone of the current {@link TelephonyConnection}.
+     *
+     * @return The clone.
+     */
+    public abstract TelephonyConnection cloneConnection();
+
     @Override
     public void onAudioStateChanged(AudioState audioState) {
         // TODO: update TTY mode.
@@ -1381,6 +1388,7 @@ abstract class TelephonyConnection extends Connection {
             sb.append("Y");
         }
         sb.append("]");
+        sb.append("OriginalConnection is" + mOriginalConnection);
         return sb.toString();
     }
 }
