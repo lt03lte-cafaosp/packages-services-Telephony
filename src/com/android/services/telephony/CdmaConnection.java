@@ -65,7 +65,6 @@ final class CdmaConnection extends TelephonyConnection {
      * {@code True} if the CDMA connection should allow mute.
      */
     private final boolean mAllowMute;
-    private final boolean mIsOutgoing;
     // Queue of pending short-DTMF characters.
     private final Queue<Character> mDtmfQueue = new LinkedList<>();
     private final EmergencyTonePlayer mEmergencyTonePlayer;
@@ -176,10 +175,6 @@ final class CdmaConnection extends TelephonyConnection {
         } else {
             updateState();
         }
-    }
-
-    boolean isOutgoing() {
-        return mIsOutgoing;
     }
 
     boolean isCallWaiting() {
