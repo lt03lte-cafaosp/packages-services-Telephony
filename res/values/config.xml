@@ -183,4 +183,7 @@
     <bool name="reject_call_as_missed_call">false</bool>
     <!-- config for 4G data only setting requirement -->
     <bool name="config_tdd_data_only">false</bool>
+
+    <!-- Disable Operator Selection Menu for some CDMA carriers -->
+    <bool name="config_disable_operator_selection_menu">false</bool>
 </resources>
