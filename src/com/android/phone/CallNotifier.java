@@ -42,6 +42,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothHeadset;
 import android.bluetooth.BluetoothProfile;
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.RingtoneManager;
@@ -263,6 +264,14 @@ public class CallNotifier extends Handler
         }
     }
 
+    private void sendBlockRecordBroadcast(int subId,String number){
+        Log.i("firewall","sendBlockRecordBroadcast");
+        Intent intent = new Intent("com.android.firewall.ADD_CALL_BLOCK_RECORD");
+        intent.putExtra("sub_id",subId);
+        intent.putExtra("number",number);
+        mApplication.getBaseContext().sendBroadcast(intent);
+    }
+
     @Override
     public void handleMessage(Message msg) {
         switch (msg.what) {
@@ -288,6 +297,7 @@ public class CallNotifier extends Handler
                             isForbidden= extras.getBoolean(IS_FORBIDDEN);
                             if (isForbidden) {
                                 PhoneUtils.hangupRingingCall(c.getCall());
+                                sendBlockRecordBroadcast(subscription,c.getAddress());
                                 return;
                             }
                         }
@@ -1047,6 +1057,10 @@ public class CallNotifier extends Handler
             log("not need show duration, setting is disabled ");
         } else if (isForbidden) {
             log("not need show duration, firewall intercept the incoming call ");
+            Phone phone = c.getCall().getPhone();
+            String number = c.getAddress();
+            int subscription = phone.getSubscription();
+            sendBlockRecordBroadcast(subscription,number);
         } else {
             mApplication.showCallDuration(c.getDurationMillis());
         }
