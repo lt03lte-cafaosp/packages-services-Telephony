@@ -103,8 +103,11 @@ public class CdmaOptions {
 
         mButtonOperatorSelectionExpand =
                 (PreferenceScreen) mPrefScreen.findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY);
-        mButtonOperatorSelectionExpand.setEnabled(false);
-
+        if(mPrefActivity.getResources().getBoolean(R.bool.config_disable_operator_selection_menu)){
+            mButtonOperatorSelectionExpand.setEnabled(false);
+        } else {
+            mPrefScreen.removePreference(mButtonOperatorSelectionExpand);
+        }
         final boolean voiceCapable = mPrefActivity.getResources().getBoolean(
                 com.android.internal.R.bool.config_voice_capable);
         final boolean isLTE = mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE;
