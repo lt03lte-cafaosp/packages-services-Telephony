@@ -156,4 +156,13 @@
 
     <!-- After a CDMA conference call is merged, the swap button should be displayed. -->
     <bool name="support_swap_after_merge" translatable="false">true</bool>
+
+    <!-- Disable Operator Selection Menu for some CDMA carriers -->
+    <bool name="config_disable_operator_selection_menu">false</bool>
+
+   <!-- Config to enable/disable showing depersonalizationpanel dialog -->
+   <bool name="icc_depersonalizationPanelEnabled">true</bool>
+
+    <!-- config switching DDS switch back to the default sub -->
+    <bool name="config_dds_switch_back">false</bool>
 </resources>
