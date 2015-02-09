@@ -1672,4 +1672,8 @@
     <string name="roamingTextSearching">Searching for Service</string>
     <string name="menu_dial_string">Call</string>
 
+    <!-- IMS to CS Retry setting title.  [CHAR LIMIT=30] -->
+    <string name="ims_to_cs_retry_title">CS Retry</string>
+    <!-- IMS to CS Retry setting summary.  [CHAR LIMIT=80] -->
+    <string name="ims_to_cs_retry_summary">Auto Retry with regular voice communications (Recommended)</string>
 </resources>
