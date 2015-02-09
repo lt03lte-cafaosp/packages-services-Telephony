@@ -199,6 +199,12 @@ public class DisconnectCauseUtil {
             case android.telephony.DisconnectCause.LOW_BATTERY:
                 return DisconnectCause.LOW_BATTERY;
 
+            case android.telephony.DisconnectCause.CALL_RETRY_BY_SILENT_REDIAL:
+                return DisconnectCause.CALL_RETRY_BY_SILENT_REDIAL;
+
+            case android.telephony.DisconnectCause.CALL_RETRY_BY_USER_CONSENT:
+                return DisconnectCause.CALL_RETRY_BY_USER_CONSENT;
+
             default:
                 return DisconnectCause.UNKNOWN;
         }
@@ -655,6 +661,9 @@ public class DisconnectCauseUtil {
 
             case android.telephony.DisconnectCause.IMS_MERGED_SUCCESSFULLY:
                 // Do not play any tones if disconnected because of a successful merge.
+            /* Do not play any tones if disconnected because of a retry request */
+            case android.telephony.DisconnectCause.CALL_RETRY_BY_SILENT_REDIAL:
+            case android.telephony.DisconnectCause.CALL_RETRY_BY_USER_CONSENT:
             default:
                 return ToneGenerator.TONE_UNKNOWN;
         }
