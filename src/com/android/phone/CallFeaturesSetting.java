@@ -1893,6 +1893,9 @@ public class CallFeaturesSetting extends PreferenceActivity
     }
 
     private void createImsSettings() {
+        if (!getResources().getBoolean(R.bool.config_network_cmcc_feature)){
+            return;
+        }
         addPreferencesFromResource(R.xml.ims_settings_category);
         //add for IMS registration
         ImsRegistration = (ListPreference) findPreference(IMS_REGISTRATION);
