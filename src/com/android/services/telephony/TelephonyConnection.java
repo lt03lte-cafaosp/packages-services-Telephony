@@ -75,6 +75,8 @@ abstract class TelephonyConnection extends Connection {
     protected boolean mIsOutgoing;
     private boolean[] mIsPermDiscCauseReceived = new
             boolean[TelephonyManager.getDefault().getPhoneCount()];
+    protected boolean mCanMerge = true;
+
 
     private static final boolean DBG = false;
 
@@ -144,6 +146,11 @@ abstract class TelephonyConnection extends Connection {
 
     protected boolean isOutgoing() {
         return mIsOutgoing;
+    }
+
+    private void setCanMerge(boolean canMerge) {
+        mCanMerge = canMerge;
+        updateCallCapabilities();
     }
 
     /**
@@ -536,6 +543,10 @@ abstract class TelephonyConnection extends Connection {
      */
     protected int buildCallCapabilities() {
         int callCapabilities = 0;
+        if (mCanMerge) {
+            callCapabilities |= PhoneCapabilities.MERGE_CONFERENCE;
+        }
+
         if (isImsConnection()) {
             callCapabilities |= PhoneCapabilities.SUPPORT_HOLD;
             if (getState() == STATE_ACTIVE || getState() == STATE_HOLDING) {
@@ -618,6 +629,8 @@ abstract class TelephonyConnection extends Connection {
         setVideoProvider(mOriginalConnection.getVideoProvider());
         setAudioQuality(mOriginalConnection.getAudioQuality());
         setCallSubstate(mOriginalConnection.getCallSubstate());
+        // TODO: When we get rid of cloning we need to call this on mpty updates
+        setCanMerge(mOriginalConnection.isMergeAllowed());
 
         if (isImsConnection()) {
             mWasImsConnection = true;
@@ -1281,7 +1294,6 @@ abstract class TelephonyConnection extends Connection {
             sb.append("Y");
         }
         sb.append("]");
-        sb.append("OriginalConnection is" + mOriginalConnection);
         return sb.toString();
     }
 }
