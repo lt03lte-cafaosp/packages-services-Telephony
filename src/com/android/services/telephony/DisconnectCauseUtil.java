@@ -195,6 +195,9 @@ public class DisconnectCauseUtil {
             case android.telephony.DisconnectCause.INTERWORKING_UNSPECIFIED:
                 return DisconnectCause.OTHER;
 
+            case android.telephony.DisconnectCause.LOW_BATTERY:
+                return DisconnectCause.LOW_BATTERY;
+
             default:
                 return DisconnectCause.UNKNOWN;
         }
@@ -644,6 +647,24 @@ public class DisconnectCauseUtil {
                 // Do not play any tones if disconnected because of a successful merge.
             default:
                 return ToneGenerator.TONE_UNKNOWN;
+        }
+    }
+
+    /**
+     * Convert the {@link android.telecom.DisconnectCause} disconnect code into a
+     * {@link android.telephony.DisconnectCause} disconnect code.
+     * @return The disconnect code as defined in {@link android.telephone.DisconnectCause}.
+     */
+    public static int toTelephonyDisconnectCauseCode(int telecomDisconnectCause) {
+        switch (telecomDisconnectCause) {
+            case DisconnectCause.LOW_BATTERY:
+                return android.telephony.DisconnectCause.LOW_BATTERY;
+            case DisconnectCause.LOCAL:
+                return android.telephony.DisconnectCause.LOCAL;
+            case DisconnectCause.REJECTED:
+                return android.telephony.DisconnectCause.INCOMING_REJECTED;
+            default:
+                return android.telephony.DisconnectCause.NOT_VALID;
         }
     }
 }
