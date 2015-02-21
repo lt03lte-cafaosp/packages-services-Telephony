@@ -111,6 +111,20 @@ public class ConferenceParticipantConnection extends Connection {
     }
 
     /**
+     * Disconnects the current {@code ConferenceParticipantConnection} from the conference.
+     * <p>
+     * Sends a participant disconnect signal to the associated parent connection.  The participant
+     * connection is not disconnected and cleaned up here.  On successful disconnection of the
+     * participant, the conference server will send an update to the conference controller
+     * indicating the disconnection was successful.
+     * @param disconnectCause used to disconnect the call with reason (currently not using).
+     */
+    @Override
+    public void onDisconnectWithReason(int disconnectCause) {
+        mParentConnection.onDisconnectConferenceParticipant(mUserEntity);
+    }
+
+    /**
      * Retrieves the user handle for this connection.
      *
      * @return The userEntity.

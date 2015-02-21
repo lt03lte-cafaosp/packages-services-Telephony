@@ -320,6 +320,16 @@ public class ImsConference extends Conference {
     @Override
     public void onDisconnect() {
         Log.v(this, "onDisconnect: hanging up conference host.");
+        disconnectWithReason(DisconnectCause.LOCAL);
+    }
+
+    @Override
+    public void onDisconnectWithReason(int disconnectCause) {
+        disconnectWithReason(disconnectCause);
+    }
+
+    private void disconnectWithReason(int disconnectCause) {
+        Log.d(this, "disconnectWithReason " + disconnectCause);
         if (mConferenceHost == null) {
             return;
         }
@@ -327,7 +337,8 @@ public class ImsConference extends Conference {
         Call call = mConferenceHost.getCall();
         if (call != null) {
             try {
-                call.hangup();
+                call.hangupWithReason(DisconnectCauseUtil.
+                        toTelephonyDisconnectCauseCode(disconnectCause));
             } catch (CallStateException e) {
                 Log.e(this, e, "Exception thrown trying to hangup conference");
             }

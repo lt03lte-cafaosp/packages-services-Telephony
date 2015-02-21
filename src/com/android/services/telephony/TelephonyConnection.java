@@ -613,6 +613,12 @@ private String getSuppSvcNotificationText(SuppServiceNotification suppSvcNotific
         hangup(android.telephony.DisconnectCause.LOCAL);
     }
 
+    @Override
+    public void onDisconnectWithReason(int disconnectCause) {
+        Log.v(this, "onDisconnect");
+        hangup(DisconnectCauseUtil.toTelephonyDisconnectCauseCode(disconnectCause));
+    }
+
     /**
      * Notifies this Connection of a request to disconnect a participant of the conference managed
      * by the connection.
@@ -704,6 +710,15 @@ private String getSuppSvcNotificationText(SuppServiceNotification suppSvcNotific
         Log.v(this, "onReject");
         if (isValidRingingCall()) {
             hangup(android.telephony.DisconnectCause.INCOMING_REJECTED);
+        }
+        super.onReject();
+    }
+
+    @Override
+    public void onRejectWithReason(int disconnectCause) {
+        Log.v(this, "onRejectWithReason, disconnect cause: " + disconnectCause);
+        if (isValidRingingCall()) {
+            hangup(DisconnectCauseUtil.toTelephonyDisconnectCauseCode(disconnectCause));
         }
         super.onReject();
     }
@@ -958,7 +973,7 @@ protected final void updateCallCapabilities() {
                 if (isValidRingingCall()) {
                     Call call = getCall();
                     if (call != null) {
-                        call.hangup();
+                        call.hangupWithReason(telephonyDisconnectCode);
                     } else {
                         Log.w(this, "Attempting to hangup a connection without backing call.");
                     }
@@ -967,7 +982,7 @@ protected final void updateCallCapabilities() {
                     // to support hanging-up specific calls within a conference call. If we invoked
                     // call.hangup() while in a conference, we would end up hanging up the entire
                     // conference call instead of the specific connection.
-                    mOriginalConnection.hangup();
+                    mOriginalConnection.hangupWithReason(telephonyDisconnectCode);
                 }
             } catch (CallStateException e) {
                 Log.e(this, e, "Call to Connection.hangup failed with exception");
