@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.telecom.AudioState;
+import android.telecom.Conference;
 import android.telecom.ConferenceParticipant;
 import android.telecom.Connection;
 import android.telecom.PhoneAccount;
@@ -31,7 +32,7 @@ import android.telecom.PhoneCapabilities;
 import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.telephony.PhoneNumberUtils;
-import android.telephony.SubInfoRecord;
+import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.widget.Toast;
@@ -131,11 +132,13 @@ abstract class TelephonyConnection extends Connection {
                                 (SuppServiceNotification)((AsyncResult) msg.obj).result;
                         String callForwardText = getSuppSvcNotificationText(mSsNotification);
                         if (TelephonyManager.getDefault().getPhoneCount() > 1) {
-                            List<SubInfoRecord> sub =
-                                    SubscriptionManager.getSubInfoUsingSlotId(
+                            SubscriptionInfo sub =
+                                    SubscriptionManager.from(
+                                            TelephonyGlobals.getApplicationContext())
+                                            .getActiveSubscriptionInfoForSimSlotIndex(
                                             getPhone().getPhoneId());
-                            String displayName =  ((sub != null) && (sub.size() > 0)) ?
-                                    sub.get(0).displayName : mSubName[getPhone().getPhoneId()];
+                            String displayName =  ((sub != null)) ?
+                                    sub.getDisplayName().toString() : mSubName[getPhone().getPhoneId()];
 
                             mDisplayName = displayName + ":" + callForwardText;
                         } else {
@@ -587,7 +590,7 @@ abstract class TelephonyConnection extends Connection {
         if (ph == null) {
             return;
         }
-        long subId = ph.getSubId();
+        int subId = ph.getSubId();
         Log.i(this, "setActiveSubscription subId:" + subId);
         CallManager.getInstance().setActiveSubscription(subId);
     }
@@ -776,6 +779,7 @@ abstract class TelephonyConnection extends Connection {
 
     protected final void updateAddress() {
         updateConnectionCapabilities();
+        Uri address;
         if (mOriginalConnection != null) {
             if ((getAddress() != null) &&
                     (getPhone().getPhoneType() == TelephonyManager.PHONE_TYPE_CDMA) &&
@@ -1076,7 +1080,7 @@ abstract class TelephonyConnection extends Connection {
             // update mIsPermDiscCauseReceived so that next redial doesn't occur
             // on this sub
             mIsPermDiscCauseReceived[phone.getPhoneId()] = true;
-            PhoneIdToCall = SubscriptionManager.INVALID_PHONE_ID;
+            PhoneIdToCall = SubscriptionManager.INVALID_PHONE_INDEX;
         }
         // Check for any subscription on which EMERGENCY_PERM_FAILURE is received
         // if no such sub, then redial should be stopped.
@@ -1089,7 +1093,7 @@ abstract class TelephonyConnection extends Connection {
         }
 
         long subId = SubscriptionController.getInstance().getSubIdUsingPhoneId(PhoneIdToCall);
-        if (PhoneIdToCall == SubscriptionManager.INVALID_PHONE_ID) {
+        if (PhoneIdToCall == SubscriptionManager.INVALID_PHONE_INDEX) {
             Log.d(this,"EMERGENCY_PERM_FAILURE received on all subs, abort redial");
             setDisconnected(DisconnectCauseUtil.toTelecomDisconnectCause(
                     mOriginalConnection.getDisconnectCause(), 0xFF, 0xFF));
