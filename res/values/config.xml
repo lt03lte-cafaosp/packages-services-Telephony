@@ -357,4 +357,8 @@ as an enum (NONE, HFA, OTASP). -->
 
     <!-- config switching DDS switch back to the default sub -->
     <bool name="config_dds_switch_back">false</bool>
+
+    <!-- config for showing dial option when fdn contact is selected.
+         By default feature is disabled -->
+    <bool name="config_fdn_direct_dial">false</bool>
 </resources>
