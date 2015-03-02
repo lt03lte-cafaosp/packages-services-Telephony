@@ -1974,7 +1974,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     }
 
     /**
-     * Set mobile data enabled
+     * Set mobile data enabled using subscription
      * Used by the user through settings etc to turn on/off mobile data
      *
      * @param enable {@code true} turn turn data on, else {@code false}
@@ -2000,7 +2000,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      * @param enable {@code true} turn turn data on, else {@code false}
      */
     @Override
-    public void setDataEnabledUsingSubId(int subId, boolean enable) {
+    public void setDataEnabled(int subId, boolean enable) {
         enforceModifyPermission();
         getPhone(subId).setDataEnabled(enable);
     }
