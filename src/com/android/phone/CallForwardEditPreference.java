@@ -301,12 +301,12 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
             callForwardInfo = null;
             if (ar.exception != null) {
                 if (DBG) Log.d(LOG_TAG, "handleGetCFResponse: ar.exception=" + ar.exception);
-                if (ar.exception instanceof RuntimeException){
-                    tcpListener.onException(CallForwardEditPreference.this,
-                            CommandException.fromRilErrno(2));
-                }else{
+                if (ar.exception instanceof CommandException){
                     tcpListener.onException(CallForwardEditPreference.this,
                             (CommandException) ar.exception);
+                } else {
+                    tcpListener.onException(CallForwardEditPreference.this,
+                            CommandException.fromRilErrno(2));
                 }
             } else {
                 if (ar.userObj instanceof Throwable) {
