@@ -357,4 +357,10 @@ as an enum (NONE, HFA, OTASP). -->
 
     <!-- config switching DDS switch back to the default sub -->
     <bool name="config_dds_switch_back">false</bool>
+
+    <!-- Flag indicating if SIP settings enabled -->
+    <bool name="sip_settings_on">true</bool>
+
+    <!-- Flag indicating if video calling on enabled -->
+    <bool name="enable_video_calling_on">true</bool>
 </resources>
