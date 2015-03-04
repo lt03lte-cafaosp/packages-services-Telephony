@@ -1082,13 +1082,13 @@ public class CallNotifier extends Handler
             Log.w(LOG_TAG, "onDisconnect: null connection");
         }
 
-        showCallDurationIfNeed(c);
-
         //For SRVCC to be seamless, donot process Disconnect indication
         if (c.getDisconnectCause() == Connection.DisconnectCause.SRVCC_CALL_DROP) {
             log("SRVCC case so do not process onDisconnect");
             return;
         }
+
+        showCallDurationIfNeed(c);
 
         int autoretrySetting = 0;
         if ((c != null) && (c.getCall().getPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA)) {
