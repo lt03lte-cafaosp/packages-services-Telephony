@@ -2015,18 +2015,6 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     }
 
     /**
-     * Set mobile data enabled using subscription
-     * Used by the user through settings etc to turn on/off mobile data
-     *
-     * @param enable {@code true} turn turn data on, else {@code false}
-     */
-    @Override
-    public void setDataEnabled(int subId, boolean enable) {
-        enforceModifyPermission();
-        getPhone(subId).setDataEnabled(enable);
-    }
-
-    /**
      * Get whether mobile data is enabled.
      *
      * Note that this used to be available from ConnectivityService, gated by
@@ -2240,13 +2228,13 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     //TODO - Fix for lmr release
    return 1;
    }
+   */
 
    @Override
    public boolean setVoiceMailNumber(int subId, String alphaTag, String number) {
        //TDO Fix me
        return false;
    } 
-    */
 
     /**
      * Returns the unique device ID of phone, for example, the IMEI for
