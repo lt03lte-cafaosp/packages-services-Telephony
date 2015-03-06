@@ -1879,7 +1879,7 @@ public class CallFeaturesSetting extends PreferenceActivity
 
     private void createSipCallSettings() {
         // Add Internet call settings.
-        if (PhoneUtils.isVoipSupported(this)) {
+        if (PhoneUtils.isVoipSupported(this) && getResources().getBoolean(R.bool.sip_settings_on)) {
             mSipManager = SipManager.newInstance(this);
             mSipSharedPreferences = new SipSharedPreferences(this);
             addPreferencesFromResource(R.xml.sip_settings_category);
