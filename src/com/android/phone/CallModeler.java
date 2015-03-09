@@ -578,7 +578,7 @@ public class CallModeler extends Handler {
         for (int i = 0; i < size; i++) {
             final Connection connection = connections.get(i);
             if (!connection.isAlive()) continue;
-            final long time = connection.getCreateTime();
+            final long time = connection.getConnectTime();
             if (time < earliestTime) {
                 earliestTime = time;
                 earliestConn = connection;
