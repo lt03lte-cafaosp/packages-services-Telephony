@@ -104,6 +104,8 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
 
     static final int preferredNetworkMode = Phone.PREFERRED_NT_MODE;
 
+    private static final int BAND_LTE = 1;
+
     //Information about logical "up" Activity
     private static final String UP_ACTIVITY_PACKAGE = "com.android.settings";
     private static final String UP_ACTIVITY_CLASS =
@@ -282,7 +284,8 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
 
         mButtonPreferredLte = (CheckBoxPreference) prefSet.findPreference(KEY_PREFERRED_LTE);
         if (!getResources().getBoolean(R.bool.config_tdd_data_only)
-            || mSubscription != MSimConstants.SUB1) {
+            || mSubscription != MSimConstants.SUB1
+            || (SystemProperties.getInt("persist.radio.lte_band", BAND_LTE) == BAND_LTE)) {
             prefSet.removePreference(mButtonPreferredLte);
             mButtonPreferredLte = null;
         }
