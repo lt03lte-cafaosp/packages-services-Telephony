@@ -96,7 +96,7 @@ public class PhoneAccountSettingsFragment extends PreferenceFragment
                     getPreferenceScreen().findPreference(CALL_ASSISTANT_CATEGORY_PREF_KEY));
         }
 
-        if (SipUtil.isVoipSupported(getActivity())) {
+        if (SipUtil.isVoipSupported(getActivity()) && getResources().getBoolean(R.bool.sip_settings_on)) {
             mSipSharedPreferences = new SipSharedPreferences(getActivity());
 
             mUseSipCalling = (ListPreference)
