@@ -555,6 +555,7 @@ public class MSimCallNotifier extends CallNotifier {
     protected void onDisconnect(AsyncResult r) {
         if (VDBG) log("onDisconnect()...  CallManager state: " + mCM.getState());
 
+        PhoneNumberUtils.resetCountryDetectorInfo();
         showUssdResponseDialog();
 
         mVoicePrivacyState = false;
