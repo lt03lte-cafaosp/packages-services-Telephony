@@ -570,6 +570,12 @@ public class MSimCallNotifier extends CallNotifier {
             Log.w(LOG_TAG, "onDisconnect: null connection");
         }
 
+        //For SRVCC to be seamless, donot process Disconnect indication
+        if (c.getDisconnectCause() == Connection.DisconnectCause.SRVCC_CALL_DROP) {
+            log("SRVCC case so do not process onDisconnect");
+            return;
+        }
+
         showCallDurationIfNeed(c);
 
         int autoretrySetting = 0;
