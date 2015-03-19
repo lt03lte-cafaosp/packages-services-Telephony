@@ -1075,7 +1075,7 @@ abstract class TelephonyConnection extends Connection {
             }
         }
 
-        long subId = SubscriptionController.getInstance().getSubIdUsingPhoneId(PhoneIdToCall);
+        int subId = SubscriptionController.getInstance().getSubIdUsingPhoneId(PhoneIdToCall);
         if (PhoneIdToCall == SubscriptionManager.INVALID_PHONE_INDEX) {
             Log.d(this,"EMERGENCY_PERM_FAILURE received on all subs, abort redial");
             setDisconnected(DisconnectCauseUtil.toTelecomDisconnectCause(
@@ -1091,7 +1091,7 @@ abstract class TelephonyConnection extends Connection {
                         telecommMgr.getCallCapablePhoneAccounts();
                 for (PhoneAccountHandle handle : phoneAccountHandles) {
                     String sub = handle.getId();
-                    if (Long.toString(subId).equals(sub)){
+                    if (Integer.toString(subId).equals(sub)){
                         Log.d(this,"EMERGENCY REDIAL");
                         for (TelephonyConnectionListener l : mTelephonyListeners) {
                             l.onEmergencyRedial(this, handle, PhoneIdToCall);
