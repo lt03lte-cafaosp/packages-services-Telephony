@@ -1069,6 +1069,7 @@ public class CallNotifier extends Handler
     protected void onDisconnect(AsyncResult r) {
         if (VDBG) log("onDisconnect()...  CallManager state: " + mCM.getState());
 
+        PhoneNumberUtils.resetCountryDetectorInfo();
         showUssdResponseDialog();
 
         mVoicePrivacyState = false;
