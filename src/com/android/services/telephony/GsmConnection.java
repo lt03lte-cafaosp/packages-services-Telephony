@@ -20,10 +20,8 @@ import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
 import android.telecom.CallProperties;
-import android.telecom.PhoneCapabilities;
 
 import com.android.internal.telephony.Call;
-import com.android.internal.telephony.CallStateException;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.gsm.SuppServiceNotification;
 import com.android.internal.telephony.Phone;
@@ -81,18 +79,12 @@ final class GsmConnection extends TelephonyConnection {
     }
 
     @Override
-    protected int buildCallCapabilities() {
-        int capabilities = super.buildCallCapabilities();
-        capabilities |= PhoneCapabilities.MUTE;
-        capabilities |= PhoneCapabilities.SUPPORT_HOLD;
+    protected int buildConnectionCapabilities() {
+        int capabilities = super.buildConnectionCapabilities();
+        capabilities |= CAPABILITY_MUTE;
+        capabilities |= CAPABILITY_SUPPORT_HOLD;
         if (getState() == STATE_ACTIVE || getState() == STATE_HOLDING) {
-            capabilities |= PhoneCapabilities.HOLD;
-        }
-        //Include FDN_ENABLED capability if FDN is enabled.
-        if (TelephonyGlobals.getApplicationContext().getResources()
-                .getBoolean(com.android.internal.R.bool.config_fdn_contact_search)
-                && PhoneFactory.getDefaultPhone().getIccCard().getIccFdnEnabled()) {
-            capabilities = capabilities | PhoneCapabilities.FDN_ENABLED;
+            capabilities |= CAPABILITY_HOLD;
         }
         return capabilities;
     }

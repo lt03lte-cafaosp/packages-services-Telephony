@@ -28,14 +28,12 @@ import android.telecom.Conference;
 import android.telecom.ConferenceParticipant;
 import android.telecom.CallProperties;
 import android.telecom.Connection;
-import android.telecom.DisconnectCause;
 import android.telecom.PhoneAccount;
 import android.telecom.PhoneCapabilities;
 import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.telecom.VideoProfile;
 import android.telephony.PhoneNumberUtils;
-import android.telephony.SubInfoRecord;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.widget.Toast;
@@ -47,9 +45,6 @@ import com.android.internal.telephony.Connection.PostDialListener;
 import com.android.internal.telephony.gsm.SuppServiceNotification;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.SubscriptionController;
-import com.android.internal.telephony.cdma.CdmaCall;
-import com.android.internal.telephony.gsm.*;
-import com.android.internal.telephony.gsm.GsmConnection;
 import com.android.internal.telephony.imsphone.ImsPhoneConnection;
 import com.android.internal.telephony.PhoneConstants;
 
@@ -426,6 +421,14 @@ abstract class TelephonyConnection extends Connection {
                 setPostDialWait(mOriginalConnection.getRemainingPostDialString());
             }
         }
+
+        @Override
+        public void onPostDialChar(char c) {
+            Log.v(TelephonyConnection.this, "onPostDialChar: %s", c);
+            if (mOriginalConnection != null) {
+                setNextPostDialWaitChar(c);
+            }
+        }
     };
 
     /**
@@ -515,28 +518,27 @@ abstract class TelephonyConnection extends Connection {
 
     /**
      * Determines if the {@link TelephonyConnection} has local video capabilities.
-     * This is used when {@link TelephonyConnection#updateCallCapabilities()}} is called,
-     * ensuring the appropriate {@link PhoneCapabilities} are set.  Since {@link PhoneCapabilities}
+     * This is used when {@link TelephonyConnection#updateConnectionCapabilities()}} is called,
+     * ensuring the appropriate capabilities are set.  Since capabilities
      * can be rebuilt at any time it is necessary to track the video capabilities between rebuild.
-     * The {@link PhoneCapabilities} (including video capabilities) are communicated to the telecom
+     * The capabilities (including video capabilities) are communicated to the telecom
      * layer.
      */
     private boolean mLocalVideoCapable;
 
     /**
      * Determines if the {@link TelephonyConnection} has remote video capabilities.
-     * This is used when {@link TelephonyConnection#updateCallCapabilities()}} is called,
-     * ensuring the appropriate {@link PhoneCapabilities} are set.  Since {@link PhoneCapabilities}
-     * can be rebuilt at any time it is necessary to track the video capabilities between rebuild.
-     * The {@link PhoneCapabilities} (including video capabilities) are communicated to the telecom
-     * layer.
+     * This is used when {@link TelephonyConnection#updateConnectionCapabilities()}} is called,
+     * ensuring the appropriate capabilities are set.  Since capabilities can be rebuilt at any time
+     * it is necessary to track the video capabilities between rebuild. The capabilities (including
+     * video capabilities) are communicated to the telecom layer.
      */
     private boolean mRemoteVideoCapable;
 
     /**
      * Determines the current audio quality for the {@link TelephonyConnection}.
-     * This is used when {@link TelephonyConnection#updateCallCapabilities}} is called to indicate
-     * whether a call has the {@link android.telecom.CallCapabilities#VoLTE} capability.
+     * This is used when {@link TelephonyConnection#updateConnectionCapabilities}} is called to
+     * indicate whether a call has the {@link Connection#CAPABILITY_HIGH_DEF_AUDIO} capability.
      */
     private int mAudioQuality;
 
@@ -632,7 +634,7 @@ abstract class TelephonyConnection extends Connection {
         if (ph == null) {
             return;
         }
-        long subId = ph.getSubId();
+        int subId = ph.getSubId();
         Log.i(this, "setActiveSubscription subId:" + subId);
         CallManager.getInstance().setActiveSubscription(subId);
     }
@@ -689,25 +691,6 @@ abstract class TelephonyConnection extends Connection {
                 mOriginalConnection.proceedAfterWaitChar();
             } else {
                 mOriginalConnection.cancelPostDial();
-            }
-        }
-    }
-
-    @Override
-    public void onConferenceChanged() {
-        Conference conference = getConference();
-        if (conference == null) {
-            return;
-        }
-
-        // If the conference was an IMS connection currently or before, disable MANAGE_CONFERENCE
-        // as the default behavior. If there is a conference event package, this may be overridden.
-        if (mWasImsConnection) {
-            int capabilities = conference.getCapabilities();
-            if (PhoneCapabilities.can(capabilities, PhoneCapabilities.MANAGE_CONFERENCE)) {
-                int newCapabilities =
-                        PhoneCapabilities.remove(capabilities, PhoneCapabilities.MANAGE_CONFERENCE);
-                conference.setCapabilities(newCapabilities);
             }
         }
     }
@@ -797,33 +780,33 @@ abstract class TelephonyConnection extends Connection {
      * Builds call capabilities common to all TelephonyConnections. Namely, apply IMS-based
      * capabilities.
      */
-    protected int buildCallCapabilities() {
+    protected int buildConnectionCapabilities() {
         int callCapabilities = 0;
         if (isImsConnection()) {
-            callCapabilities |= PhoneCapabilities.SUPPORT_HOLD;
+            callCapabilities |= CAPABILITY_SUPPORT_HOLD;
             if (getState() == STATE_ACTIVE || getState() == STATE_HOLDING) {
-                callCapabilities |= PhoneCapabilities.HOLD;
+                callCapabilities |= CAPABILITY_HOLD;
             }
         }
         return callCapabilities;
     }
 
-    protected final void updateCallCapabilities() {
-        int newCallCapabilities = buildCallCapabilities();
-        newCallCapabilities = applyVideoCapabilities(newCallCapabilities);
-        newCallCapabilities = applyAudioQualityCapabilities(newCallCapabilities);
-        newCallCapabilities = applyConferenceTerminationCapabilities(newCallCapabilities);
-        newCallCapabilities = applyVoicePrivacyCapabilities(newCallCapabilities);
-        newCallCapabilities = applyAddParticipantCapabilities(newCallCapabilities);
-        newCallCapabilities = applyConferenceCapabilities(newCallCapabilities);
+    protected final void updateConnectionCapabilities() {
+        int newCapabilities = buildConnectionCapabilities();
+        newCapabilities = applyVideoCapabilities(newCapabilities);
+        newCapabilities = applyAudioQualityCapabilities(newCapabilities);
+        newCapabilities = applyConferenceTerminationCapabilities(newCapabilities);
+        newCapabilities = applyVoicePrivacyCapabilities(newCapabilities);
+        newCapabilities = applyAddParticipantCapabilities(newCapabilities);
+        newCapabilities = applyConferenceCapabilities(newCapabilities);
 
-        if (getCallCapabilities() != newCallCapabilities) {
-            setCallCapabilities(newCallCapabilities);
+        if (getConnectionCapabilities() != newCapabilities) {
+            setConnectionCapabilities(newCapabilities);
         }
     }
 
     protected final void updateAddress() {
-        updateCallCapabilities();
+        updateConnectionCapabilities();
         Uri address;
         if (mOriginalConnection != null) {
             if ((getAddress() != null) &&
@@ -1132,7 +1115,7 @@ abstract class TelephonyConnection extends Connection {
                     break;
             }
         }
-        updateCallCapabilities();
+        updateConnectionCapabilities();
         updateAddress();
     }
 
@@ -1143,7 +1126,7 @@ abstract class TelephonyConnection extends Connection {
             // update mIsPermDiscCauseReceived so that next redial doesn't occur
             // on this sub
             mIsPermDiscCauseReceived[phone.getPhoneId()] = true;
-            PhoneIdToCall = SubscriptionManager.INVALID_PHONE_ID;
+            PhoneIdToCall = SubscriptionManager.INVALID_PHONE_INDEX;
         }
         // Check for any subscription on which EMERGENCY_PERM_FAILURE is received
         // if no such sub, then redial should be stopped.
@@ -1155,8 +1138,8 @@ abstract class TelephonyConnection extends Connection {
             }
         }
 
-        long subId = SubscriptionController.getInstance().getSubIdUsingPhoneId(PhoneIdToCall);
-        if (PhoneIdToCall == SubscriptionManager.INVALID_PHONE_ID) {
+        int subId = SubscriptionController.getInstance().getSubIdUsingPhoneId(PhoneIdToCall);
+        if (PhoneIdToCall == SubscriptionManager.INVALID_PHONE_INDEX) {
             Log.d(this,"EMERGENCY_PERM_FAILURE received on all subs, abort redial");
             setDisconnected(DisconnectCauseUtil.toTelecomDisconnectCause(
                     mOriginalConnection.getDisconnectCause(), 0xFF, 0xFF));
@@ -1171,7 +1154,7 @@ abstract class TelephonyConnection extends Connection {
                         telecommMgr.getCallCapablePhoneAccounts();
                 for (PhoneAccountHandle handle : phoneAccountHandles) {
                     String sub = handle.getId();
-                    if (Long.toString(subId).equals(sub)){
+                    if (Integer.toString(subId).equals(sub)){
                         Log.d(this,"EMERGENCY REDIAL");
                         for (TelephonyConnectionListener l : mTelephonyListeners) {
                             l.onEmergencyRedial(this, handle, PhoneIdToCall);
@@ -1249,18 +1232,18 @@ abstract class TelephonyConnection extends Connection {
         int currentCapabilities = capabilities;
         if (mRemoteVideoCapable) {
             currentCapabilities = applyCapability(currentCapabilities,
-                    PhoneCapabilities.SUPPORTS_VT_REMOTE);
+                    CAPABILITY_SUPPORTS_VT_REMOTE);
         } else {
             currentCapabilities = removeCapability(currentCapabilities,
-                    PhoneCapabilities.SUPPORTS_VT_REMOTE);
+                    CAPABILITY_SUPPORTS_VT_REMOTE);
         }
 
         if (mLocalVideoCapable) {
             currentCapabilities = applyCapability(currentCapabilities,
-                    PhoneCapabilities.SUPPORTS_VT_LOCAL);
+                    CAPABILITY_SUPPORTS_VT_LOCAL);
         } else {
             currentCapabilities = removeCapability(currentCapabilities,
-                    PhoneCapabilities.SUPPORTS_VT_LOCAL);
+                    CAPABILITY_SUPPORTS_VT_LOCAL);
         }
         int callState = getState();
         if (mLocalVideoCapable && mRemoteVideoCapable
@@ -1276,20 +1259,19 @@ abstract class TelephonyConnection extends Connection {
 
     /**
      * Applies the audio capabilities to the {@code CallCapabilities} bit-mask.  A call with high
-     * definition audio is considered to have the {@code VoLTE} call capability as VoLTE uses high
-     * definition audio.
+     * definition audio is considered to have the {@code HIGH_DEF_AUDIO} call capability.
      *
-     * @param callCapabilities The {@code CallCapabilities} bit-mask.
+     * @param capabilities The {@code CallCapabilities} bit-mask.
      * @return The capabilities with the audio capabilities applied.
      */
-    private int applyAudioQualityCapabilities(int callCapabilities) {
-        int currentCapabilities = callCapabilities;
+    private int applyAudioQualityCapabilities(int capabilities) {
+        int currentCapabilities = capabilities;
 
         if (mAudioQuality ==
                 com.android.internal.telephony.Connection.AUDIO_QUALITY_HIGH_DEFINITION) {
-            currentCapabilities = applyCapability(currentCapabilities, PhoneCapabilities.VoLTE);
+            currentCapabilities = applyCapability(currentCapabilities, CAPABILITY_HIGH_DEF_AUDIO);
         } else {
-            currentCapabilities = removeCapability(currentCapabilities, PhoneCapabilities.VoLTE);
+            currentCapabilities = removeCapability(currentCapabilities, CAPABILITY_HIGH_DEF_AUDIO);
         }
 
         return currentCapabilities;
@@ -1299,17 +1281,17 @@ abstract class TelephonyConnection extends Connection {
      * Applies capabilities specific to conferences termination to the
      * {@code CallCapabilities} bit-mask.
      *
-     * @param callCapabilities The {@code CallCapabilities} bit-mask.
+     * @param capabilities The {@code CallCapabilities} bit-mask.
      * @return The capabilities with the IMS conference capabilities applied.
      */
-    private int applyConferenceTerminationCapabilities(int callCapabilities) {
-        int currentCapabilities = callCapabilities;
+    private int applyConferenceTerminationCapabilities(int capabilities) {
+        int currentCapabilities = capabilities;
 
         // An IMS call cannot be individually disconnected or separated from its parent conference.
         // If the call was IMS, even if it hands over to GMS, these capabilities are not supported.
         if (!mWasImsConnection) {
-            currentCapabilities |= PhoneCapabilities.DISCONNECT_FROM_CONFERENCE;
-            currentCapabilities |= PhoneCapabilities.SEPARATE_FROM_CONFERENCE;
+            currentCapabilities |= CAPABILITY_DISCONNECT_FROM_CONFERENCE;
+            currentCapabilities |= CAPABILITY_SEPARATE_FROM_CONFERENCE;
         }
 
         return currentCapabilities;
@@ -1392,35 +1374,35 @@ abstract class TelephonyConnection extends Connection {
 
     /**
      * Sets whether video capability is present locally.  Used during rebuild of the
-     * {@link PhoneCapabilities} to set the video call capabilities.
+     * capabilities to set the video call capabilities.
      *
      * @param capable {@code True} if video capable.
      */
     public void setLocalVideoCapable(boolean capable) {
         mLocalVideoCapable = capable;
-        updateCallCapabilities();
+        updateConnectionCapabilities();
     }
 
     /**
      * Sets whether video capability is present remotely.  Used during rebuild of the
-     * {@link PhoneCapabilities} to set the video call capabilities.
+     * capabilities to set the video call capabilities.
      *
      * @param capable {@code True} if video capable.
      */
     public void setRemoteVideoCapable(boolean capable) {
         mRemoteVideoCapable = capable;
-        updateCallCapabilities();
+        updateConnectionCapabilities();
     }
 
     /**
-     * Sets the current call audio quality.  Used during rebuild of the
-     * {@link PhoneCapabilities} to set or unset the {@link PhoneCapabilities#VoLTE} capability.
+     * Sets the current call audio quality.  Used during rebuild of the capabilities
+     * to set or unset the {@link Connection#CAPABILITY_HIGH_DEF_AUDIO} capability.
      *
      * @param audioQuality The audio quality.
      */
     public void setAudioQuality(int audioQuality) {
         mAudioQuality = audioQuality;
-        updateCallCapabilities();
+        updateConnectionCapabilities();
     }
 
     /**
@@ -1556,7 +1538,7 @@ abstract class TelephonyConnection extends Connection {
         sb.append(" state:");
         sb.append(Connection.stateToString(getState()));
         sb.append(" capabilities:");
-        sb.append(PhoneCapabilities.toString(getCallCapabilities()));
+        sb.append(capabilitiesToString(getConnectionCapabilities()));
         sb.append(" address:");
         sb.append(Log.pii(getAddress()));
         sb.append(" originalConnection:");

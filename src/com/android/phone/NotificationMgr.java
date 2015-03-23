@@ -491,7 +491,7 @@ public class NotificationMgr {
     private void showNetworkSelection(String operator, Phone phone) {
         if (DBG) log("showNetworkSelection(" + operator + ")...");
 
-        long subId = phone.getSubId();
+        int subId = phone.getSubId();
         Notification.Builder builder = new Notification.Builder(mContext)
                 .setSmallIcon(android.R.drawable.stat_sys_warning)
                 .setContentTitle(mContext.getString(R.string.notification_network_selection_title))
@@ -569,10 +569,10 @@ public class NotificationMgr {
             SharedPreferences sp =
                     PreferenceManager.getDefaultSharedPreferences(mContext);
             String networkSelection =
-                    sp.getString(PhoneBase.NETWORK_SELECTION_NAME_KEY, "");
+                    sp.getString(PhoneBase.NETWORK_SELECTION_NAME_KEY + phone.getSubId(), "");
             if (TextUtils.isEmpty(networkSelection)) {
                 networkSelection =
-                        sp.getString(PhoneBase.NETWORK_SELECTION_KEY, "");
+                        sp.getString(PhoneBase.NETWORK_SELECTION_KEY + phone.getSubId(), "");
             }
 
             if (DBG) log("updateNetworkSelection()..." + "state = " +
