@@ -45,6 +45,12 @@ public class ImsConferenceController {
 
             mImsConferences.remove(conference);
         }
+
+        @Override
+        public void onStateChanged(Conference c, int oldState, int newState) {
+            Log.v(ImsConferenceController.class, "onStateChanged: conf");
+            recalculate();
+        }
     };
 
     /**
@@ -62,6 +68,12 @@ public class ImsConferenceController {
         public void onDisconnected(Connection c, DisconnectCause disconnectCause) {
             Log.v(this, "onDisconnected: %s", Log.pii(c.getAddress()));
             recalculate();
+        }
+
+        @Override
+        public void onConnectionCapabilitiesChanged(Connection c, int callCapabilities) {
+            Log.v(this, "onConnectionCapabilitiesChanged: %s", Log.pii(c.getAddress()));
+            recalculateConference();
         }
 
         @Override
@@ -109,7 +121,7 @@ public class ImsConferenceController {
 
         mTelephonyConnections.add(connection);
         connection.addConnectionListener(mConnectionListener);
-        recalculateConference();
+        recalculate();
     }
 
     /**
@@ -123,7 +135,7 @@ public class ImsConferenceController {
         }
 
         mTelephonyConnections.remove(connection);
-        recalculateConferenceable();
+        recalculate();
     }
 
     /**
@@ -263,8 +275,9 @@ public class ImsConferenceController {
         // Create conference and add to telecom
         ImsConference conference = new ImsConference(mConnectionService, conferenceHostConnection);
         conference.setState(connection.getState());
-        mConnectionService.addConference(conference);
         conference.addListener(mConferenceListener);
+        conference.updateConferenceStateAfterCreation();
+        mConnectionService.addConference(conference);
 
         // Cleanup TelephonyConnection which backed the original connection and remove from telecom.
         // Use the "Other" disconnect cause to ensure the call is logged to the call log but the
@@ -273,6 +286,12 @@ public class ImsConferenceController {
         connection.clearOriginalConnection();
         connection.setDisconnected(new DisconnectCause(DisconnectCause.OTHER));
         connection.destroy();
+        //TODO: Do this before or right after clone!!! mConnectionService.removeConnection(connection);
         mImsConferences.add(conference);
     }
+
+    public ArrayList<ImsConference> getImsConferences() {
+            return mImsConferences;
+    }
+
 }

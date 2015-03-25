@@ -20,7 +20,6 @@ import android.os.Handler;
 import android.os.Message;
 
 import android.provider.Settings;
-import android.telecom.PhoneCapabilities;
 import android.telephony.DisconnectCause;
 import android.telephony.PhoneNumberUtils;
 
@@ -91,6 +90,22 @@ final class CdmaConnection extends TelephonyConnection {
         }
     }
 
+    CdmaConnection(
+            Connection connection,
+            EmergencyTonePlayer emergencyTonePlayer,
+            boolean allowMute,
+            boolean isOutgoing,
+            Call.State state) {
+        super(connection, state);
+        mEmergencyTonePlayer = emergencyTonePlayer;
+        mAllowMute = allowMute;
+        mIsOutgoing = isOutgoing;
+        mIsCallWaiting = connection != null && connection.getState() == Call.State.WAITING;
+        if (mIsCallWaiting) {
+            startCallWaitingTimer();
+        }
+    }
+
     /** {@inheritDoc} */
     @Override
     public void onPlayDtmfTone(char digit) {
@@ -155,7 +170,8 @@ final class CdmaConnection extends TelephonyConnection {
     @Override
     public TelephonyConnection cloneConnection() {
         CdmaConnection cdmaConnection = new CdmaConnection(getOriginalConnection(),
-                mEmergencyTonePlayer, mAllowMute, mIsOutgoing);
+                mEmergencyTonePlayer, mAllowMute, mIsOutgoing,
+                getOriginalConnectionState());
         return cdmaConnection;
     }
 
@@ -180,10 +196,10 @@ final class CdmaConnection extends TelephonyConnection {
     }
 
     @Override
-    protected int buildCallCapabilities() {
-        int capabilities = super.buildCallCapabilities();
+    protected int buildConnectionCapabilities() {
+        int capabilities = super.buildConnectionCapabilities();
         if (mAllowMute) {
-            capabilities |= PhoneCapabilities.MUTE;
+            capabilities |= CAPABILITY_MUTE;
         }
         return capabilities;
     }
