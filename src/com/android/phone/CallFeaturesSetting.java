@@ -187,6 +187,7 @@ public class CallFeaturesSetting extends PreferenceActivity
     /* package */ static final String BUTTON_VOICEMAIL_NOTIFICATION_RINGTONE_KEY =
             "button_voicemail_notification_ringtone_key";
     private static final String BUTTON_FDN_KEY   = "button_fdn_key";
+    private static final String BUTTON_IMS_ACCOUNT_SETTINGS_KEY   = "ims_account_settings_key";
 
     private static final String BUTTON_DTMF_KEY        = "button_dtmf_settings";
     private static final String BUTTON_RETRY_KEY       = "button_auto_retry_key";
@@ -1755,6 +1756,13 @@ public class CallFeaturesSetting extends PreferenceActivity
         mVibrateAfterConnected = (CheckBoxPreference) findPreference(BUTTON_VIBRATE_CONNECTED_KEY);
         mShowDurationCheckBox = (CheckBoxPreference) findPreference(SHOW_DURATION_KEY);
         mIPPrefixPreference = (PreferenceScreen) findPreference(BUTTON_IPPREFIX_KEY);
+
+        if (!getResources().getBoolean(R.bool.config_show_ims_account_setting)) {
+            Preference pref = prefSet.findPreference(BUTTON_IMS_ACCOUNT_SETTINGS_KEY);
+            if (pref != null) {
+                prefSet.removePreference(pref);
+            }
+        }
 
         mButton4glte = (SwitchPreference)findPreference(BUTTON_4G_LTE_KEY);
         mButton4glte.setOnPreferenceChangeListener(this);
