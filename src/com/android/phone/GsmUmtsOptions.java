@@ -90,10 +90,7 @@ public class GsmUmtsOptions {
                 mPrefScreen.removePreference(mPrefScreen.findPreference(BUTTON_APN_EXPAND_KEY));
             }
             if (!res.getBoolean(R.bool.config_operator_selection_expand)) {
-                if (mButtonOperatorSelectionExpand != null) {
-                    mPrefScreen.removePreference(mButtonOperatorSelectionExpand);
-                    mButtonOperatorSelectionExpand = null;
-               }
+                mPrefScreen.removePreference(mButtonOperatorSelectionExpand);
             }
         }
         updateOperatorSelectionVisibility();
@@ -102,10 +99,6 @@ public class GsmUmtsOptions {
     private void updateOperatorSelectionVisibility() {
         log("updateOperatorSelectionVisibility. mPhone = " + mPhone.getPhoneName());
         Resources res = mPrefActivity.getResources();
-        if (mButtonOperatorSelectionExpand == null) {
-            android.util.Log.e(LOG_TAG, "mButtonOperatorSelectionExpand is null");
-            return;
-        }
         if (!mPhone.isManualNetSelAllowed()) {
             log("Manual network selection not allowed.Disabling Operator Selection menu.");
             mButtonOperatorSelectionExpand.setEnabled(false);
@@ -115,10 +108,7 @@ public class GsmUmtsOptions {
                 mButtonOperatorSelectionExpand.setEnabled(true);
             } else {
                 log("[CSP] Disabling Operator Selection menu.");
-                if (mButtonOperatorSelectionExpand != null) {
-                    mPrefScreen.removePreference(mButtonOperatorSelectionExpand);
-                    mButtonOperatorSelectionExpand = null;
-                }
+                mPrefScreen.removePreference(mButtonOperatorSelectionExpand);
             }
         }
     }
