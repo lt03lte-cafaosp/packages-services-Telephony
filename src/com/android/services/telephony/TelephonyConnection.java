@@ -1131,6 +1131,8 @@ abstract class TelephonyConnection extends Connection {
                                 mSsNotification.notificationType,
                                 mSsNotification.code));
                         mSsNotification = null;
+                        DisconnectCauseUtil.mNotificationCode = 0xFF;
+                        DisconnectCauseUtil.mNotificationType = 0xFF;
                     } else if(isEmergencyNumber &&
                             (TelephonyManager.getDefault().getPhoneCount() > 1) &&
                             ((cause == android.telephony.DisconnectCause.EMERGENCY_TEMP_FAILURE) ||
