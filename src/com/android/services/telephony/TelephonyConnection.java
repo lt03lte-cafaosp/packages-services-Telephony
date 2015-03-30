@@ -34,6 +34,7 @@ import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.telecom.VideoProfile;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.widget.Toast;
@@ -51,6 +52,7 @@ import com.android.internal.telephony.PhoneConstants;
 import com.android.phone.R;
 
 import java.lang.Override;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -266,6 +268,7 @@ abstract class TelephonyConnection extends Connection {
                 // hold
                 callForwardTxt = TelephonyGlobals.getApplicationContext()
                         .getString(R.string.card_title_callonhold);
+                mHeldRemotely = true;
                 break;
 
             case SuppServiceNotification.MT_CODE_CALL_RETRIEVED:
@@ -273,6 +276,7 @@ abstract class TelephonyConnection extends Connection {
                 //hold & retrives it back.
                 callForwardTxt = TelephonyGlobals.getApplicationContext().getString(
                         R.string.card_title_callretrieved);
+                mHeldRemotely = false;
                 break;
 
             case SuppServiceNotification.MT_CODE_MULTI_PARTY_CALL:
@@ -857,16 +861,28 @@ abstract class TelephonyConnection extends Connection {
     protected void onSuppServiceNotification(SuppServiceNotification notification) {
         Log.d(this, "SS Notification: " + notification);
 
-        // hold/retrieved notifications can come from either gsm or ims phones
-        if (notification.notificationType == SuppServiceNotification.NOTIFICATION_TYPE_MT) {
-            if (notification.code == SuppServiceNotification.MT_CODE_CALL_ON_HOLD) {
-                mHeldRemotely = true;
-            } else if (notification.code == SuppServiceNotification.MT_CODE_CALL_RETRIEVED) {
-                mHeldRemotely = false;
+        final String notificationText = getSuppSvcNotificationText(notification);
+        if (notificationText != null && !notificationText.isEmpty()
+                && notification.history != null && notification.history.length > 0) {
+
+            if (TelephonyManager.getDefault().getPhoneCount() > 1) {
+                SubscriptionInfo sub = SubscriptionManager.from(
+                        TelephonyGlobals.getApplicationContext())
+                        .getActiveSubscriptionInfoForSimSlotIndex(getPhone().getPhoneId());
+                String displayName =  ((sub != null)) ?
+                        sub.getDisplayName().toString() : mSubName[getPhone().getPhoneId()];
+                mDisplayName = displayName + ":" + notificationText;
+            } else {
+                mDisplayName = notificationText;
             }
+
+            final String history = TelephonyGlobals.getApplicationContext().getString(R.string.card_title_history) + Arrays.toString(notification.history);
+            Toast.makeText(TelephonyGlobals.getApplicationContext(),
+                    mDisplayName + history, Toast.LENGTH_LONG).show();
+        } else {
+            setCallProperties(computeCallProperties());
         }
 
-        setCallProperties(computeCallProperties());
     }
 
     protected int computeCallProperties() {
