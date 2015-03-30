@@ -35,7 +35,6 @@ import android.telecom.Conference.Listener;
 import android.telecom.Connection.VideoProvider;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -167,11 +166,13 @@ public class ImsConference extends Conference {
         }
 
         @Override
-        public void onCallCapabilitiesChanged(Connection c, int callCapabilities) {
-            Log.d(this, "onCallCapabilitiesChanged: Connection: %s, callCapabilities: %s", c,
+        public void onConnectionCapabilitiesChanged(Connection c, int callCapabilities) {
+            Log.d(this, "onConnectionCapabilitiesChanged: Connection: %s, callCapabilities: %s", c,
                     callCapabilities);
             int capabilites = ImsConference.this.getCapabilities();
-            setCapabilities(applyVideoCapabilities(capabilites, callCapabilities));
+            capabilites = applyMergeCapabilities(capabilites, callCapabilities);
+            capabilites = applyVideoCapabilities(capabilites, callCapabilities);
+            setCapabilities(capabilites);
         }
     };
 
@@ -215,6 +216,9 @@ public class ImsConference extends Conference {
             TelephonyConnection conferenceHost) {
 
         super(null);
+        // Specify the connection time of the conference to be the connection time of the original
+        // connection
+        setConnectTimeMillis(conferenceHost.getOriginalConnection().getConnectTime());
         mTelephonyConnectionService = telephonyConnectionService;
         setConferenceHost(conferenceHost);
         if (conferenceHost != null && conferenceHost.getCall() != null
@@ -224,12 +228,27 @@ public class ImsConference extends Conference {
             Log.v(this, "set phacc to " + mPhoneAccount);
         }
 
-        int capabilities = PhoneCapabilities.SUPPORT_HOLD | PhoneCapabilities.HOLD |
-                PhoneCapabilities.MUTE | PhoneCapabilities.ADD_PARTICIPANT;
+        //Re-visit later
+        /*int capabilities = PhoneCapabilities.SUPPORT_HOLD | PhoneCapabilities.HOLD |
+                PhoneCapabilities.MUTE | PhoneCapabilities.ADD_PARTICIPANT;*/
+        int capabilities = Connection.CAPABILITY_SUPPORT_HOLD |
+                Connection.CAPABILITY_HOLD |
+                Connection.CAPABILITY_MUTE | Connection.ADD_PARTICIPANT;
 
+        capabilities = applyMergeCapabilities(capabilities, mConferenceHost.getCallCapabilities());
         capabilities = applyVideoCapabilities(capabilities, mConferenceHost.getCallCapabilities());
         setCapabilities(capabilities);
 
+    }
+    private int applyMergeCapabilities(int conferenceCapabilities, int capabilities) {
+        if (PhoneCapabilities.can(capabilities, PhoneCapabilities.MERGE_CONFERENCE)) {
+            conferenceCapabilities = applyCapability(conferenceCapabilities,
+                    PhoneCapabilities.MERGE_CONFERENCE);
+        } else {
+            conferenceCapabilities = removeCapability(conferenceCapabilities,
+                    PhoneCapabilities.MERGE_CONFERENCE);
+        }
+        return conferenceCapabilities;
     }
 
     private int applyVideoCapabilities(int conferenceCapabilities, int capabilities) {
@@ -259,14 +278,9 @@ public class ImsConference extends Conference {
         return conferenceCapabilities;
     }
 
-    /**
-     * Not used by the IMS conference controller.
-     *
-     * @return {@code Null}.
-     */
     @Override
     public android.telecom.Connection getPrimaryConnection() {
-        return null;
+        return mConferenceHost;
     }
 
     /**
@@ -444,22 +458,19 @@ public class ImsConference extends Conference {
      * are no conference event package participants, conference management is not permitted.
      */
     private void updateManageConference() {
-        boolean couldManageConference = PhoneCapabilities.can(getCapabilities(),
-                PhoneCapabilities.MANAGE_CONFERENCE);
+        boolean couldManageConference = can(Connection.CAPABILITY_MANAGE_CONFERENCE);
         boolean canManageConference = !mConferenceParticipantConnections.isEmpty();
         Log.v(this, "updateManageConference was:%s is:%s", couldManageConference ? "Y" : "N",
                 canManageConference ? "Y" : "N");
 
         if (couldManageConference != canManageConference) {
-            int newCapabilities = getCapabilities();
+            int newCapabilities = getConnectionCapabilities();
 
             if (canManageConference) {
-                newCapabilities |= PhoneCapabilities.MANAGE_CONFERENCE;
+                addCapability(Connection.CAPABILITY_MANAGE_CONFERENCE);
             } else {
-                newCapabilities = PhoneCapabilities.remove(newCapabilities,
-                        PhoneCapabilities.MANAGE_CONFERENCE);
+                removeCapability(Connection.CAPABILITY_MANAGE_CONFERENCE);
             }
-            setCapabilities(newCapabilities);
         }
     }
 
@@ -494,19 +505,20 @@ public class ImsConference extends Conference {
         boolean newParticipantsAdded = false;
         boolean oldParticipantsRemoved = false;
         ArrayList<ConferenceParticipant> newParticipants = new ArrayList<>(participants.size());
-        HashSet<Uri> participantEndpoints = new HashSet<>(participants.size());
+        HashSet<Uri> participantUserEntities = new HashSet<>(participants.size());
 
         // Add any new participants and update existing.
         for (ConferenceParticipant participant : participants) {
-            Uri endpoint = participant.getEndpoint();
-            participantEndpoints.add(endpoint);
-            if (!mConferenceParticipantConnections.containsKey(endpoint)) {
+            Uri userEntity = participant.getHandle();
+
+            participantUserEntities.add(userEntity);
+            if (!mConferenceParticipantConnections.containsKey(userEntity)) {
                 createConferenceParticipantConnection(parent, participant);
                 newParticipants.add(participant);
                 newParticipantsAdded = true;
             } else {
                 ConferenceParticipantConnection connection =
-                        mConferenceParticipantConnections.get(endpoint);
+                        mConferenceParticipantConnections.get(userEntity);
                 connection.updateState(participant.getState());
                 if (participant.getState() == ConferenceParticipantConnection.STATE_DISCONNECTED) {
                     removeConferenceParticipant(connection);
@@ -520,7 +532,7 @@ public class ImsConference extends Conference {
             // Set the state of the new participants at once and add to the conference
             for (ConferenceParticipant newParticipant : newParticipants) {
                 ConferenceParticipantConnection connection =
-                        mConferenceParticipantConnections.get(newParticipant.getEndpoint());
+                        mConferenceParticipantConnections.get(newParticipant.getHandle());
                 connection.updateState(newParticipant.getState());
             }
         }
@@ -532,8 +544,9 @@ public class ImsConference extends Conference {
         while (entryIterator.hasNext()) {
             Map.Entry<Uri, ConferenceParticipantConnection> entry = entryIterator.next();
 
-            if (!participantEndpoints.contains(entry.getKey())) {
+            if (!participantUserEntities.contains(entry.getKey())) {
                 ConferenceParticipantConnection participant = entry.getValue();
+                participant.setDisconnected(new DisconnectCause(DisconnectCause.CANCELED));
                 removeConferenceParticipant(participant);
                 removeConnection(participant);
                 entryIterator.remove();
@@ -571,7 +584,7 @@ public class ImsConference extends Conference {
             Log.v(this, "createConferenceParticipantConnection: %s", connection);
         }
 
-        mConferenceParticipantConnections.put(participant.getEndpoint(), connection);
+        mConferenceParticipantConnections.put(participant.getHandle(), connection);
         PhoneAccountHandle phoneAccountHandle =
                 TelecomAccountRegistry.makePstnPhoneAccountHandle(parent.getPhone());
         mTelephonyConnectionService.addExistingConnection(phoneAccountHandle, connection);
@@ -587,8 +600,8 @@ public class ImsConference extends Conference {
         Log.d(this, "removeConferenceParticipant: %s", participant);
 
         participant.removeConnectionListener(mParticipantListener);
-        participant.getEndpoint();
-        mConferenceParticipantConnections.remove(participant.getEndpoint());
+        participant.getUserEntity();
+        mConferenceParticipantConnections.remove(participant.getUserEntity());
         mTelephonyConnectionService.removeConnection(participant);
     }
 
@@ -601,11 +614,11 @@ public class ImsConference extends Conference {
         for (ConferenceParticipantConnection connection :
                 mConferenceParticipantConnections.values()) {
 
-            removeConferenceParticipant(connection);
-
             // Mark disconnect cause as cancelled to ensure that the call is not logged in the
             // call log.
             connection.setDisconnected(new DisconnectCause(DisconnectCause.CANCELED));
+            removeConferenceParticipant(connection);
+
             connection.destroy();
         }
         mConferenceParticipantConnections.clear();
@@ -663,8 +676,10 @@ public class ImsConference extends Conference {
             case Connection.STATE_INITIALIZING:
             case Connection.STATE_NEW:
             case Connection.STATE_RINGING:
-            case Connection.STATE_DIALING:
                 // No-op -- not applicable.
+                break;
+            case Connection.STATE_DIALING:
+                setDialing();
                 break;
             case Connection.STATE_DISCONNECTED:
                 DisconnectCause disconnectCause;
