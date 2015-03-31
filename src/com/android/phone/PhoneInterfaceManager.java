@@ -208,7 +208,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
             switch (msg.what) {
                 case CMD_HANDLE_PIN_MMI:
                     request = (MainThreadRequest) msg.obj;
-                    request.result = mPhone.handlePinMmi((String) request.argument);
+                    request.result =
+                            getPhoneFromRequest(request).handlePinMmi((String) request.argument);
                     // Wake up the requesting thread
                     synchronized (request) {
                         request.notifyAll();
@@ -251,7 +252,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                     if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
                         // CDMA: If the user presses the Power button we treat it as
                         // ending the complete call session
-                        hungUp = PhoneUtils.hangupRingingAndActive(mPhone);
+                        hungUp = PhoneUtils.hangupRingingAndActive(getPhone(end_subId));
                     } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
                         // GSM: End the call as per the Phone state
                         hungUp = PhoneUtils.hangup(mCM);
@@ -689,12 +690,12 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      * waits for the request to complete, and returns the result.
      * @see #sendRequestAsync
      */
-    private Object sendRequest(int command, Object argument, Object argument2) {
+    private Object sendRequest(int command, Object argument, Integer subId) {
         if (Looper.myLooper() == mMainThreadHandler.getLooper()) {
             throw new RuntimeException("This method will deadlock if called from the main thread.");
         }
 
-        MainThreadRequest request = new MainThreadRequest(argument);
+        MainThreadRequest request = new MainThreadRequest(argument, subId);
         Message msg = mMainThreadHandler.obtainMessage(command, request);
         msg.sendToTarget();
 
@@ -1189,7 +1190,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
 
     public boolean handlePinMmiForSubscriber(int subId, String dialString) {
         enforceModifyPermission();
-        return (Boolean) sendRequest(CMD_HANDLE_PIN_MMI, dialString, subId);
+        return (Boolean) sendRequest(CMD_HANDLE_PIN_MMI, dialString, new Integer(subId));
     }
 
     public int getCallState() {
@@ -1296,7 +1297,28 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
 
     @Override
     public List<CellInfo> getAllCellInfo() {
-        return getAllCellInfoUsingSubId(getDefaultSubscription());
+        try {
+            mApp.enforceCallingOrSelfPermission(
+                android.Manifest.permission.ACCESS_FINE_LOCATION, null);
+        } catch (SecurityException e) {
+            // If we have ACCESS_FINE_LOCATION permission, skip the check for ACCESS_COARSE_LOCATION
+            // A failure should throw the SecurityException from ACCESS_COARSE_LOCATION since this
+            // is the weaker precondition
+            mApp.enforceCallingOrSelfPermission(
+                android.Manifest.permission.ACCESS_COARSE_LOCATION, null);
+        }
+
+        if (checkIfCallerIsSelfOrForegroundUser()) {
+            if (DBG_LOC) log("getAllCellInfo: is active user");
+            List<CellInfo> cellInfos = new ArrayList<CellInfo>();
+            for (Phone phone : PhoneFactory.getPhones()) {
+                cellInfos.addAll(phone.getAllCellInfo());
+            }
+            return cellInfos;
+        } else {
+            if (DBG_LOC) log("getAllCellInfo: suppress non-active user");
+            return null;
+        }
     }
 
     @Override
@@ -1313,10 +1335,10 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         }
 
         if (checkIfCallerIsSelfOrForegroundUser()) {
-            if (DBG_LOC) log("getAllCellInfo: is active user");
+            if (DBG_LOC) log("getAllCellInfoUsingSubId: is active user");
             return getPhone(subId).getAllCellInfo();
         } else {
-            if (DBG_LOC) log("getAllCellInfo: suppress non-active user");
+            if (DBG_LOC) log("getAllCellInfoUsingSubId: suppress non-active user");
             return null;
         }
     }
@@ -1499,7 +1521,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      */
     public String getCdmaMdn(int subId) {
         enforceModifyPermissionOrCarrierPrivilege();
-        if (mPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
+        if (getPhone(subId).getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
             return getPhone(subId).getLine1Number();
         } else {
             return null;
@@ -1511,7 +1533,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      */
     public String getCdmaMin(int subId) {
         enforceModifyPermissionOrCarrierPrivilege();
-        if (mPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
+        if (getPhone(subId).getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
             return getPhone(subId).getCdmaMin();
         } else {
             return null;
