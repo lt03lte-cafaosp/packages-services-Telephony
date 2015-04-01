@@ -127,6 +127,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
         IntentFilter intentFilter = new IntentFilter(TelephonyIntents.ACTION_SIM_STATE_CHANGED);
         intentFilter.addAction(Intent.ACTION_LOCALE_CHANGED);
         intentFilter.addAction(TelephonyIntents.ACTION_SUBSCRIPTION_SET_UICC_RESULT);
+        intentFilter.addAction(TelephonyIntents.ACTION_SUBINFO_RECORD_UPDATED);
         mContext.registerReceiver(mReceiver, intentFilter);
 
         logd("get preferred data sub from DB:" + getUserPrefDataSubIdFromDB());
@@ -197,6 +198,20 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
                         PhoneConstants.SUCCESS && state == SubscriptionManager.ACTIVE &&
                         subId == getUserPrefDataSubIdFromDB()) {
                     SubscriptionManager.setDefaultDataSubId(getUserPrefDataSubIdFromDB());
+                }
+            } else if (TelephonyIntents.ACTION_SUBINFO_RECORD_UPDATED.equals(action)) {
+                List<SubscriptionInfo> subInfoList = SubscriptionManager.from(context)
+                    .getActiveSubscriptionInfoList();
+                boolean havePrefSub = false;
+                int subId = getUserPrefDataSubIdFromDB();
+                for (SubscriptionInfo subInfo : subInfoList) {
+                    if (subInfo.getSubscriptionId() == subId) {
+                        havePrefSub = true;
+                    }
+                }
+                logd("havePrefSub= " + havePrefSub);
+                if (!havePrefSub) {
+                    setUserPrefDataSubIdInDB(SubscriptionManager.getDefaultDataSubId());
                 }
             }
         }
