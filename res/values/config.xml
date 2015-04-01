@@ -363,4 +363,5 @@ as an enum (NONE, HFA, OTASP). -->
     <bool name="config_fdn_direct_dial">false</bool>
     <!-- config for Ims account setting -->
     <bool name="config_show_ims_account_setting">true</bool>
+    <integer name="config_default_vibrate_after_connected">1</integer>
 </resources>
