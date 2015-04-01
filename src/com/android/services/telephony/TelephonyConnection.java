@@ -710,6 +710,9 @@ protected final void updateCallCapabilities() {
 
         // Set video state and capabilities
         setVideoState(mOriginalConnection.getVideoState());
+        if (mOriginalConnection.isAlive()) {
+            updateState();
+        }
         setLocalVideoCapable(mOriginalConnection.isLocalVideoCapable());
         setRemoteVideoCapable(mOriginalConnection.isRemoteVideoCapable());
         setVideoProvider(mOriginalConnection.getVideoProvider());
