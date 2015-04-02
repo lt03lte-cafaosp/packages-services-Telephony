@@ -22,12 +22,16 @@ import android.net.Uri;
 import android.telecom.Connection;
 import android.telecom.ConferenceParticipant;
 import android.telecom.DisconnectCause;
-import android.telecom.PhoneCapabilities;
 
 /**
  * Represents a participant in a conference call.
  */
 public class ConferenceParticipantConnection extends Connection {
+
+    /**
+     * The user entity URI For the conference participant.
+     */
+    private final Uri mUserEntity;
 
     /**
      * The endpoint URI For the conference participant.
@@ -52,6 +56,7 @@ public class ConferenceParticipantConnection extends Connection {
         setAddress(participant.getHandle(), PhoneConstants.PRESENTATION_ALLOWED);
         setCallerDisplayName(participant.getDisplayName(), PhoneConstants.PRESENTATION_ALLOWED);
 
+        mUserEntity = participant.getHandle();
         mEndpoint = participant.getEndpoint();
         setCapabilities();
     }
@@ -86,7 +91,6 @@ public class ConferenceParticipantConnection extends Connection {
                 break;
             case STATE_DISCONNECTED:
                 setDisconnected(new DisconnectCause(DisconnectCause.CANCELED));
-                destroy();
                 break;
             default:
                 setActive();
@@ -103,7 +107,16 @@ public class ConferenceParticipantConnection extends Connection {
      */
     @Override
     public void onDisconnect() {
-        mParentConnection.onDisconnectConferenceParticipant(mEndpoint);
+        mParentConnection.onDisconnectConferenceParticipant(mUserEntity);
+    }
+
+    /**
+     * Retrieves the user handle for this connection.
+     *
+     * @return The userEntity.
+     */
+    public Uri getUserEntity() {
+        return mUserEntity;
     }
 
     /**
@@ -116,13 +129,13 @@ public class ConferenceParticipantConnection extends Connection {
     }
 
     /**
-     * Configures the {@link android.telecom.PhoneCapabilities} applicable to this connection.  A
+     * Configures the capabilities applicable to this connection.  A
      * conference participant can only be disconnected from a conference since there is not
      * actual connection to the participant which could be split from the conference.
      */
     private void setCapabilities() {
-        int capabilities = PhoneCapabilities.DISCONNECT_FROM_CONFERENCE;
-        setCallCapabilities(capabilities);
+        int capabilities = CAPABILITY_DISCONNECT_FROM_CONFERENCE;
+        setConnectionCapabilities(capabilities);
     }
 
     /**

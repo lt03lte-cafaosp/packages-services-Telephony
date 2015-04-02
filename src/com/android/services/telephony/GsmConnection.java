@@ -16,8 +16,7 @@
 
 package com.android.services.telephony;
 
-import android.telecom.PhoneCapabilities;
-
+import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallStateException;
 import com.android.internal.telephony.Connection;
 
@@ -29,6 +28,10 @@ final class GsmConnection extends TelephonyConnection {
         super(connection);
     }
 
+    GsmConnection(Connection connection, Call.State state) {
+        super(connection, state);
+    }
+
     /**
      * Clones the current {@link GsmConnection}.
      * <p>
@@ -38,7 +41,8 @@ final class GsmConnection extends TelephonyConnection {
      */
     @Override
     public TelephonyConnection cloneConnection() {
-        GsmConnection gsmConnection = new GsmConnection(getOriginalConnection());
+        GsmConnection gsmConnection = new GsmConnection(getOriginalConnection(),
+                getOriginalConnectionState());
         return gsmConnection;
     }
 
@@ -59,12 +63,12 @@ final class GsmConnection extends TelephonyConnection {
     }
 
     @Override
-    protected int buildCallCapabilities() {
-        int capabilities = super.buildCallCapabilities();
-        capabilities |= PhoneCapabilities.MUTE;
-        capabilities |= PhoneCapabilities.SUPPORT_HOLD;
+    protected int buildConnectionCapabilities() {
+        int capabilities = super.buildConnectionCapabilities();
+        capabilities |= CAPABILITY_MUTE;
+        capabilities |= CAPABILITY_SUPPORT_HOLD;
         if (getState() == STATE_ACTIVE || getState() == STATE_HOLDING) {
-            capabilities |= PhoneCapabilities.HOLD;
+            capabilities |= CAPABILITY_HOLD;
         }
         return capabilities;
     }
