@@ -932,7 +932,9 @@ protected final void updateCallCapabilities() {
                                 mOriginalConnection.getDisconnectCause(),
                                 mSsNotification.notificationType,
                                 mSsNotification.code));
-                        mSsNotification = null;
+                        TelephonyGlobals.mSsNotification[getPhone().getPhoneId()] = null;
+                        DisconnectCauseUtil.mNotificationCode = 0xFF;
+                        DisconnectCauseUtil.mNotificationType = 0xFF;
                     } else if(isEmergencyNumber &&
                             (TelephonyManager.getDefault().getPhoneCount() > 1) &&
                             ((cause == android.telephony.DisconnectCause.EMERGENCY_TEMP_FAILURE) ||
