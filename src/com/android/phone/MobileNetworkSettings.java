@@ -306,7 +306,7 @@ public class MobileNetworkSettings extends PreferenceActivity
                     preferredNetworkMode);
             mButtonPreferredNetworkMode.setValue(Integer.toString(settingsNetworkMode));
             mCdmaOptions = new CdmaOptions(this, prefSet, mPhone);
-            mGsmUmtsOptions = new GsmUmtsOptions(this, prefSet, mPhone.getSubId());
+            mGsmUmtsOptions = new GsmUmtsOptions(this, prefSet, mPhone.getPhoneId());
         } else {
             prefSet.removePreference(mButtonPreferredNetworkMode);
             // mButtonPreferredNetworkMode = null as it is not needed anymore
@@ -351,7 +351,7 @@ public class MobileNetworkSettings extends PreferenceActivity
                     mButtonEnabledNetworks.setEntryValues(
                             R.array.enabled_networks_values);
                 }
-                mGsmUmtsOptions = new GsmUmtsOptions(this, prefSet, mPhone.getSubId());
+                mGsmUmtsOptions = new GsmUmtsOptions(this, prefSet, mPhone.getPhoneId());
             } else {
                 throw new IllegalStateException("Unexpected phone type: " + phoneType);
             }
