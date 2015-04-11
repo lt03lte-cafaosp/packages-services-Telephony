@@ -20,6 +20,7 @@ import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
 import android.telecom.CallProperties;
+import android.telecom.PhoneCapabilities;
 
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.Connection;
@@ -85,6 +86,12 @@ final class GsmConnection extends TelephonyConnection {
         capabilities |= CAPABILITY_SUPPORT_HOLD;
         if (getState() == STATE_ACTIVE || getState() == STATE_HOLDING) {
             capabilities |= CAPABILITY_HOLD;
+        }
+        //Include FDN_ENABLED capability if FDN is enabled.
+        if (TelephonyGlobals.getApplicationContext().getResources()
+                .getBoolean(com.android.internal.R.bool.config_fdn_contact_search)
+                && PhoneFactory.getDefaultPhone().getIccCard().getIccFdnEnabled()) {
+            capabilities = capabilities | PhoneCapabilities.FDN_ENABLED;
         }
         return capabilities;
     }
