@@ -18,6 +18,7 @@ package com.android.services.telephony;
 
 import android.telecom.Conference;
 import android.telecom.Connection;
+import android.telecom.DisconnectCause;
 import android.telecom.PhoneAccountHandle;
 
 import com.android.internal.telephony.Call;
@@ -47,8 +48,21 @@ public class TelephonyConference extends Conference {
      */
     @Override
     public void onDisconnect() {
+        disconnectWithReason(DisconnectCause.LOCAL);
+    }
+
+    /**
+     * Invoked when the Conference and all it's {@link Connection}s
+     * should be disconnected with reason.
+     */
+    @Override
+    public void onDisconnectWithReason(int disconnectCause) {
+        disconnectWithReason(disconnectCause);
+    }
+
+    private void disconnectWithReason(int disconnectCause) {
         for (Connection connection : getConnections()) {
-            if (disconnectCall(connection)) {
+            if (disconnectCallWithReason(connection, disconnectCause)) {
                 break;
             }
         }
@@ -58,14 +72,15 @@ public class TelephonyConference extends Conference {
      * Disconnect the underlying Telephony Call for a connection.
      *
      * @param connection The connection.
+     * @param disconnectCause call disconnect reason.
      * @return {@code True} if the call was disconnected.
      */
-    private boolean disconnectCall(Connection connection) {
+    private boolean disconnectCallWithReason(Connection connection, int disconnectCause) {
         Call call = getMultipartyCallForConnection(connection, "onDisconnect");
         if (call != null) {
             Log.d(this, "Found multiparty call to hangup for conference.");
             try {
-                call.hangup();
+                call.hangupWithReason(disconnectCause);
                 return true;
             } catch (CallStateException e) {
                 Log.e(this, e, "Exception thrown trying to hangup conference");

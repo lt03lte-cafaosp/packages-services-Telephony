@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.telecom.Conference;
 import android.telecom.Connection;
+import android.telecom.DisconnectCause;
 import android.telecom.PhoneAccountHandle;
 
 import com.android.internal.telephony.Call;
@@ -50,11 +51,25 @@ public class CdmaConference extends Conference {
      */
     @Override
     public void onDisconnect() {
+        disconnectWithReason(DisconnectCause.LOCAL);
+    }
+
+    /**
+     * Invoked when the Conference and all it's {@link Connection}s should be disconnected
+     * with reason.
+     * @param disconnectCause call disconnect reason
+     */
+    @Override
+    public void onDisconnectWithReason(int disconnectCause) {
+        disconnectWithReason(disconnectCause);
+    }
+
+    private void disconnectWithReason(int disconnectCause) {
         Call call = getOriginalCall();
         if (call != null) {
             Log.d(this, "Found multiparty call to hangup for conference.");
             try {
-                call.hangup();
+                call.hangupWithReason(disconnectCause);
             } catch (CallStateException e) {
                 Log.e(this, e, "Exception thrown trying to hangup conference");
             }
