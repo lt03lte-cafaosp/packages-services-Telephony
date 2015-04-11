@@ -590,6 +590,12 @@ abstract class TelephonyConnection extends Connection {
         hangup(android.telephony.DisconnectCause.LOCAL);
     }
 
+    @Override
+    public void onDisconnectWithReason(int disconnectCause) {
+        Log.v(this, "onDisconnect");
+        hangup(DisconnectCauseUtil.toTelephonyDisconnectCauseCode(disconnectCause));
+    }
+
     /**
      * Notifies this Connection of a request to disconnect a participant of the conference managed
      * by the connection.
@@ -681,6 +687,15 @@ abstract class TelephonyConnection extends Connection {
         Log.v(this, "onReject");
         if (isValidRingingCall()) {
             hangup(android.telephony.DisconnectCause.INCOMING_REJECTED);
+        }
+        super.onReject();
+    }
+
+    @Override
+    public void onRejectWithReason(int disconnectCause) {
+        Log.v(this, "onRejectWithReason, disconnect cause: " + disconnectCause);
+        if (isValidRingingCall()) {
+            hangup(DisconnectCauseUtil.toTelephonyDisconnectCauseCode(disconnectCause));
         }
         super.onReject();
     }
@@ -894,6 +909,9 @@ abstract class TelephonyConnection extends Connection {
 
         // Set video state and capabilities
         setVideoState(mOriginalConnection.getVideoState());
+        if (mOriginalConnection.isAlive()) {
+            updateState();
+        }
         setLocalVideoCapable(mOriginalConnection.isLocalVideoCapable());
         setRemoteVideoCapable(mOriginalConnection.isRemoteVideoCapable());
         setVideoProvider(mOriginalConnection.getVideoProvider());
@@ -933,7 +951,7 @@ abstract class TelephonyConnection extends Connection {
                 if (isValidRingingCall()) {
                     Call call = getCall();
                     if (call != null) {
-                        call.hangup();
+                        call.hangupWithReason(telephonyDisconnectCode);
                     } else {
                         Log.w(this, "Attempting to hangup a connection without backing call.");
                     }
@@ -942,7 +960,7 @@ abstract class TelephonyConnection extends Connection {
                     // to support hanging-up specific calls within a conference call. If we invoked
                     // call.hangup() while in a conference, we would end up hanging up the entire
                     // conference call instead of the specific connection.
-                    mOriginalConnection.hangup();
+                    mOriginalConnection.hangupWithReason(telephonyDisconnectCode);
                 }
             } catch (CallStateException e) {
                 Log.e(this, e, "Call to Connection.hangup failed with exception");
