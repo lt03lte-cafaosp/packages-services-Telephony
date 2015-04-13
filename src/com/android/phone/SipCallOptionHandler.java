@@ -212,6 +212,7 @@ public class SipCallOptionHandler extends Activity implements
                 int SubscriptionOnLTE = getSubscriptionOnLTE();
                 if (SubscriptionOnLTE == NoSimOnLTE ){
                     Log.e(TAG, "ims registered and not on LTE, wrong!!!!!");
+                    finish();
                     return;
                 }
                 if (isIMSVTCall){
