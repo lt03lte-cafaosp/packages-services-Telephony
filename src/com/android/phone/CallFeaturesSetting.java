@@ -141,7 +141,6 @@ public class CallFeaturesSetting extends PreferenceActivity
             "com.android.dialer.DialtactsActivity";
 
     private static final String BUTTON_4G_LTE_KEY = "enhanced_4g_lte";
-    private static final String BUTTON_ENABLE_VIDEO_CALLING = "button_enable_video_calling";
 
     // Used to tell the saving logic to leave forwarding number as is
     public static final CallForwardInfo[] FWD_SETTINGS_DONT_TOUCH = null;
@@ -1748,7 +1747,7 @@ public class CallFeaturesSetting extends PreferenceActivity
         }
 
         if (!getResources().getBoolean(R.bool.enable_video_calling_on)) {
-            getPreferenceScreen().removePreference(findPreference(BUTTON_ENABLE_VIDEO_CALLING));
+            getPreferenceScreen().removePreference(findPreference(ENABLE_VIDEO_CALLING_KEY));
         }
 
         mButtonDTMF = (ListPreference) findPreference(BUTTON_DTMF_KEY);
@@ -2022,11 +2021,15 @@ public class CallFeaturesSetting extends PreferenceActivity
         }
 
         if (ImsUtil.isImsEnabled(mPhone.getContext()) && ENABLE_VT_FLAG) {
-            mEnableVideoCalling.setChecked(
-                    PhoneGlobals.getInstance().phoneMgr.isVideoCallingEnabled());
-            mEnableVideoCalling.setOnPreferenceChangeListener(this);
+            if (mEnableVideoCalling != null) {
+                mEnableVideoCalling.setChecked(
+                        PhoneGlobals.getInstance().phoneMgr.isVideoCallingEnabled());
+                mEnableVideoCalling.setOnPreferenceChangeListener(this);
+            }
         } else {
-            prefSet.removePreference(mEnableVideoCalling);
+            if (mEnableVideoCalling != null) {
+                prefSet.removePreference(mEnableVideoCalling);
+            }
         }
 
         // Look up the voicemail ringtone name asynchronously and update its preference.
