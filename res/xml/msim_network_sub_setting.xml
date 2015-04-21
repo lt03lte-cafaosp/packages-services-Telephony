@@ -49,4 +49,10 @@
         android:summary="@string/preferred_lte_summary"
         android:persistent="false" />
 
+    <SwitchPreference
+        android:key="enhanced_4g_lte"
+        android:title="@string/enhanced_4g_lte_mode_title"
+        android:persistent="false"
+        android:summary="@string/enhanced_4g_lte_mode_summary"/>
+
 </PreferenceScreen>
