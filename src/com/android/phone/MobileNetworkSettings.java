@@ -428,6 +428,12 @@ public class MobileNetworkSettings extends PreferenceActivity
             mPhone.getPreferredNetworkType(mHandler.obtainMessage(
                     MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
         }
+
+        if (ImsManager.isVolteEnabledByPlatform(this)
+                && ImsManager.isVolteProvisionedOnDevice(this)) {
+            TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+            tm.listen(mPhoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
+        }
     }
 
     @Override
