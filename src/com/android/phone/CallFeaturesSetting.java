@@ -2041,11 +2041,15 @@ public class CallFeaturesSetting extends PreferenceActivity
         }
 
         if (ImsUtil.isImsEnabled(mPhone.getContext()) && ENABLE_VT_FLAG) {
-            mEnableVideoCalling.setChecked(
-                    PhoneGlobals.getInstance().phoneMgr.isVideoCallingEnabled());
-            mEnableVideoCalling.setOnPreferenceChangeListener(this);
+            if (mEnableVideoCalling != null) {
+                mEnableVideoCalling.setChecked(
+                        PhoneGlobals.getInstance().phoneMgr.isVideoCallingEnabled());
+                mEnableVideoCalling.setOnPreferenceChangeListener(this);
+            }
         } else {
-            prefSet.removePreference(mEnableVideoCalling);
+            if (mEnableVideoCalling != null) {
+                prefSet.removePreference(mEnableVideoCalling);
+            }
         }
 
         // Look up the voicemail ringtone name asynchronously and update its preference.
