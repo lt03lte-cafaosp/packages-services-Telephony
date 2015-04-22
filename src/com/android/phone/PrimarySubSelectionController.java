@@ -169,8 +169,9 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
                     if (mRestoreDdsToPrimarySub) {
                         if (slot == primarySlot) {
                             logd("restore dds to primary card");
-                            SubscriptionManager.setDefaultDataSubId(SubscriptionManager
-                                    .getSubId(slot)[0]);
+                            long subId = SubscriptionManager.getSubId(slot)[0];
+                            SubscriptionManager.setDefaultDataSubId(subId);
+                            setUserPrefDataSubIdInDB(subId);
                             mRestoreDdsToPrimarySub = false;
                         }
                     }
@@ -435,8 +436,9 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
                     + "] =" + mIccLoaded[primarySlot]);
             if (mIccLoaded[primarySlot]
                     && currentDds != primarySlot) {
-                SubscriptionManager
-                        .setDefaultDataSubId(SubscriptionManager.getSubId(primarySlot)[0]);
+                long subId = SubscriptionManager.getSubId(primarySlot)[0];
+                SubscriptionManager.setDefaultDataSubId(subId);
+                setUserPrefDataSubIdInDB(subId);
                 mRestoreDdsToPrimarySub = false;
             } else {
                 mRestoreDdsToPrimarySub = true;
