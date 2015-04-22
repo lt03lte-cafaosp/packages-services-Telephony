@@ -208,7 +208,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
             switch (msg.what) {
                 case CMD_HANDLE_PIN_MMI:
                     request = (MainThreadRequest) msg.obj;
-                    request.result = mPhone.handlePinMmi((String) request.argument);
+                    request.result =
+                            getPhoneFromRequest(request).handlePinMmi((String) request.argument);
                     // Wake up the requesting thread
                     synchronized (request) {
                         request.notifyAll();
@@ -251,7 +252,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                     if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
                         // CDMA: If the user presses the Power button we treat it as
                         // ending the complete call session
-                        hungUp = PhoneUtils.hangupRingingAndActive(mPhone);
+                        hungUp = PhoneUtils.hangupRingingAndActive(getPhone(end_subId));
                     } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
                         // GSM: End the call as per the Phone state
                         hungUp = PhoneUtils.hangup(mCM);
@@ -288,10 +289,11 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                 case EVENT_TRANSMIT_APDU_LOGICAL_CHANNEL_DONE:
                     ar = (AsyncResult) msg.obj;
                     request = (MainThreadRequest) ar.userObj;
-                    request.result = ar.result;
                     if (ar.exception == null && ar.result != null) {
                         if (DBG) log("EVENT_TRANSMIT_APDU_LOGICAL_CHANNEL_DONE successful");
+                        request.result = ar.result;
                     } else {
+                        request.result = new IccIoResult(0x6F, 0, (byte[])null);
                         if (ar.result == null) {
                             loge("iccTransmitApduLogicalChannel: Empty response");
                         } else if (ar.exception instanceof CommandException) {
@@ -327,10 +329,11 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                 case EVENT_TRANSMIT_APDU_BASIC_CHANNEL_DONE:
                     ar = (AsyncResult) msg.obj;
                     request = (MainThreadRequest) ar.userObj;
-                    request.result = ar.result;
                     if (ar.exception == null && ar.result != null) {
                         if (DBG) log("EVENT_TRANSMIT_APDU_BASIC_CHANNEL_DONE successful");
+                        request.result = ar.result;
                     } else {
+                        request.result = new IccIoResult(0x6F, 0, (byte[])null);
                         if (ar.result == null) {
                             loge("iccTransmitApduBasicChannel: Empty response");
                         } else if (ar.exception instanceof CommandException) {
@@ -366,10 +369,11 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                 case EVENT_EXCHANGE_SIM_IO_DONE:
                     ar = (AsyncResult) msg.obj;
                     request = (MainThreadRequest) ar.userObj;
-                    request.result = ar.result;
                     if (ar.exception == null && ar.result != null) {
                         if (DBG) log("EVENT_EXCHANGE_SIM_IO_DONE successful");
+                        request.result = ar.result;
                     } else {
+                        request.result = new IccIoResult(0x6f, 0, (byte[])null);
                         if (ar.result == null) {
                             loge("ccExchangeSimIO: Empty Response");
                         } else if (ar.exception instanceof CommandException) {
@@ -640,8 +644,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                     request = (MainThreadRequest) msg.obj;
                     onCompleted = obtainMessage(EVENT_SET_VOICEMAIL_NUMBER_DONE, request);
                     Pair<String, String> tagNum = (Pair<String, String>) request.argument;
-                    Phone phone = (request.subId == null) ? mPhone : getPhone(request.subId);
-                    phone.setVoiceMailNumber(tagNum.first, tagNum.second, onCompleted);
+                    getPhoneFromRequest(request).setVoiceMailNumber(tagNum.first, tagNum.second,
+                            onCompleted);
                     break;
 
                 case EVENT_SET_VOICEMAIL_NUMBER_DONE:
@@ -762,6 +766,10 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         if (DBG) log("publish: " + this);
 
         ServiceManager.addService("phone", this);
+    }
+
+    private Phone getPhoneFromRequest(MainThreadRequest request) {
+        return (request.subId == null) ? mPhone : getPhone(request.subId);
     }
 
     // returns phone associated with the subId.
@@ -1197,7 +1205,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
 
     public boolean handlePinMmiForSubscriber(int subId, String dialString) {
         enforceModifyPermission();
-        return (Boolean) sendRequest(CMD_HANDLE_PIN_MMI, dialString, subId);
+        return (Boolean) sendRequest(CMD_HANDLE_PIN_MMI, dialString, new Integer(subId));
     }
 
     public int getCallState() {
@@ -1302,14 +1310,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         }
     }
 
-
     @Override
     public List<CellInfo> getAllCellInfo() {
-        return getAllCellInfoUsingSubId(getDefaultSubscription());
-    }
-
-    @Override
-    public List<CellInfo> getAllCellInfoUsingSubId(int subId) {
         try {
             mApp.enforceCallingOrSelfPermission(
                 android.Manifest.permission.ACCESS_FINE_LOCATION, null);
@@ -1330,6 +1332,28 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
             return cellInfos;
         } else {
             if (DBG_LOC) log("getAllCellInfo: suppress non-active user");
+            return null;
+        }
+    }
+
+    @Override
+    public List<CellInfo> getAllCellInfoUsingSubId(int subId) {
+        try {
+            mApp.enforceCallingOrSelfPermission(
+                android.Manifest.permission.ACCESS_FINE_LOCATION, null);
+        } catch (SecurityException e) {
+            // If we have ACCESS_FINE_LOCATION permission, skip the check for ACCESS_COARSE_LOCATION
+            // A failure should throw the SecurityException from ACCESS_COARSE_LOCATION since this
+            // is the weaker precondition
+            mApp.enforceCallingOrSelfPermission(
+                android.Manifest.permission.ACCESS_COARSE_LOCATION, null);
+        }
+
+        if (checkIfCallerIsSelfOrForegroundUser()) {
+            if (DBG_LOC) log("getAllCellInfoUsingSubId: is active user");
+            return getPhone(subId).getAllCellInfo();
+        } else {
+            if (DBG_LOC) log("getAllCellInfoUsingSubId: suppress non-active user");
             return null;
         }
     }
@@ -1512,7 +1536,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      */
     public String getCdmaMdn(int subId) {
         enforceModifyPermissionOrCarrierPrivilege();
-        if (mPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
+        if (getPhone(subId).getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
             return getPhone(subId).getLine1Number();
         } else {
             return null;
@@ -1524,7 +1548,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      */
     public String getCdmaMin(int subId) {
         enforceModifyPermissionOrCarrierPrivilege();
-        if (mPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
+        if (getPhone(subId).getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
             return getPhone(subId).getCdmaMin();
         } else {
             return null;
@@ -1543,7 +1567,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      */
     @Override
     public boolean setVoiceMailNumber(int subId, String alphaTag, String number) {
-        enforceModifyPermissionOrCarrierPrivilege();
+        enforceCarrierPrivilege();
         Boolean success = (Boolean) sendRequest(CMD_SET_VOICEMAIL_NUMBER,
                 new Pair<String, String>(alphaTag, number), new Integer(subId));
         return success;
