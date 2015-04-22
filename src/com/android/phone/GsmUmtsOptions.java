@@ -94,8 +94,10 @@ public class GsmUmtsOptions {
                 // installed by user
                 if ((resolveInfo.activityInfo.applicationInfo.flags &
                         ApplicationInfo.FLAG_SYSTEM) != 0) {
-                    // set the target intent
+                    // set the target intent.
                     intent.putExtra(SUBSCRIPTION_KEY, mPhone.getSubId());
+                    intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                     mButtonOperatorSelectionExpand.setIntent(intent);
                     break;
                 }
