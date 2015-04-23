@@ -364,4 +364,7 @@ as an enum (NONE, HFA, OTASP). -->
     <!-- config for Ims account setting -->
     <bool name="config_show_ims_account_setting">true</bool>
     <integer name="config_default_vibrate_after_connected">1</integer>
+
+   <!-- Config to enable/disable Packet Count/Packet Error Count UI option -->
+   <bool name="config_ims_enable_rtp_statistics">false</bool>
 </resources>
