@@ -122,6 +122,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     private static final int EVENT_EXCHANGE_SIM_IO_DONE = 32;
     private static final int CMD_GET_ATR = 33;
     private static final int EVENT_GET_ATR_DONE = 34;
+    private static final int CMD_OPEN_CHANNEL_WITH_P2 = 35;
 
     /** The singleton instance. */
     private static PhoneInterfaceManager sInstance;
@@ -436,6 +437,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                     break;
 
                 case CMD_OPEN_CHANNEL:
+
                     request = (MainThreadRequest) msg.obj;
                     if (uiccCard == null) {
                         loge("iccOpenLogicalChannel: No UICC");
@@ -446,6 +448,22 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                     } else {
                         onCompleted = obtainMessage(EVENT_OPEN_CHANNEL_DONE, request);
                         uiccCard.iccOpenLogicalChannel((String)request.argument, onCompleted);
+                    }
+                    break;
+
+                case CMD_OPEN_CHANNEL_WITH_P2:
+                    request = (MainThreadRequest) msg.obj;
+                    if (uiccCard == null) {
+                        loge("iccOpenLogicalChannel: No UICC");
+                        request.result = new IccIoResult(0x6F, 0, (byte[])null);
+                        synchronized (request) {
+                            request.notifyAll();
+                        }
+                    } else {
+                        onCompleted = obtainMessage(EVENT_OPEN_CHANNEL_DONE, request);
+                        Pair<String, Byte> aidByteValue = (Pair<String, Byte>) request.argument;
+                        Log.d("TEST", "PhoneInterfaceManager iccOpenLogicalChannel with p2");
+                        uiccCard.iccOpenLogicalChannel_P2(aidByteValue.first, aidByteValue.second, onCompleted);
                     }
                     break;
 
@@ -1618,10 +1636,20 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     @Override
     public IccOpenLogicalChannelResponse iccOpenLogicalChannel(String AID) {
         enforceModifyPermissionOrCarrierPrivilege();
-
+        Log.d("TEST", "iccOpenLogicalChannel");
         if (DBG) log("iccOpenLogicalChannel: " + AID);
         IccOpenLogicalChannelResponse response = (IccOpenLogicalChannelResponse)sendRequest(
             CMD_OPEN_CHANNEL, AID);
+        if (DBG) log("iccOpenLogicalChannel: " + response);
+        return response;
+    }
+
+    @Override
+    public IccOpenLogicalChannelResponse iccOpenLogicalChannel_P2(String AID, byte p2) {
+        enforceModifyPermissionOrCarrierPrivilege();
+        if (DBG) log("iccOpenLogicalChannel: " + AID);
+        IccOpenLogicalChannelResponse response = (IccOpenLogicalChannelResponse)sendRequest(
+                CMD_OPEN_CHANNEL_WITH_P2, new Pair<String, Byte>(AID, p2));
         if (DBG) log("iccOpenLogicalChannel: " + response);
         return response;
     }
