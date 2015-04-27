@@ -137,14 +137,14 @@ public class TelephonyConnectionService extends ConnectionService {
                 TelephonyProperties.EXTRA_SKIP_SCHEMA_PARSING, false) ||
                 bundle.getBoolean(TelephonyProperties.EXTRA_DIAL_CONFERENCE_URI, false));
         Uri handle = request.getAddress();
-        if (handle == null) {
+        if (!isSkipSchemaOrConfUri && handle == null) {
             Log.d(this, "onCreateOutgoingConnection, handle is null");
             return Connection.createFailedConnection(
                     DisconnectCauseUtil.toTelecomDisconnectCause(
                             android.telephony.DisconnectCause.NO_PHONE_NUMBER_SUPPLIED,
                             "No phone number supplied"));
         }
-
+        if (handle == null) handle = Uri.EMPTY;
         String scheme = handle.getScheme();
         final String number;
         if (PhoneAccount.SCHEME_VOICEMAIL.equals(scheme)) {
@@ -244,10 +244,15 @@ public class TelephonyConnectionService extends ConnectionService {
                 case ServiceState.STATE_EMERGENCY_ONLY:
                     break;
                 case ServiceState.STATE_OUT_OF_SERVICE:
-                    return Connection.createFailedConnection(
-                            DisconnectCauseUtil.toTelecomDisconnectCause(
-                                    android.telephony.DisconnectCause.OUT_OF_SERVICE,
-                                    "ServiceState.STATE_OUT_OF_SERVICE"));
+                    if (phone.isUtEnabled() && number.endsWith("#")) {
+                        Log.d(this, "onCreateOutgoingConnection dial for UT");
+                        break;
+                    } else {
+                        return Connection.createFailedConnection(
+                                DisconnectCauseUtil.toTelecomDisconnectCause(
+                                        android.telephony.DisconnectCause.OUT_OF_SERVICE,
+                                        "ServiceState.STATE_OUT_OF_SERVICE"));
+                    }
                 case ServiceState.STATE_POWER_OFF:
                     return Connection.createFailedConnection(
                             DisconnectCauseUtil.toTelecomDisconnectCause(
