@@ -418,6 +418,9 @@ public class CallModeler extends Handler {
         PhoneGlobals.getInstance().updateWakeState();
     }
 
+    void updateDialSuccess(AsyncResult r) {
+       onPhoneStateChanged(r);
+    }
     /**
      * Go through the Calls from CallManager and return the list of calls that were updated.
      * Method also finds any orphaned Calls (Connection objects no longer returned by telephony as

@@ -356,10 +356,14 @@ public class OutgoingCallBroadcaster extends Activity
         newIntent.putExtra(PhoneConstants.IP_CALL, mIPCall);
         CallGatewayManager.checkAndCopyPhoneProviderExtras(intent, newIntent);
         PhoneUtils.copyImsExtras(intent, newIntent);
+        String scheme = uri.getScheme();
         if(isIMSVTCall){
             newIntent.putExtra(IMS_VIDEOCALL_KEY, isIMSVTCall);
+        } else if (Constants.SCHEME_TEL.equals(scheme)) {
+            Log.d(TAG, "skip SipOptionCallHandler...");
+            PhoneGlobals.getInstance().callController.placeCall(newIntent);
+            return;
         }
-
         // Finally, launch the SipCallOptionHandler, with the copy of the
         // original CALL intent stashed away in the EXTRA_NEW_CALL_INTENT
         // extra.

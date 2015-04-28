@@ -977,6 +977,8 @@ public class PhoneUtils {
                 setMute(false);
             }
 
+            Log.d(LOG_TAG, "updateDialSuccess before audiomode: " );
+            PhoneGlobals.getInstance().getCallModeler().updateDialSuccess(null);
             setAudioMode();
 
             if (DBG) log("about to activate speaker");
