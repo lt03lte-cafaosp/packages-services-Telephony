@@ -462,7 +462,6 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                     } else {
                         onCompleted = obtainMessage(EVENT_OPEN_CHANNEL_DONE, request);
                         Pair<String, Byte> aidByteValue = (Pair<String, Byte>) request.argument;
-                        Log.d("TEST", "PhoneInterfaceManager iccOpenLogicalChannel with p2");
                         uiccCard.iccOpenLogicalChannel_P2(aidByteValue.first, aidByteValue.second, onCompleted);
                     }
                     break;
@@ -1636,7 +1635,6 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     @Override
     public IccOpenLogicalChannelResponse iccOpenLogicalChannel(String AID) {
         enforceModifyPermissionOrCarrierPrivilege();
-        Log.d("TEST", "iccOpenLogicalChannel");
         if (DBG) log("iccOpenLogicalChannel: " + AID);
         IccOpenLogicalChannelResponse response = (IccOpenLogicalChannelResponse)sendRequest(
             CMD_OPEN_CHANNEL, AID);
