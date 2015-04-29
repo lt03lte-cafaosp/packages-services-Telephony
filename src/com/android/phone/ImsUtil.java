@@ -1,0 +1,74 @@
+/*
+ * Copyright 2013 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.phone;
+
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.provider.Settings.SettingNotFoundException;
+import android.util.Log;
+
+import com.android.internal.telephony.Phone;
+import com.android.phone.PhoneGlobals;
+
+public class ImsUtil {
+
+    private static final String TAG = ImsUtil.class.getSimpleName();
+    private static boolean sImsPhoneSupported = false;
+
+    private ImsUtil() {
+    }
+
+    static {
+        PhoneGlobals app = PhoneGlobals.getInstance();
+        sImsPhoneSupported = true;
+    }
+
+    /**
+     * @return true if this device supports voice calls using the built-in SIP stack.
+     */
+    static boolean isImsPhoneSupported() {
+        return sImsPhoneSupported;
+
+    }
+
+    /**
+     * @see MobileNetworkSettings#setIMS
+     * @param context The context to get the content resolver from.
+     * @return Whether IMS is turned on by the user system setting.
+     */
+    static boolean isImsEnabled(Context context) {
+        int value = 0;
+        try {
+            value = android.provider.Settings.Global.getInt(
+                    context.getContentResolver(),
+                    android.provider.Settings.Global.ENHANCED_4G_MODE_ENABLED);
+        } catch (SettingNotFoundException e) {
+            return false;
+        }
+
+        switch (value) {
+            case 0:
+                return false;
+            case 1:
+                return true;
+            default:
+                Log.wtf(TAG,"Unexpected value for VOLTE_VT_ENABLED: " + value);
+                return false;
+        }
+    }
+}
