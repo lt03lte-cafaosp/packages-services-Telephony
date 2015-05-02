@@ -173,7 +173,7 @@ abstract class TelephonyConnection extends Connection {
                     break;
 
                 case MSG_SET_VIDEO_STATE:
-                    setVideoState(msg.arg1);
+                    updateVideoState(msg.arg1);
                     break;
 
                 case MSG_SET_LOCAL_VIDEO_CAPABILITY:
@@ -514,7 +514,7 @@ abstract class TelephonyConnection extends Connection {
 
     /* package */ com.android.internal.telephony.Connection mOriginalConnection;
     private Call.State mOriginalConnectionState = Call.State.IDLE;
-    private Bundle mOriginalConnectionExtras;
+    private Bundle mOriginalConnectionExtras = new Bundle();
 
     private boolean mWasImsConnection;
 
@@ -1064,31 +1064,50 @@ abstract class TelephonyConnection extends Connection {
     protected void setExtras() {
         Bundle extras = null;
         if (mOriginalConnection != null) {
-            extras = mOriginalConnection.getCall().getExtras();
-            if (extras != null) {
-                // Check if extras have changed and need updating.
-                if (!Objects.equals(mOriginalConnectionExtras, extras)) {
-                    if (DBG) {
-                        Log.d(TelephonyConnection.this, "Updating extras:");
-                        for (String key : extras.keySet()) {
-                            Object value = extras.get(key);
-                            if (value instanceof String) {
-                                Log.d(TelephonyConnection.this,
-                                        "setExtras Key=" + key +
-                                                " value=" + (String)value);
-                            }
+            extras = mOriginalConnection.getExtras();
+            // Check if extras have changed and need updating.
+            if (!isEqual(mOriginalConnectionExtras, extras)) {
+                if (DBG) {
+                    Log.d(TelephonyConnection.this, "Updating extras:");
+                    for (String key : extras.keySet()) {
+                        Object value = extras.get(key);
+                        if (value instanceof String) {
+                            Log.d(TelephonyConnection.this,
+                                    "setExtras Key=" + key +
+                                            " value=" + (String)value);
                         }
                     }
-                    mOriginalConnectionExtras = extras;
-                    super.setExtras(extras);
-                } else {
-                    Log.d(TelephonyConnection.this,
-                        "Extras update not required");
                 }
+                mOriginalConnectionExtras.clear();
+                mOriginalConnectionExtras.putAll(extras);
+                super.setExtras(extras);
             } else {
-                Log.d(TelephonyConnection.this, "Null call extras");
+                Log.d(TelephonyConnection.this,
+                    "Extras update not required");
             }
         }
+    }
+
+    private static boolean isEqual(Bundle extras, Bundle newExtras) {
+        if (extras == null || newExtras == null) {
+            return extras == newExtras;
+        }
+
+        if (extras.size() != newExtras.size()) {
+            return false;
+        }
+
+        for(String key : extras.keySet()) {
+            if (key != null) {
+                final Object value = extras.get(key);
+                final Object newValue = newExtras.get(key);
+                if ((value == null && newValue != null) ||
+                        (value != null && !value.equals(newValue))) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     void updateState() {
@@ -1549,6 +1568,14 @@ abstract class TelephonyConnection extends Connection {
         for (TelephonyConnectionListener l : mTelephonyListeners) {
             l.onOriginalConnectionConfigured(this);
         }
+    }
+
+    /**
+     * Set the extras and set video state to the new state.
+     */
+    private void updateVideoState(int videoState) {
+        setExtras();
+        setVideoState(videoState);
     }
 
     /**
