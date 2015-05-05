@@ -1777,7 +1777,13 @@ public class CallFeaturesSetting extends PreferenceActivity
 
         if (mVoicemailProviders != null) {
             mVoicemailProviders.setOnPreferenceChangeListener(this);
-            mVoicemailSettings = (PreferenceScreen)findPreference(BUTTON_VOICEMAIL_SETTING_KEY);
+            mVoicemailSettings = (PreferenceScreen)mVoicemailCategory.findPreference(BUTTON_VOICEMAIL_SETTING_KEY);
+            if (getResources().getBoolean(
+                    com.android.internal.R.bool.config_regional_voicemail_address_editable)) {
+                mVoicemailSettings.removePreference(mSubMenuVoicemailSettings);
+                mVoicemailCategory.removePreference(mVoicemailSettings);
+            }
+
             mVoicemailNotificationRingtone =
                     findPreference(BUTTON_VOICEMAIL_NOTIFICATION_RINGTONE_KEY);
             mVoicemailNotificationVibrate =
