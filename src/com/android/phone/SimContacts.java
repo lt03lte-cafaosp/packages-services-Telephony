@@ -427,12 +427,12 @@ public class SimContacts extends ADNList {
             String phoneNumber = mCursor.getString(NUMBER_COLUMN);
             if (phoneNumber != null) {
                 phoneNumber = PhoneNumberUtils.formatNumber(phoneNumber);
+                Intent intent = new Intent(Intent.ACTION_SENDTO,
+                        Uri.fromParts(PhoneAccount.SCHEME_SMSTO, phoneNumber, null));
+                startActivity(intent);
             } else {
                 Log.e(LOG_TAG, " There is no number in contact ...");
             }
-            Intent intent = new Intent(Intent.ACTION_SENDTO,
-                    Uri.fromParts(PhoneAccount.SCHEME_SMSTO, phoneNumber, null));
-            startActivity(intent);
             finish();
         } else {
             showAlertDialog(getString(R.string.cursorError));
@@ -444,12 +444,13 @@ public class SimContacts extends ADNList {
             String phoneNumber = mCursor.getString(NUMBER_COLUMN);
             if (phoneNumber == null || !TextUtils.isGraphic(phoneNumber)) {
                 Log.e(LOG_TAG, " There is no number in contact ...");
+            } else {
+                Intent intent = new Intent(Intent.ACTION_CALL_PRIVILEGED,
+                        Uri.fromParts(PhoneAccount.SCHEME_TEL, phoneNumber, null));
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+                startActivity(intent);
             }
-            Intent intent = new Intent(Intent.ACTION_CALL_PRIVILEGED,
-                    Uri.fromParts(PhoneAccount.SCHEME_TEL, phoneNumber, null));
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                    | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-            startActivity(intent);
             finish();
         } else {
             showAlertDialog(getString(R.string.cursorError));
