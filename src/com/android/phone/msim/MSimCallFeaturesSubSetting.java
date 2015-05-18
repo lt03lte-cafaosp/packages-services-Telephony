@@ -50,6 +50,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.preference.PreferenceCategory;
+import android.preference.SwitchPreference;
 import android.provider.ContactsContract.CommonDataKinds;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
@@ -194,6 +195,17 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
 
     private static final String BUTTON_IPPREFIX_KEY = "button_ipprefix_key";
 
+    private static final String BUTTON_INTERNATIONAL_PREFIX_KEY
+            = "button_international_prefix_key";
+    private static final String BUTTON_INTERNATIONAL_PREFIX_ENABLE_KEY
+            = "button_international_prefix_enable_key";
+    private static final String BUTTON_INTERNATIONAL_PREFIX_EDIT_KEY
+            = "button_international_prefix_edit_key";
+    private static final String SETTINGS_INTERNATIONAL_PREFIX_NUMBER
+            = "international_prefix_number";
+    private static final String SETTINGS_INTERNATIONAL_PREFIX_ENABLE
+            = "international_prefix_enable";
+    private static final String DEFUALT_INTERNATIONAL_PREFIX = "01033";
 
     private static final String VM_NUMBERS_SHARED_PREFERENCES_NAME = "vm_numbers";
 
@@ -251,6 +263,10 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
     private PreferenceScreen mButtonVideoCallFallback;
     private PreferenceScreen mButtonVideoCallForward;
     private PreferenceScreen mButtonVideoCallPictureSelect;
+
+    private PreferenceScreen mInternationalPrefix;
+    private PreferenceScreen mInternationalPrefixEdit;
+    private SwitchPreference mInternationalPrefixEnable;
 
     private EditPhoneNumberPreference mSubMenuVoicemailSettings;
 
@@ -575,6 +591,14 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
             return true;
         } else if (preference == mButtonVideoCallPictureSelect) {
             startActivity(getVTCallImageSettingsIntent());
+            return true;
+        } else if (preference == mInternationalPrefixEdit) {
+            handleInternaionalPrefixClick();
+            return true;
+        } else if (preference == mInternationalPrefixEnable) {
+            Settings.System.putInt(getContentResolver(),
+                    SETTINGS_INTERNATIONAL_PREFIX_ENABLE
+                    + mSubId, mInternationalPrefixEnable.isChecked() ? 1 : 0);
             return true;
         }
         return false;
@@ -1557,6 +1581,12 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
         mSubscriptionPrefGSM.getIntent().putExtra(SUBSCRIPTION_KEY, mSubId);
         mSubscriptionPrefCDMA.getIntent().putExtra(SUBSCRIPTION_KEY, mSubId);
 
+        mInternationalPrefix = (PreferenceScreen)
+                findPreference(BUTTON_INTERNATIONAL_PREFIX_KEY);
+        mInternationalPrefixEdit = (PreferenceScreen)
+                findPreference(BUTTON_INTERNATIONAL_PREFIX_EDIT_KEY);
+        mInternationalPrefixEnable = (SwitchPreference)
+                findPreference(BUTTON_INTERNATIONAL_PREFIX_ENABLE_KEY);
         log("settings onCreate subscription =" + mSubId);
         mPhone = PhoneUtils.getPhoneFromSubId(mSubId);
 
@@ -1631,6 +1661,36 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
                 mSubscriptionPrefMOREEXPAND.getIntent().putExtra(SUBSCRIPTION_KEY, mSubId);
             } else {
                 throw new IllegalStateException("Unexpected phone type: " + phoneType);
+            }
+        }
+
+        if (mInternationalPrefix != null) {
+            if (DBG) log("international prefix subscription: " + mSubId +
+                    " CDMA phone: " + isCDMAPhone(mSubId));
+            if (SystemProperties.getBoolean("persist.env.phone.checkidp", false)
+                    && isCDMAPhone(mSubId)) {
+                if (mInternationalPrefixEdit != null) {
+                    String internationalPrefix = Settings.System.getString(getContentResolver(),
+                            SETTINGS_INTERNATIONAL_PREFIX_NUMBER + mSubId);
+                    if (internationalPrefix == null) {
+                        mInternationalPrefixEdit
+                                .setSummary(DEFUALT_INTERNATIONAL_PREFIX);
+                    } else if(TextUtils.isEmpty(internationalPrefix)) {
+                        mInternationalPrefixEdit
+                                .setSummary(R.string.international_prefix_not_set);
+                    } else {
+                        mInternationalPrefixEdit.setSummary(internationalPrefix);
+                    }
+                }
+
+                if (mInternationalPrefixEnable != null) {
+                    boolean isEnabled = Settings.System.getInt(getContentResolver(),
+                        SETTINGS_INTERNATIONAL_PREFIX_ENABLE + mSubId, 1) == 1;
+                    mInternationalPrefixEnable.setChecked(isEnabled);
+                }
+
+            } else {
+                prefSet.removePreference(mInternationalPrefix);
             }
         }
 
@@ -1758,9 +1818,59 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
         new Thread(mRingtoneLookupRunnable).start();
     }
 
+    private static boolean isCDMAPhone(int subscription) {
+        int phoneType = TelephonyManager.getDefault().getCurrentPhoneType(subscription);
+        return (TelephonyManager.PHONE_TYPE_CDMA == phoneType);
+    }
+
+    private void handleInternaionalPrefixClick() {
+        View v = getLayoutInflater().inflate(R.layout.ip_prefix, null);
+        final EditText edit = (EditText) v.findViewById(R.id.ip_prefix_dialog_edit);
+        String internationalPrefix = Settings.System.getString(getContentResolver(),
+                SETTINGS_INTERNATIONAL_PREFIX_NUMBER + mSubId);
+        if (TextUtils.isEmpty(internationalPrefix)) {
+            internationalPrefix = DEFUALT_INTERNATIONAL_PREFIX;
+        }
+
+        edit.setHint("");
+        edit.setText(internationalPrefix);
+        edit.setSelection(internationalPrefix.length());
+
+        AlertDialog alertDialog  = new AlertDialog.Builder(this)
+                .setTitle(R.string.international_prefix_edit)
+                .setView(v)
+                .setPositiveButton(android.R.string.ok,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                String internationalPrefix = edit.getText().toString();
+                                Settings.System.putString(getContentResolver(),
+                                        SETTINGS_INTERNATIONAL_PREFIX_NUMBER + mSubId,
+                                        internationalPrefix);
+                                if (TextUtils.isEmpty(internationalPrefix)) {
+                                    mInternationalPrefixEdit
+                                            .setSummary(R.string.international_prefix_not_set);
+                                } else {
+                                    mInternationalPrefixEdit.setSummary(internationalPrefix);
+                                }
+                                onResume();
+                            }
+                        })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+        alertDialog.getWindow().setSoftInputMode(WindowManager
+                .LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+
+    }
+
     private void setScreenState() {
         int simState = TelephonyManager.getDefault().getSimState(mPhone.getPhoneId());
         getPreferenceScreen().setEnabled(simState != TelephonyManager.SIM_STATE_ABSENT);
+        mInternationalPrefix = (PreferenceScreen)
+                findPreference(BUTTON_INTERNATIONAL_PREFIX_KEY);
+        mInternationalPrefixEdit = (PreferenceScreen)
+                findPreference(BUTTON_INTERNATIONAL_PREFIX_EDIT_KEY);
+        mInternationalPrefixEnable = (SwitchPreference)
+                findPreference(BUTTON_INTERNATIONAL_PREFIX_ENABLE_KEY);
     }
 
     /**
