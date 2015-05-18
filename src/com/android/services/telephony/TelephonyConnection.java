@@ -1079,25 +1079,29 @@ abstract class TelephonyConnection extends Connection {
         Bundle extras = null;
         if (mOriginalConnection != null) {
             extras = mOriginalConnection.getExtras();
-            // Check if extras have changed and need updating.
-            if (!isEqual(mOriginalConnectionExtras, extras)) {
-                if (DBG) {
-                    Log.d(TelephonyConnection.this, "Updating extras:");
-                    for (String key : extras.keySet()) {
-                        Object value = extras.get(key);
-                        if (value instanceof String) {
-                            Log.d(TelephonyConnection.this,
-                                    "setExtras Key=" + key +
-                                            " value=" + (String)value);
+            if (extras != null) {
+                // Check if extras have changed and need updating.
+                if (!isEqual(mOriginalConnectionExtras, extras)) {
+                    if (DBG) {
+                        Log.d(TelephonyConnection.this, "Updating extras:");
+                        for (String key : extras.keySet()) {
+                            Object value = extras.get(key);
+                            if (value instanceof String) {
+                                Log.d(TelephonyConnection.this,
+                                        "setExtras Key=" + key +
+                                                " value=" + (String)value);
+                            }
                         }
                     }
+                    mOriginalConnectionExtras.clear();
+                    mOriginalConnectionExtras.putAll(extras);
+                    super.setExtras(extras);
+                } else {
+                    Log.d(TelephonyConnection.this,
+                        "Extras update not required");
                 }
-                mOriginalConnectionExtras.clear();
-                mOriginalConnectionExtras.putAll(extras);
-                super.setExtras(extras);
             } else {
-                Log.d(TelephonyConnection.this,
-                    "Extras update not required");
+                Log.d(TelephonyConnection.this, "setExtras extras: " + extras);
             }
         }
     }
