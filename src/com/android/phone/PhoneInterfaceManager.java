@@ -292,7 +292,10 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                         if (DBG) log("EVENT_TRANSMIT_APDU_LOGICAL_CHANNEL_DONE successful");
                     } else {
                         if (ar.result == null) {
-                            loge("iccTransmitApduLogicalChannel: Empty response");
+                            loge("iccTransmitApduLogicalChannel: Empty response received."
+                                    + "Setting result: sw1 = 0x6F and sw2 = 0");
+                            // If the request fails with an empty payload.
+                            request.result = new IccIoResult(0x6F, 0, (byte[])null);
                         } else if (ar.exception instanceof CommandException) {
                             loge("iccTransmitApduLogicalChannel: CommandException: " +
                                     ar.exception);
@@ -331,7 +334,9 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                         if (DBG) log("EVENT_TRANSMIT_APDU_BASIC_CHANNEL_DONE successful");
                     } else {
                         if (ar.result == null) {
-                            loge("iccTransmitApduBasicChannel: Empty response");
+                            loge("iccTransmitApduBasicChannel: Empty response received."
+                            + "Setting result: sw1 = 0x6F and sw2 = 0");
+                            request.result = new IccIoResult(0x6F, 0, (byte[])null);
                         } else if (ar.exception instanceof CommandException) {
                             loge("iccTransmitApduBasicChannel: CommandException: " +
                                     ar.exception);
@@ -370,7 +375,9 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                         if (DBG) log("EVENT_EXCHANGE_SIM_IO_DONE successful");
                     } else {
                         if (ar.result == null) {
-                            loge("ccExchangeSimIO: Empty Response");
+                            loge("ccExchangeSimIO: Empty Response recieved."
+                            + "Setting result: sw1 = 0x6F and sw2 = 0");
+                            request.result = new IccIoResult(0x6F, 0, (byte[])null);
                         } else if (ar.exception instanceof CommandException) {
                             loge("iccTransmitApduBasicChannel: CommandException: " +
                                     ar.exception);
