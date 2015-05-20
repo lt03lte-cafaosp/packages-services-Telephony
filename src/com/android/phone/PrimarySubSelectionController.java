@@ -478,6 +478,16 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
                 if (mNeedHandleModemReadyEvent) {
                     setPrimarySub();
                     mNeedHandleModemReadyEvent = false;
+                } else if (isPrimaryLteSubEnabled()){
+                    int primarySlot = getPrimarySlot();
+                    int currentDds = SubscriptionManager.getSlotId(SubscriptionManager
+                            .getDefaultDataSubId());
+                    if ((primarySlot != -1) && (mIccLoaded[primarySlot]) &&
+                            (currentDds != primarySlot)) {
+                        int subId = SubscriptionManager.getSubId(primarySlot)[0];
+                        SubscriptionManager.from(mContext).setDefaultDataSubId(subId);
+                        setUserPrefDataSubIdInDB(subId);
+                    };
                 }
                 break;
             case MSG_ALL_CARDS_AVAILABLE:
