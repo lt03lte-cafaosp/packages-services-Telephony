@@ -106,6 +106,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     private MyHandler mHandler;
     private PhoneStateListener mPhoneStateListener;
     private boolean mOkClicked;
+    private boolean showRegionalNetworkMode;
 
     //GsmUmts options and Cdma options
     GsmUmtsOptions mGsmUmtsOptions;
@@ -288,6 +289,18 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                 } else {
                     prefSet.removePreference(mButtonPreferredNetworkMode);
                 }
+                break;
+            case Constants.NETWORK_MODE_DEFAULT:
+                if (getResources().getBoolean(
+                            com.android.internal.R.bool.config_regional_preferred_network_customization)) {
+                    mButtonPreferredNetworkMode
+                            .setEntries(R.array.preferred_network_mode_choices_regional);
+                    mButtonPreferredNetworkMode.setEntryValues(
+                            R.array.preferred_network_mode_values_regional);
+                } else {
+                    /* do nothing */
+                }
+
                 break;
             default:
                 break;
@@ -651,14 +664,27 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     private void UpdatePreferredNetworkModeSummary(int NetworkMode) {
         int networkFeature = SystemProperties.getInt(Constants.PERSIST_RADIO_NETWORK_FEATURE,
                 Constants.NETWORK_MODE_DEFAULT);
+        boolean showRegionalNetworkMode = getResources().getBoolean(
+                   com.android.internal.R.bool.config_regional_preferred_network_customization);
+
         switch(NetworkMode) {
             case Phone.NT_MODE_WCDMA_PREF:
-                mButtonPreferredNetworkMode.setSummary(
-                        R.string.preferred_network_mode_wcdma_perf_summary);
+                if(showRegionalNetworkMode) {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_wcdma_perf_summary_regional);
+                } else {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_wcdma_perf_summary);
+                }
                 break;
             case Phone.NT_MODE_GSM_ONLY:
-                mButtonPreferredNetworkMode.setSummary(
-                        R.string.preferred_network_mode_gsm_only_summary);
+                if(showRegionalNetworkMode) {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_gsm_only_summary_regional);
+                } else {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_gsm_only_summary);
+                }
                 break;
             case Phone.NT_MODE_WCDMA_ONLY:
                 mButtonPreferredNetworkMode.setSummary(
@@ -694,8 +720,13 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                         R.string.preferred_network_mode_lte_summary);
                 break;
             case Phone.NT_MODE_LTE_GSM_WCDMA:
-                mButtonPreferredNetworkMode.setSummary(
-                        R.string.preferred_network_mode_lte_gsm_wcdma_summary);
+                if(showRegionalNetworkMode) {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_lte_gsm_wcdma_summary_regional);
+                } else {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_lte_gsm_wcdma_summary);
+                }
                 break;
             case Phone.NT_MODE_LTE_CDMA_AND_EVDO:
                 mButtonPreferredNetworkMode.setSummary(

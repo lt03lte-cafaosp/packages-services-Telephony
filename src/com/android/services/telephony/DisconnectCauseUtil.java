@@ -138,6 +138,7 @@ public class DisconnectCauseUtil {
             case android.telephony.DisconnectCause.DIAL_MODIFIED_TO_SS:
             case android.telephony.DisconnectCause.DIAL_MODIFIED_TO_DIAL:
             case android.telephony.DisconnectCause.ERROR_UNSPECIFIED:
+            case android.telephony.DisconnectCause.HO_NOT_FEASIBLE:
                 return DisconnectCause.ERROR;
 
             case android.telephony.DisconnectCause.DIALED_MMI:
@@ -275,6 +276,10 @@ public class DisconnectCauseUtil {
             case android.telephony.DisconnectCause.INVALID_NUMBER:
             case android.telephony.DisconnectCause.UNOBTAINABLE_NUMBER:
                 resourceId = R.string.callFailed_unobtainable_number;
+                break;
+
+            case android.telephony.DisconnectCause.HO_NOT_FEASIBLE:
+                resourceId = R.string.callFailed_hoNotFeasible;
                 break;
 
             default:
@@ -589,6 +594,10 @@ public class DisconnectCauseUtil {
                 resourceId = R.string.callFailed_non_selected_user_clearing;
                 break;
 
+            case android.telephony.DisconnectCause.HO_NOT_FEASIBLE:
+                resourceId = R.string.callFailed_hoNotFeasible;
+                break;
+
             case android.telephony.DisconnectCause.OUTGOING_CANCELED:
                 // We don't want to show any dialog for the canceled case since the call was
                 // either canceled by the user explicitly (end-call button pushed immediately)
@@ -628,6 +637,7 @@ public class DisconnectCauseUtil {
 
             case android.telephony.DisconnectCause.CDMA_DROP:
             case android.telephony.DisconnectCause.OUT_OF_SERVICE:
+            case android.telephony.DisconnectCause.HO_NOT_FEASIBLE:
                 return ToneGenerator.TONE_CDMA_CALLDROP_LITE;
 
             case android.telephony.DisconnectCause.NO_ROUTE_TO_DESTINAON:
