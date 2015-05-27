@@ -28,17 +28,30 @@
 
 package com.android.phone;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import android.R.integer;
 import android.app.ActionBar;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
+import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceCategory;
 import android.preference.PreferenceScreen;
 import android.preference.SwitchPreference;
 import android.telephony.SubscriptionManager;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MenuItem;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.Toast;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 
 import com.android.ims.ImsConfig;
 import com.android.ims.ImsConfigListener;
@@ -46,12 +59,18 @@ import com.android.ims.ImsException;
 import com.android.ims.ImsManager;
 
 public class WifiCallingSettings extends PreferenceActivity
-        implements Preference.OnPreferenceChangeListener {
+        implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
 
     private static final String TAG = WifiCallingSettings.class.getSimpleName();
 
     private static final String WIFI_CALLING_KEY = "wifi_calling";
     private static final String WIFI_CALLING_PREFERENCE_KEY = "wifi_calling_preferrence";
+    private static final String KEY_WIFI_CALLING_WIZARD = "wifi_calling_wizard";
+    private static final String KEY_WIFI_CALLING_PREFERRED_SCREEN = "wifi_calling_prefence";
+    // Below is the prefence key as the same as the CheckBoxPreference title.
+    private static final String KEY_WIFI_CALLING_PREFERRED = "Wi-Fi Preferred";
+    private static final String KEY_CELLULAR_NETWORK_PREFERRED = "Cellular Network Preferred";
+    private static final String KEY_NEVER_USE_CELLULAR_NETWORK_PREFERRED = "Never use Cellular Network";
 
     private static final int WIFI_PREF_NONE = 0;
     private static final int WIFI_PREFERRED = 1;
@@ -63,6 +82,10 @@ public class WifiCallingSettings extends PreferenceActivity
     private SwitchPreference mWifiCallingSetting;
     private ListPreference mWifiCallingPreference;
     private ImsConfig mImsConfig;
+    private Switch mSwitch;
+    private int mSelection = 0;
+    private ArrayList<CheckBoxPreference> mCheckboxPref = new ArrayList<CheckBoxPreference>();
+    private Map<String, Integer> mPrefenceIndex = new HashMap<String, Integer>();
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -91,6 +114,79 @@ public class WifiCallingSettings extends PreferenceActivity
         } catch (ImsException e) {
             mImsConfig = null;
             Log.e(TAG, "ImsService is not running");
+        }
+        updatePrefence();
+    }
+
+    private boolean isCarriers(){
+        return getBaseContext().getResources().getBoolean(
+                com.android.internal.R.bool.config_regional_wifi_calling_menu_enable);
+    }
+
+    private void updatePrefence(){
+        if(!isCarriers()){
+            Preference wifi = getPreferenceScreen().findPreference(WIFI_CALLING_PREFERENCE_KEY);
+            if(wifi != null){
+                getPreferenceScreen().removePreference(wifi);
+            }
+            Preference wifi_turorial = getPreferenceScreen().findPreference("wifi_calling_tutorial");
+            if(wifi_turorial != null){
+                getPreferenceScreen().removePreference(wifi_turorial);
+            }
+            return;
+        }
+        Preference wifi_key = getPreferenceScreen().findPreference(WIFI_CALLING_KEY);
+        if(wifi_key != null) {
+            getPreferenceScreen().removePreference(wifi_key);
+        }
+        Preference wifi_pre = getPreferenceScreen().findPreference(WIFI_CALLING_PREFERENCE_KEY);
+        if(wifi_pre != null) {
+            getPreferenceScreen().removePreference(wifi_pre);
+        }
+        mSwitch = new Switch(this);
+        mSwitch.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Log.i(TAG, "onCheckedChanged isChecked : " + isChecked);
+                setWifiCallingPreference(isChecked ?
+                        ImsConfig.WifiCallingValueConstants.ON :
+                        ImsConfig.WifiCallingValueConstants.OFF,
+                        mSelection);
+                getPreferenceScreen().findPreference(
+                        KEY_WIFI_CALLING_PREFERRED_SCREEN)
+                        .setEnabled(isChecked);
+            }
+        });
+        ActionBar actionBar = getActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM,
+                    ActionBar.DISPLAY_SHOW_CUSTOM);
+            actionBar.setCustomView(mSwitch, new ActionBar.LayoutParams(
+                    ActionBar.LayoutParams.WRAP_CONTENT,
+                    ActionBar.LayoutParams.WRAP_CONTENT,
+                    Gravity.CENTER_VERTICAL | Gravity.RIGHT));
+        }
+
+        PreferenceCategory prefCate = (PreferenceCategory) findPreference(KEY_WIFI_CALLING_PREFERRED_SCREEN);
+        int current = 0;
+        String[] titleArray = getBaseContext().getResources().getStringArray(
+                R.array.wifi_call_preferences_entries_title);
+        String[] summaryArray = getBaseContext().getResources().getStringArray(
+                R.array.wifi_call_preferences_entries_summary);
+        String[] entriesArray = getBaseContext().getResources().getStringArray(
+                R.array.wifi_call_preferences_entries);
+        for (int i=0;i<titleArray.length;i++) {
+            CheckBoxPreference pref = new CheckBoxPreference(this);
+            pref.setKey(titleArray[i]);
+            pref.setOnPreferenceClickListener(this);
+            pref.setChecked(i == current ? true : false);
+            pref.setTitle(titleArray[i]);
+            pref.setSummary(summaryArray[i]);
+            prefCate.addPreference(pref);
+            mCheckboxPref.add(pref);
+            mPrefenceIndex.put(titleArray[i], Integer.parseInt(entriesArray[i]));
+            if (pref.isChecked()) mSelection = Integer.parseInt(entriesArray[i]);
         }
     }
 
@@ -227,6 +323,20 @@ public class WifiCallingSettings extends PreferenceActivity
             return;
         }
         mWifiCallingSetting.setChecked(getWifiCallingSettingFromStatus(status));
+        if (isCarriers()) {
+            boolean isTurnOn = getWifiCallingSettingFromStatus(status);
+            mSwitch.setChecked(isTurnOn);
+            getPreferenceScreen().findPreference(
+                    KEY_WIFI_CALLING_PREFERRED_SCREEN)
+                    .setEnabled(isTurnOn);
+            Set<String> set = mPrefenceIndex.keySet();
+            for(String prefence : set){
+                if(mPrefenceIndex.get(prefence).equals(preference)){
+                    mSelection = mPrefenceIndex.get(prefence);
+                    updateSelection(prefence);
+                }
+            }
+        }
         if (mWifiCallingPreference != null) {
             mWifiCallingPreference.setValue(String.valueOf(preference));
             mWifiCallingPreference.setSummary(getWifiPreferenceString(preference));
@@ -287,4 +397,36 @@ public class WifiCallingSettings extends PreferenceActivity
         return getApplicationContext().getResources().getInteger(
                 R.integer.config_default_wifi_calling_preference);
     }
+
+    @Override
+    public boolean onPreferenceClick(Preference preference) {
+        updateSelection(preference.getKey());
+        int state = mSwitch.isChecked() ?
+                ImsConfig.WifiCallingValueConstants.ON :
+                ImsConfig.WifiCallingValueConstants.OFF;
+        boolean result = setWifiCallingPreference(state, mSelection);
+        if (result) {
+            loadWifiCallingPreference(state, mSelection);
+        }
+        return true;
+    }
+
+    // Control the three checkbox: only one should be selected.
+    private void updateSelection(String preferenceKey){
+        if(preferenceKey == null){
+            Log.i(TAG, "updateSelection is null");
+            return;
+        }
+        for(int index = 0; index < mCheckboxPref.size(); index ++){
+            CheckBoxPreference checkbox = mCheckboxPref.get(index);
+            if(preferenceKey.equals(checkbox.getKey())){
+                checkbox.setChecked(true);
+                mSelection = mPrefenceIndex.get(preferenceKey);
+            }else{
+                checkbox.setChecked(false);
+            }
+        }
+        Log.i(TAG, "updateSelection with mSelect : " + mSelection + " Checkbox : " + preferenceKey);
+    }
+
 }
