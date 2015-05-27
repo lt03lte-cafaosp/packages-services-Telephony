@@ -46,5 +46,18 @@
         android:entryValues="@array/wifi_calling_preference_values"
         android:dialogTitle="@string/wifi_calling_preference_dialog_title"
         android:dependency="wifi_calling" />
+    <PreferenceCategory
+        android:key="wifi_calling_prefence"
+        android:title="@string/wifi_call_preferrd_setting_title" >
+    </PreferenceCategory>
+    <PreferenceScreen
+        android:key="wifi_calling_tutorial"
+        android:title="@string/wifi_calling_settings_menu_help" >
+        <intent
+        android:action="android.intent.action.MAIN"
+        android:targetPackage="com.android.settings"
+        android:targetClass="com.android.settings.wificall.WifiCallingWizardActivity" />
+    </PreferenceScreen>
+
 
 </PreferenceScreen>
