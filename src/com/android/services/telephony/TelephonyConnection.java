@@ -862,9 +862,7 @@ abstract class TelephonyConnection extends Connection {
         Log.d(this, "SS Notification: " + notification);
 
         final String notificationText = getSuppSvcNotificationText(notification);
-        if (notificationText != null && !notificationText.isEmpty()
-                && notification.history != null && notification.history.length > 0) {
-
+        if (notificationText != null && !notificationText.isEmpty()) {
             if (TelephonyManager.getDefault().getPhoneCount() > 1) {
                 SubscriptionInfo sub = SubscriptionManager.from(
                         TelephonyGlobals.getApplicationContext())
@@ -875,14 +873,15 @@ abstract class TelephonyConnection extends Connection {
             } else {
                 mDisplayName = notificationText;
             }
-
-            final String history = TelephonyGlobals.getApplicationContext().getString(R.string.card_title_history) + Arrays.toString(notification.history);
+            if (notification.history != null && notification.history.length > 0) {
+                mDisplayName = mDisplayName + TelephonyGlobals.getApplicationContext().
+                        getString(R.string.card_title_history) +
+                        Arrays.toString(notification.history);
+            }
             Toast.makeText(TelephonyGlobals.getApplicationContext(),
-                    mDisplayName + history, Toast.LENGTH_LONG).show();
-        } else {
-            setCallProperties(computeCallProperties());
+                     mDisplayName, Toast.LENGTH_LONG).show();
         }
-
+        setCallProperties(computeCallProperties());
     }
 
     protected int computeCallProperties() {
