@@ -36,7 +36,6 @@ import android.telecom.TelecomManager;
 import android.telecom.VideoProfile;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.SubInfoRecord;
-import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.widget.Toast;
@@ -812,26 +811,17 @@ abstract class TelephonyConnection extends Connection {
         Log.d(this, "SS Notification: " + notification);
 
         final String notificationText = getSuppSvcNotificationText(notification);
-        if (notificationText != null && !notificationText.isEmpty()
-                && notification.history != null && notification.history.length > 0) {
-            if (TelephonyManager.getDefault().getPhoneCount() > 1) {
-                SubscriptionInfo sub = SubscriptionManager.from(
-                       TelephonyGlobals.getApplicationContext())
-                       .getActiveSubscriptionInfoForSimSlotIndex(getPhone().getPhoneId());
-                String displayName =  ((sub != null)) ?
-                       sub.getDisplayName().toString() : mSubName[getPhone().getPhoneId()];
-                mDisplayName = displayName + ":" + notificationText;
-            } else {
-                mDisplayName = notificationText;
+        if (notificationText != null && !notificationText.isEmpty()) {
+            mDisplayName = notificationText;
+            if (notification.history != null && notification.history.length > 0) {
+                mDisplayName = mDisplayName + TelephonyGlobals.getApplicationContext().
+                        getString(R.string.card_title_history) +
+                        Arrays.toString(notification.history);
             }
-
-            final String history = TelephonyGlobals.getApplicationContext().
-                    getString(R.string.card_title_history) + Arrays.toString(notification.history);
             Toast.makeText(TelephonyGlobals.getApplicationContext(),
-                     mDisplayName + history, Toast.LENGTH_LONG).show();
-        } else {
-            setCallProperties(computeCallProperties());
+                     mDisplayName, Toast.LENGTH_LONG).show();
         }
+        setCallProperties(computeCallProperties());
     }
 
     protected int computeCallProperties() {
