@@ -1697,6 +1697,11 @@
     <string name="CFDeactivate">Deactivate</string>
     <string name="null_phone_number">Phone number cannot be null !</string>
     <string name="labelCFDeactAll">Deactivate All</string>
+    <string name="international_prefix_title">International prefix</string>
+    <string name="international_prefix_summery">Manage international prefix</string>
+    <string name="international_prefix_enable">Enable</string>
+    <string name="international_prefix_edit">Edit Number</string>
+    <string name="international_prefix_not_set">Not set</string>
  <!-- Manual PLMN scan data disconnect dialog text -->
     <string name="disconnect_data_confirm">Data service temporarily would be disconnected. Are you sure?</string>
 
