@@ -102,10 +102,6 @@ public class FdnList extends ADNList {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:  // See ActionBar#setDisplayHomeAsUpEnabled()
-                Intent intent = new Intent(this, FdnSetting.class);
-                intent.setAction(Intent.ACTION_MAIN);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
                 finish();
                 return true;
 
