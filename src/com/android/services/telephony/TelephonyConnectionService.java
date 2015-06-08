@@ -698,6 +698,8 @@ public class TelephonyConnectionService extends ConnectionService {
                 Log.d(this, "Adding CDMA connection to conference controller: " + connection);
                 mCdmaConferenceController[phoneId].add((CdmaConnection)connection);
             }
+            Log.d(this, "Removing connection from IMS conference controller: " + connection);
+            mImsConferenceController[phoneId].remove(connection);
         }
     }
 }
