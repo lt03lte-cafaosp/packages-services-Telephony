@@ -56,6 +56,7 @@ import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.DefaultPhoneNotifier;
 import com.android.internal.telephony.ITelephony;
 import com.android.internal.telephony.IccCard;
+import com.android.internal.telephony.ModemStackController;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.CallManager;
@@ -979,11 +980,26 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         // For replies from SimCard interface
         private Handler mHandler;
 
+        private ModemStackController mModemStackController;
+
         // For async handler to identify request type
         private static final int SUPPLY_PIN_COMPLETE = 100;
 
         public UnlockSim(IccCard simCard) {
             mSimCard = simCard;
+        }
+
+        private boolean isCrossMappingInProgress() {
+            mModemStackController = ModemStackController.getInstance();
+            if (mModemStackController != null && TelephonyManager.getDefault().
+                    getPhoneCount() > 1) {
+                if (!mModemStackController.isStackReady()) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            return false;
         }
 
         @Override
@@ -1005,7 +1021,12 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                                                 == CommandException.Error.PASSWORD_INCORRECT) {
                                             mResult = PhoneConstants.PIN_PASSWORD_INCORRECT;
                                         } else {
-                                            mResult = PhoneConstants.PIN_GENERAL_FAILURE;
+                                            if (isCrossMappingInProgress()) {
+                                                Log.d(LOG_TAG, "Cross mapping in progress");
+                                                mResult = PhoneConstants.PIN_ERROR_CROSS_MAPPING;
+                                            } else {
+                                                mResult = PhoneConstants.PIN_GENERAL_FAILURE;
+                                            }
                                         }
                                     } else {
                                         mResult = PhoneConstants.PIN_RESULT_SUCCESS;
