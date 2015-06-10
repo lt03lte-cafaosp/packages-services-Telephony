@@ -35,6 +35,7 @@ import java.util.Set;
 
 import android.R.integer;
 import android.app.ActionBar;
+import android.content.Intent;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
@@ -336,6 +337,9 @@ public class WifiCallingSettings extends PreferenceActivity
                     updateSelection(prefence);
                 }
             }
+            Intent intent = new Intent(isTurnOn ? "com.android.wificall.TURNON"
+                    : "com.android.wificall.TURNOFF");
+            sendBroadcast(intent);
         }
         if (mWifiCallingPreference != null) {
             mWifiCallingPreference.setValue(String.valueOf(preference));
