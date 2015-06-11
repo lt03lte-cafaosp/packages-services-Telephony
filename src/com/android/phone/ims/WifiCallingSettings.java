@@ -49,6 +49,7 @@ import android.telephony.SubscriptionManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.Toast;
@@ -72,16 +73,22 @@ public class WifiCallingSettings extends PreferenceActivity
     private static final String KEY_WIFI_CALLING_PREFERRED = "Wi-Fi Preferred";
     private static final String KEY_CELLULAR_NETWORK_PREFERRED = "Cellular Network Preferred";
     private static final String KEY_NEVER_USE_CELLULAR_NETWORK_PREFERRED = "Never use Cellular Network";
+    private static final String KEY_WIFI_CALLING_CONNECTION_PREFERENCE = "wifi_calling_connection_pref";
 
     private static final int WIFI_PREF_NONE = 0;
     private static final int WIFI_PREFERRED = 1;
     private static final int WIFI_ONLY = 2;
     private static final int CELLULAR_PREFERRED = 3;
     private static final int CELLULAR_ONLY = 4;
+    private static int mStatus = 1;
 
 
     private SwitchPreference mWifiCallingSetting;
     private ListPreference mWifiCallingPreference;
+    private Preference mWifiCallingHelp;
+    private Preference mWifiCallingPreCarrier;
+    private Preference mWifiCallingConnectPre;
+    private PreferenceCategory mPrefCate;
     private ImsConfig mImsConfig;
     private Switch mSwitch;
     private int mSelection = 0;
@@ -125,69 +132,78 @@ public class WifiCallingSettings extends PreferenceActivity
     }
 
     private void updatePrefence(){
-        if(!isCarriers()){
-            Preference wifi = getPreferenceScreen().findPreference(WIFI_CALLING_PREFERENCE_KEY);
-            if(wifi != null){
-                getPreferenceScreen().removePreference(wifi);
+        final PreferenceScreen screen = getPreferenceScreen();
+        mWifiCallingPreCarrier = screen
+                .findPreference(WIFI_CALLING_PREFERENCE_KEY);
+        mWifiCallingHelp = screen.findPreference("wifi_calling_tutorial");
+        mWifiCallingConnectPre = screen
+                .findPreference(KEY_WIFI_CALLING_CONNECTION_PREFERENCE);
+        mWifiCallingConnectPre.setOnPreferenceClickListener(this);
+        if (!isCarriers()) {
+            if (mWifiCallingPreCarrier != null) {
+                screen.removePreference(mWifiCallingPreCarrier);
             }
-            Preference wifi_turorial = getPreferenceScreen().findPreference("wifi_calling_tutorial");
-            if(wifi_turorial != null){
-                getPreferenceScreen().removePreference(wifi_turorial);
+            if (mWifiCallingHelp != null) {
+                screen.removePreference(mWifiCallingHelp);
+            }
+            if (mWifiCallingConnectPre != null) {
+                screen.removePreference(screen);
             }
             return;
-        }
-        Preference wifi_key = getPreferenceScreen().findPreference(WIFI_CALLING_KEY);
-        if(wifi_key != null) {
-            getPreferenceScreen().removePreference(wifi_key);
-        }
-        Preference wifi_pre = getPreferenceScreen().findPreference(WIFI_CALLING_PREFERENCE_KEY);
-        if(wifi_pre != null) {
-            getPreferenceScreen().removePreference(wifi_pre);
-        }
-        mSwitch = new Switch(this);
-        mSwitch.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Log.i(TAG, "onCheckedChanged isChecked : " + isChecked);
-                setWifiCallingPreference(isChecked ?
-                        ImsConfig.WifiCallingValueConstants.ON :
-                        ImsConfig.WifiCallingValueConstants.OFF,
-                        mSelection);
-                getPreferenceScreen().findPreference(
-                        KEY_WIFI_CALLING_PREFERRED_SCREEN)
-                        .setEnabled(isChecked);
+        } else {
+            if (mWifiCallingSetting != null) {
+                screen.removePreference(mWifiCallingSetting);
             }
-        });
-        ActionBar actionBar = getActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM,
-                    ActionBar.DISPLAY_SHOW_CUSTOM);
-            actionBar.setCustomView(mSwitch, new ActionBar.LayoutParams(
-                    ActionBar.LayoutParams.WRAP_CONTENT,
-                    ActionBar.LayoutParams.WRAP_CONTENT,
-                    Gravity.CENTER_VERTICAL | Gravity.RIGHT));
-        }
+            if (mWifiCallingPreference != null) {
+                screen.removePreference(mWifiCallingPreference);
+            }
+            mSwitch = new Switch(this);
+            mSwitch.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 
-        PreferenceCategory prefCate = (PreferenceCategory) findPreference(KEY_WIFI_CALLING_PREFERRED_SCREEN);
-        int current = 0;
-        String[] titleArray = getBaseContext().getResources().getStringArray(
-                R.array.wifi_call_preferences_entries_title);
-        String[] summaryArray = getBaseContext().getResources().getStringArray(
-                R.array.wifi_call_preferences_entries_summary);
-        String[] entriesArray = getBaseContext().getResources().getStringArray(
-                R.array.wifi_call_preferences_entries);
-        for (int i=0;i<titleArray.length;i++) {
-            CheckBoxPreference pref = new CheckBoxPreference(this);
-            pref.setKey(titleArray[i]);
-            pref.setOnPreferenceClickListener(this);
-            pref.setChecked(i == current ? true : false);
-            pref.setTitle(titleArray[i]);
-            pref.setSummary(summaryArray[i]);
-            prefCate.addPreference(pref);
-            mCheckboxPref.add(pref);
-            mPrefenceIndex.put(titleArray[i], Integer.parseInt(entriesArray[i]));
-            if (pref.isChecked()) mSelection = Integer.parseInt(entriesArray[i]);
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView,
+                        boolean isChecked) {
+                    Log.i(TAG, "onCheckedChanged isChecked : " + isChecked);
+                    setWifiCallingPreference(
+                            isChecked ? ImsConfig.WifiCallingValueConstants.ON
+                                    : ImsConfig.WifiCallingValueConstants.OFF,
+                            mSelection);
+                    mPrefCate.setEnabled(isChecked);
+                }
+            });
+            ActionBar actionBar = getActionBar();
+            if (actionBar != null && mSwitch != null) {
+                actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM,
+                        ActionBar.DISPLAY_SHOW_CUSTOM);
+                actionBar.setCustomView(mSwitch, new ActionBar.LayoutParams(
+                        ActionBar.LayoutParams.WRAP_CONTENT,
+                        ActionBar.LayoutParams.WRAP_CONTENT,
+                        Gravity.CENTER_VERTICAL | Gravity.RIGHT));
+            }
+            mPrefCate = (PreferenceCategory) findPreference(KEY_WIFI_CALLING_PREFERRED_SCREEN);
+            int current = 0;
+            String[] titleArray = getBaseContext().getResources().getStringArray(
+                    R.array.wifi_call_preferences_entries_title);
+            String[] summaryArray = getBaseContext().getResources().getStringArray(
+                    R.array.wifi_call_preferences_entries_summary);
+            String[] entriesArray = getBaseContext().getResources().getStringArray(
+                    R.array.wifi_call_preferences_entries);
+            for (int i=0;i<titleArray.length;i++) {
+                CheckBoxPreference pref = new CheckBoxPreference(this);
+                pref.setKey(titleArray[i]);
+                pref.setOnPreferenceClickListener(this);
+                pref.setChecked(i == current ? true : false);
+                pref.setTitle(titleArray[i]);
+                pref.setSummary(summaryArray[i]);
+                mPrefCate.addPreference(pref);
+                mCheckboxPref.add(pref);
+                mPrefenceIndex.put(titleArray[i], Integer.parseInt(entriesArray[i]));
+                if (pref.isChecked()) mSelection = Integer.parseInt(entriesArray[i]);
+            }
+            screen.removePreference(mPrefCate);
+            if (mStatus == 2) {
+                changeToPreference();
+            }
         }
     }
 
@@ -327,9 +343,7 @@ public class WifiCallingSettings extends PreferenceActivity
         if (isCarriers()) {
             boolean isTurnOn = getWifiCallingSettingFromStatus(status);
             mSwitch.setChecked(isTurnOn);
-            getPreferenceScreen().findPreference(
-                    KEY_WIFI_CALLING_PREFERRED_SCREEN)
-                    .setEnabled(isTurnOn);
+            mPrefCate.setEnabled(isTurnOn);
             Set<String> set = mPrefenceIndex.keySet();
             for(String prefence : set){
                 if(mPrefenceIndex.get(prefence).equals(preference)){
@@ -404,6 +418,10 @@ public class WifiCallingSettings extends PreferenceActivity
 
     @Override
     public boolean onPreferenceClick(Preference preference) {
+        if (preference.getKey().equals(KEY_WIFI_CALLING_CONNECTION_PREFERENCE)) {
+            changeToPreference();
+            return true;
+        }
         updateSelection(preference.getKey());
         int state = mSwitch.isChecked() ?
                 ImsConfig.WifiCallingValueConstants.ON :
@@ -431,6 +449,29 @@ public class WifiCallingSettings extends PreferenceActivity
             }
         }
         Log.i(TAG, "updateSelection with mSelect : " + mSelection + " Checkbox : " + preferenceKey);
+    }
+
+    @Override
+    public void onBackPressed() {
+        PreferenceScreen screen = getPreferenceScreen();
+        if (screen.findPreference(KEY_WIFI_CALLING_PREFERRED_SCREEN) != null) {
+            screen.removePreference(mPrefCate);
+            screen.addPreference(mWifiCallingConnectPre);
+            screen.addPreference(mWifiCallingHelp);
+            mSwitch.setVisibility(View.GONE);
+            mStatus = 1;
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    private void changeToPreference(){
+        mStatus = 2;
+        PreferenceScreen screen = getPreferenceScreen();
+        screen.removePreference(mWifiCallingConnectPre);
+        screen.removePreference(mWifiCallingHelp);
+        screen.addPreference(mPrefCate);
+        mSwitch.setVisibility(View.VISIBLE);
     }
 
 }
