@@ -46,6 +46,10 @@
         android:entryValues="@array/wifi_calling_preference_values"
         android:dialogTitle="@string/wifi_calling_preference_dialog_title"
         android:dependency="wifi_calling" />
+    <Preference
+        android:key="wifi_calling_connection_pref"
+        android:title="@string/wifi_calling_connection_pref_title"
+        />
     <PreferenceCategory
         android:key="wifi_calling_prefence"
         android:title="@string/wifi_call_preferrd_setting_title" >
