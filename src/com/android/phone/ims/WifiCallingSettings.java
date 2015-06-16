@@ -353,6 +353,7 @@ public class WifiCallingSettings extends PreferenceActivity
             }
             Intent intent = new Intent(isTurnOn ? "com.android.wificall.TURNON"
                     : "com.android.wificall.TURNOFF");
+            intent.putExtra("preference", preference);
             sendBroadcast(intent);
         }
         if (mWifiCallingPreference != null) {
