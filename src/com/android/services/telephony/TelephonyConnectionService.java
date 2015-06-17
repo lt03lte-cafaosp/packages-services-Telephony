@@ -628,9 +628,8 @@ public class TelephonyConnectionService extends ConnectionService {
 
         if (phoneId == -1) {
             for (int phId = 0; phId < phoneCount; phId++) {
-                int[] subId = scontrol.getSubId(phId);
                 if ((tm.getSimState(phId) == TelephonyManager.SIM_STATE_READY) &&
-                        (scontrol.getSubState(subId[0]) == SubscriptionManager.ACTIVE)) {
+                        (PhoneFactory.getSubInfoRecordUpdater().IsStackActivated(phId) == true)) {
                     phoneId = phId;
                     if (phoneId == voicePhoneId) break;
                 }
