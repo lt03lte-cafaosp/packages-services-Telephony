@@ -357,6 +357,12 @@ public class NotificationMgr {
                     .setSound(ringtoneUri)
                     .setColor(mContext.getResources().getColor(R.color.dialer_theme_color))
                     .setOngoing(false);
+            //User should not be able to clear VMNotification without
+            //reading it by clear or swipe option.
+            if (mContext.getResources().getBoolean(
+                R.bool.config_show_vm_notification_always)){
+                builder.setOngoing(true);
+            }
 
             CallFeaturesSetting.migrateVoicemailVibrationSettingsIfNeeded(prefs, phoneId);
             final boolean vibrate = prefs.getBoolean(
