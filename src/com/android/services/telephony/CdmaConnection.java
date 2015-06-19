@@ -98,6 +98,10 @@ final class CdmaConnection extends TelephonyConnection {
         if (mIsCallWaiting && !isImsCall) {
             startCallWaitingTimer();
         }
+        // Register receiver for ECBM exit
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED);
+        TelephonyGlobals.getApplicationContext().registerReceiver(mEcmExitReceiver, filter);
     }
 
     CdmaConnection(
@@ -114,6 +118,10 @@ final class CdmaConnection extends TelephonyConnection {
         if (mIsCallWaiting) {
             startCallWaitingTimer();
         }
+        // Register receiver for ECBM exit
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED);
+        TelephonyGlobals.getApplicationContext().registerReceiver(mEcmExitReceiver, filter);
     }
 
     /** {@inheritDoc} */
@@ -209,18 +217,14 @@ final class CdmaConnection extends TelephonyConnection {
     void setOriginalConnection(com.android.internal.telephony.Connection originalConnection) {
         super.setOriginalConnection(originalConnection);
         getPhone().registerForLineControlInfo(mHandler, MSG_CDMA_LINE_CONTROL_INFO_REC, null);
-        // Register receiver for ECBM exit
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED);
-        getPhone().getContext().registerReceiver(mEcmExitReceiver, filter);
     }
 
     @Override
     protected void close() {
         if (getPhone() != null) {
             getPhone().unregisterForLineControlInfo(mHandler);
-            getPhone().getContext().unregisterReceiver(mEcmExitReceiver);
         }
+        TelephonyGlobals.getApplicationContext().unregisterReceiver(mEcmExitReceiver);
         super.close();
         mConnectionTimeReset = false;
     }
@@ -229,7 +233,6 @@ final class CdmaConnection extends TelephonyConnection {
     void clearOriginalConnection() {
         if (getPhone() != null) {
             getPhone().unregisterForLineControlInfo(mHandler);
-            getPhone().getContext().unregisterReceiver(mEcmExitReceiver);
         }
         super.clearOriginalConnection();
     }
