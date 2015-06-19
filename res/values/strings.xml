@@ -558,6 +558,9 @@
     <!-- In-call screen: call failure reason (call denied because call barring
             is ON on MT side ) -->
     <string name="callFailed_incoming_cb_enabled">Party has barred all Incoming calls.</string>
+    <!-- In-call screen: call failure reason (call failed because LTE to 3G/2G Handover
+            is not feasible ) -->
+    <string name="callFailed_hoNotFeasible">Video call was ended as LTE to 3G/2G Handover is not feasible</string>
     <!-- In-call screen: status label for an incoming call that is not answered and forwarded  -->
     <string name="callUnanswered_forwarded">Call Unanswered and Forwarded</string>
 
@@ -665,6 +668,25 @@
         <item>"0"</item>
     </string-array>
 
+    <!-- Specific for regional carriers, display network mode as LTE ON, LTE OFF, and 2G only -->
+    <string name="preferred_network_mode_lte_on">LTE On(Automatic LTE/4G/3G/2G)</string>
+    <string name="preferred_network_mode_lte_off">LTE Off(Automatic 4G/3G/2G)</string>
+    <string name="preferred_network_mode_gsm_only">2G Only</string>
+    <string name="preferred_network_mode_lte_gsm_wcdma_summary_regional">Preferred network mode: LTE On(Automatic LTE/4G/3G/2G)</string>
+    <string name="preferred_network_mode_wcdma_perf_summary_regional">Preferred network mode: LTE Off(Automatic 4G/3G/2G)</string>
+    <string name="preferred_network_mode_gsm_only_summary_regional">Preferred network mode: 2G Only</string>
+
+    <string-array name="preferred_network_mode_choices_regional">
+        <item>@string/preferred_network_mode_lte_on</item>
+        <item>@string/preferred_network_mode_lte_off</item>
+        <item>@string/preferred_network_mode_gsm_only</item>
+    </string-array>
+    <string-array name="preferred_network_mode_values_regional" translatable="false">
+        <item>"9"</item>
+        <item>"0"</item>
+        <item>"1"</item>
+    </string-array>
+
     <string-array name="preferred_network_mode_choices_cmcc" translatable="false">
         <item>@string/preferred_network_mode_4g_3g_2g_auto</item>
         <item>@string/preferred_network_mode_3g_2g_auto</item>
@@ -697,6 +719,7 @@
 
     <!-- USSD aggregation dialog box: separator strings between messages (new-lines will be added before and after) -->
     <string name="ussd_dialog_sep" translatable="false">----------</string>
+    <string name=" hide_error_from_network_text">Unable to Process Request</string>
 
     <string name="gsm_umts_options">GSM/UMTS Options</string>
     <string name="cdma_options">CDMA Options</string>
@@ -1200,6 +1223,47 @@
     <string name="card_title_dialing">Dialing</string>
     <!-- In-call screen: status label for a re-dialing call -->
     <string name="card_title_redialing">Retrying</string>
+    <!-- In-call screen: status label for Unconditional Call Forwarding enabled  -->
+    <string name="card_title_unconditionalCF">Call Forward Unconditional is enabled</string>
+    <!-- In-call screen: status label for Conditional Call Forwarding enabled  -->
+    <string name="card_title_conditionalCF">Call Forward Conditional is enabled</string>
+    <!-- In-call screen: status label for a forwarded MO call  -->
+    <string name="card_title_MOcall_forwarding">Outgoing Forwarded Call</string>
+    <!-- In-call screen: status label when Call waiting is enabled on remote party  -->
+    <string name="card_title_calliswaiting">Call Waiting</string>
+    <!-- In-call screen: status label for MO call, when the caller & callee both
+            belng to a CUG group -->
+    <string name="card_title_cugcall">CUG Call</string>
+    <!-- In-call screen: status label when MO calls are barred -->
+    <string name="card_title_outgoing_barred">Outgoing Calls Barred</string>
+    <!-- In-call screen: status label for MO calls, when incoming calls are barred
+            at remote party -->
+    <string name="card_title_incoming_barred">Incoming Calls Barred</string>
+    <!-- In-call screen: status label for MO calls when CLIR Suppression is rejected -->
+    <string name="card_title_clir_suppression_rejected">CLIR Suppression Rejected</string>
+    <!-- In-call screen: status label when MO call gets deflected to another party -->
+    <string name="card_title_call_deflected">Call Deflected</string>
+    <!-- In-call screen: status label for incoming call being forwarded to other remote party  -->
+    <string name="card_title_MTcall_forwarding">Incoming Call is Forwarded</string>
+    <!-- In-call screen: status label for incoming call forwarded from other remote party -->
+    <string name="card_title_forwarded_MTcall">Forwarded Incoming Call</string>
+    <!-- In-call screen: status label for incoming call which is answered & then put on hold  -->
+    <string name="card_title_callonhold">Put on Hold</string>
+    <!-- In-call screen: status label for incoming call put on hold & then retreived back -->
+    <string name="card_title_callretrieved">Call Retreived</string>
+    <!-- In-call screen: status label for incoming call which is part of MultiParty Call -->
+    <string name="card_title_multipartycall">MultiParty Call</string>
+    <!-- In-call screen: status label for incoming call which is answered,
+            put on hold & then released -->
+    <string name="card_title_callonhold_released">Call Released</string>
+    <!-- In-call screen: status label for incoming call forward check received -->
+    <string name="card_title_forwardcheckreceived">Forward Check Received</string>
+    <!-- In-call screen: status label for incoming call connecting through ECT -->
+    <string name="card_title_callconnectingect">Call Connecting ECT</string>
+    <!-- In-call screen: status label for incoming call connected through ECT -->
+    <string name="card_title_callconnectedect">Call Connected ECT</string>
+    <!-- In-call screen: status label for incoming call is a deflected call -->
+    <string name="card_title_deflectedcall">Deflected Call</string>
     <!-- In-call screen: status label for a conference call -->
     <string name="card_title_conf_call">Conference call</string>
     <!-- In-call screen: status label for an incoming call -->
@@ -1215,6 +1279,8 @@
     <!-- In-call screen: special status label that shows your own phone
          number during emergency callback mode (ECM) [CHAR LIMIT=30] -->
     <string name="card_title_my_phone_number">My number is <xliff:g id="my_phone_number">%s</xliff:g></string>
+    <!-- call forward history -->
+    <string name="card_title_history"> History: </string>
 
     <!-- Notification strings -->
     <!-- The "label" of the in-call Notification for a dialing call, used
@@ -1657,6 +1723,11 @@
     <string name="CFDeactivate">Deactivate</string>
     <string name="null_phone_number">Phone number cannot be null !</string>
     <string name="labelCFDeactAll">Deactivate All</string>
+    <string name="international_prefix_title">International prefix</string>
+    <string name="international_prefix_summery">Manage international prefix</string>
+    <string name="international_prefix_enable">Enable</string>
+    <string name="international_prefix_edit">Edit Number</string>
+    <string name="international_prefix_not_set">Not set</string>
  <!-- Manual PLMN scan data disconnect dialog text -->
     <string name="disconnect_data_confirm">Data service temporarily would be disconnected. Are you sure?</string>
 
@@ -1709,4 +1780,39 @@
     <string name="ims_get_packet_error_count_failed">Failed to get packet error count</string>
     <string name="ims_get_packet_count_label">click here to get packet count</string>
     <string name="ims_get_packet_error_count_label">click here to get packet error count</string>
+
+    <!-- Wifi Call Settings -->
+    <string name="wifi_call_setting">Wifi Call Settings</string>
+    <string name="wifi_calling_title">Wifi Calling</string>
+    <string name="wifi_calling_summary">Enable Wifi Calling and Select Wifi Preference for Wifi Calling</string>
+
+    <string name="wifi_calling_preference_title">Wifi Calling Preference</string>
+    <string name="wifi_calling_preference_dialog_title">Wifi Calling Preference</string>
+    <string name="wifi_calling_preference_summary">Change the wifi calling preference</string>
+    <string name="ims_set_wifi_calling_preference_failed">Failed to set wifi calling preference</string>
+
+    <string name="wifi_pref_none">No Preference Selected</string>
+    <string name="wifi_preferred">Wifi Preferred</string>
+    <string name="wifi_only">Wifi Only</string>
+    <string name="cellular_preferred">Cellular Preferred</string>
+    <string name="cellular_only">Cellular Only</string>
+
+    <string-array name="wifi_calling_preference_choices">
+        <item>@string/wifi_preferred</item>
+        <item>@string/wifi_only</item>
+        <item>@string/cellular_preferred</item>
+        <item>@string/cellular_only</item>
+    </string-array>
+
+    <string-array name="wifi_calling_preference_values" translatable="false">
+        <item>"1"</item>
+        <item>"2"</item>
+        <item>"3"</item>
+        <item>"4"</item>
+    </string-array>
+
+    <!-- IMS to CS Retry setting title.  [CHAR LIMIT=30] -->
+    <string name="ims_to_cs_retry_title">CS Retry</string>
+    <!-- IMS to CS Retry setting summary.  [CHAR LIMIT=80] -->
+    <string name="ims_to_cs_retry_summary">Auto Retry with regular voice communications (Recommended)</string>
 </resources>

@@ -65,4 +65,10 @@
         android:persistent="false"
         android:summary="@string/enhanced_4g_lte_mode_summary"/>
 
+    <SwitchPreference
+        android:key="ims_to_cs_retry"
+        android:title="@string/ims_to_cs_retry_title"
+        android:persistent="false"
+        android:summary="@string/ims_to_cs_retry_summary"/>
+
 </PreferenceScreen>

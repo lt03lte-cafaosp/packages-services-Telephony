@@ -138,6 +138,7 @@ public class DisconnectCauseUtil {
             case android.telephony.DisconnectCause.DIAL_MODIFIED_TO_SS:
             case android.telephony.DisconnectCause.DIAL_MODIFIED_TO_DIAL:
             case android.telephony.DisconnectCause.ERROR_UNSPECIFIED:
+            case android.telephony.DisconnectCause.HO_NOT_FEASIBLE:
                 return DisconnectCause.ERROR;
 
             case android.telephony.DisconnectCause.DIALED_MMI:
@@ -194,6 +195,15 @@ public class DisconnectCauseUtil {
             case android.telephony.DisconnectCause.PROTOCOL_ERROR_UNSPECIFIED:
             case android.telephony.DisconnectCause.INTERWORKING_UNSPECIFIED:
                 return DisconnectCause.OTHER;
+
+            case android.telephony.DisconnectCause.LOW_BATTERY:
+                return DisconnectCause.LOW_BATTERY;
+
+            case android.telephony.DisconnectCause.CALL_RETRY_BY_SILENT_REDIAL:
+                return DisconnectCause.CALL_RETRY_BY_SILENT_REDIAL;
+
+            case android.telephony.DisconnectCause.CALL_RETRY_BY_USER_CONSENT:
+                return DisconnectCause.CALL_RETRY_BY_USER_CONSENT;
 
             default:
                 return DisconnectCause.UNKNOWN;
@@ -268,6 +278,10 @@ public class DisconnectCauseUtil {
                 resourceId = R.string.callFailed_unobtainable_number;
                 break;
 
+            case android.telephony.DisconnectCause.HO_NOT_FEASIBLE:
+                resourceId = R.string.callFailed_hoNotFeasible;
+                break;
+
             default:
                 break;
         }
@@ -293,8 +307,6 @@ public class DisconnectCauseUtil {
                         SuppServiceNotification.MT_CODE_ADDITIONAL_CALL_FORWARDED) {
                     resourceId = R.string.callUnanswered_forwarded;
                 }
-                mNotificationCode = 0xFF;
-                mNotificationType = 0xFF;
                 break;
             }
 
@@ -310,8 +322,6 @@ public class DisconnectCauseUtil {
                 } else {
                     resourceId = R.string.callFailed_cb_enabled;
                 }
-                mNotificationCode = 0xFF;
-                mNotificationType = 0xFF;
                 break;
             }
 
@@ -584,6 +594,10 @@ public class DisconnectCauseUtil {
                 resourceId = R.string.callFailed_non_selected_user_clearing;
                 break;
 
+            case android.telephony.DisconnectCause.HO_NOT_FEASIBLE:
+                resourceId = R.string.callFailed_hoNotFeasible;
+                break;
+
             case android.telephony.DisconnectCause.OUTGOING_CANCELED:
                 // We don't want to show any dialog for the canceled case since the call was
                 // either canceled by the user explicitly (end-call button pushed immediately)
@@ -623,6 +637,7 @@ public class DisconnectCauseUtil {
 
             case android.telephony.DisconnectCause.CDMA_DROP:
             case android.telephony.DisconnectCause.OUT_OF_SERVICE:
+            case android.telephony.DisconnectCause.HO_NOT_FEASIBLE:
                 return ToneGenerator.TONE_CDMA_CALLDROP_LITE;
 
             case android.telephony.DisconnectCause.NO_ROUTE_TO_DESTINAON:
@@ -642,8 +657,29 @@ public class DisconnectCauseUtil {
 
             case android.telephony.DisconnectCause.IMS_MERGED_SUCCESSFULLY:
                 // Do not play any tones if disconnected because of a successful merge.
+            /* Do not play any tones if disconnected because of a retry request */
+            case android.telephony.DisconnectCause.CALL_RETRY_BY_SILENT_REDIAL:
+            case android.telephony.DisconnectCause.CALL_RETRY_BY_USER_CONSENT:
             default:
                 return ToneGenerator.TONE_UNKNOWN;
+        }
+    }
+
+    /**
+     * Convert the {@link android.telecom.DisconnectCause} disconnect code into a
+     * {@link android.telephony.DisconnectCause} disconnect code.
+     * @return The disconnect code as defined in {@link android.telephone.DisconnectCause}.
+     */
+    public static int toTelephonyDisconnectCauseCode(int telecomDisconnectCause) {
+        switch (telecomDisconnectCause) {
+            case DisconnectCause.LOW_BATTERY:
+                return android.telephony.DisconnectCause.LOW_BATTERY;
+            case DisconnectCause.LOCAL:
+                return android.telephony.DisconnectCause.LOCAL;
+            case DisconnectCause.REJECTED:
+                return android.telephony.DisconnectCause.INCOMING_REJECTED;
+            default:
+                return android.telephony.DisconnectCause.NOT_VALID;
         }
     }
 }

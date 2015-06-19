@@ -34,6 +34,7 @@ import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.telecom.VideoProfile;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.widget.Toast;
@@ -51,6 +52,7 @@ import com.android.internal.telephony.PhoneConstants;
 import com.android.phone.R;
 
 import java.lang.Override;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -173,7 +175,7 @@ abstract class TelephonyConnection extends Connection {
                     break;
 
                 case MSG_SET_VIDEO_STATE:
-                    setVideoState(msg.arg1);
+                    updateVideoState(msg.arg1);
                     break;
 
                 case MSG_SET_LOCAL_VIDEO_CAPABILITY:
@@ -266,6 +268,7 @@ abstract class TelephonyConnection extends Connection {
                 // hold
                 callForwardTxt = TelephonyGlobals.getApplicationContext()
                         .getString(R.string.card_title_callonhold);
+                mHeldRemotely = true;
                 break;
 
             case SuppServiceNotification.MT_CODE_CALL_RETRIEVED:
@@ -273,6 +276,7 @@ abstract class TelephonyConnection extends Connection {
                 //hold & retrives it back.
                 callForwardTxt = TelephonyGlobals.getApplicationContext().getString(
                         R.string.card_title_callretrieved);
+                mHeldRemotely = false;
                 break;
 
             case SuppServiceNotification.MT_CODE_MULTI_PARTY_CALL:
@@ -514,7 +518,7 @@ abstract class TelephonyConnection extends Connection {
 
     /* package */ com.android.internal.telephony.Connection mOriginalConnection;
     private Call.State mOriginalConnectionState = Call.State.IDLE;
-    private Bundle mOriginalConnectionExtras;
+    private Bundle mOriginalConnectionExtras = new Bundle();
 
     private boolean mWasImsConnection;
 
@@ -589,6 +593,12 @@ abstract class TelephonyConnection extends Connection {
         Log.v(this, "onDisconnect");
         PhoneNumberUtils.resetCountryDetectorInfo();
         hangup(android.telephony.DisconnectCause.LOCAL);
+    }
+
+    @Override
+    public void onDisconnectWithReason(int disconnectCause) {
+        Log.v(this, "onDisconnect");
+        hangup(DisconnectCauseUtil.toTelephonyDisconnectCauseCode(disconnectCause));
     }
 
     /**
@@ -682,6 +692,15 @@ abstract class TelephonyConnection extends Connection {
         Log.v(this, "onReject");
         if (isValidRingingCall()) {
             hangup(android.telephony.DisconnectCause.INCOMING_REJECTED);
+        }
+        super.onReject();
+    }
+
+    @Override
+    public void onRejectWithReason(int disconnectCause) {
+        Log.v(this, "onRejectWithReason, disconnect cause: " + disconnectCause);
+        if (isValidRingingCall()) {
+            hangup(DisconnectCauseUtil.toTelephonyDisconnectCauseCode(disconnectCause));
         }
         super.onReject();
     }
@@ -857,15 +876,26 @@ abstract class TelephonyConnection extends Connection {
     protected void onSuppServiceNotification(SuppServiceNotification notification) {
         Log.d(this, "SS Notification: " + notification);
 
-        // hold/retrieved notifications can come from either gsm or ims phones
-        if (notification.notificationType == SuppServiceNotification.NOTIFICATION_TYPE_MT) {
-            if (notification.code == SuppServiceNotification.MT_CODE_CALL_ON_HOLD) {
-                mHeldRemotely = true;
-            } else if (notification.code == SuppServiceNotification.MT_CODE_CALL_RETRIEVED) {
-                mHeldRemotely = false;
+        final String notificationText = getSuppSvcNotificationText(notification);
+        if (notificationText != null && !notificationText.isEmpty()) {
+            if (TelephonyManager.getDefault().getPhoneCount() > 1) {
+                SubscriptionInfo sub = SubscriptionManager.from(
+                       TelephonyGlobals.getApplicationContext())
+                       .getActiveSubscriptionInfoForSimSlotIndex(getPhone().getPhoneId());
+                String displayName =  ((sub != null)) ?
+                       sub.getDisplayName().toString() : mSubName[getPhone().getPhoneId()];
+                mDisplayName = displayName + ":" + notificationText;
+            } else {
+                mDisplayName = notificationText;
             }
+            if (notification.history != null && notification.history.length > 0) {
+                mDisplayName = mDisplayName + TelephonyGlobals.getApplicationContext().
+                        getString(R.string.card_title_history) +
+                        Arrays.toString(notification.history);
+            }
+            Toast.makeText(TelephonyGlobals.getApplicationContext(),
+                     mDisplayName, Toast.LENGTH_LONG).show();
         }
-
         setCallProperties(computeCallProperties());
     }
 
@@ -937,7 +967,7 @@ abstract class TelephonyConnection extends Connection {
                 if (isValidRingingCall()) {
                     Call call = getCall();
                     if (call != null) {
-                        call.hangup();
+                        call.hangupWithReason(telephonyDisconnectCode);
                     } else {
                         Log.w(this, "Attempting to hangup a connection without backing call.");
                     }
@@ -946,7 +976,7 @@ abstract class TelephonyConnection extends Connection {
                     // to support hanging-up specific calls within a conference call. If we invoked
                     // call.hangup() while in a conference, we would end up hanging up the entire
                     // conference call instead of the specific connection.
-                    mOriginalConnection.hangup();
+                    mOriginalConnection.hangupWithReason(telephonyDisconnectCode);
                 }
             } catch (CallStateException e) {
                 Log.e(this, e, "Call to Connection.hangup failed with exception");
@@ -1049,10 +1079,10 @@ abstract class TelephonyConnection extends Connection {
     protected void setExtras() {
         Bundle extras = null;
         if (mOriginalConnection != null) {
-            extras = mOriginalConnection.getCall().getExtras();
+            extras = mOriginalConnection.getExtras();
             if (extras != null) {
                 // Check if extras have changed and need updating.
-                if (!Objects.equals(mOriginalConnectionExtras, extras)) {
+                if (!isEqual(mOriginalConnectionExtras, extras)) {
                     if (DBG) {
                         Log.d(TelephonyConnection.this, "Updating extras:");
                         for (String key : extras.keySet()) {
@@ -1064,16 +1094,39 @@ abstract class TelephonyConnection extends Connection {
                             }
                         }
                     }
-                    mOriginalConnectionExtras = extras;
+                    mOriginalConnectionExtras.clear();
+                    mOriginalConnectionExtras.putAll(extras);
                     super.setExtras(extras);
                 } else {
                     Log.d(TelephonyConnection.this,
                         "Extras update not required");
                 }
             } else {
-                Log.d(TelephonyConnection.this, "Null call extras");
+                Log.d(TelephonyConnection.this, "setExtras extras: " + extras);
             }
         }
+    }
+
+    private static boolean isEqual(Bundle extras, Bundle newExtras) {
+        if (extras == null || newExtras == null) {
+            return extras == newExtras;
+        }
+
+        if (extras.size() != newExtras.size()) {
+            return false;
+        }
+
+        for(String key : extras.keySet()) {
+            if (key != null) {
+                final Object value = extras.get(key);
+                final Object newValue = newExtras.get(key);
+                if ((value == null && newValue != null) ||
+                        (value != null && !value.equals(newValue))) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     void updateState() {
@@ -1116,6 +1169,8 @@ abstract class TelephonyConnection extends Connection {
                                 mSsNotification.notificationType,
                                 mSsNotification.code));
                         mSsNotification = null;
+                        DisconnectCauseUtil.mNotificationCode = 0xFF;
+                        DisconnectCauseUtil.mNotificationType = 0xFF;
                     } else if(isEmergencyNumber &&
                             (TelephonyManager.getDefault().getPhoneCount() > 1) &&
                             ((cause == android.telephony.DisconnectCause.EMERGENCY_TEMP_FAILURE) ||
@@ -1534,6 +1589,14 @@ abstract class TelephonyConnection extends Connection {
         for (TelephonyConnectionListener l : mTelephonyListeners) {
             l.onOriginalConnectionConfigured(this);
         }
+    }
+
+    /**
+     * Set the extras and set video state to the new state.
+     */
+    private void updateVideoState(int videoState) {
+        setExtras();
+        setVideoState(videoState);
     }
 
     /**

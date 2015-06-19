@@ -84,6 +84,7 @@ public class MobileNetworkSettings extends PreferenceActivity
     private static final String BUTTON_UPLMN_KEY = "button_uplmn_key";
     private static final String BUTTON_ENABLED_NETWORKS_KEY = "enabled_networks_key";
     private static final String BUTTON_4G_LTE_KEY = "enhanced_4g_lte";
+    private static final String BUTTON_CS_RETRY_KEY = "ims_to_cs_retry";
     private static final String BUTTON_CELL_BROADCAST_SETTINGS = "cell_broadcast_settings";
     private static final String KEY_PREFERRED_LTE = "toggle_preferred_lte";
     static final int preferredNetworkMode = Phone.PREFERRED_NT_MODE;
@@ -98,6 +99,7 @@ public class MobileNetworkSettings extends PreferenceActivity
     private ListPreference mButtonEnabledNetworks;
     private SwitchPreference mButtonDataRoam;
     private SwitchPreference mButton4glte;
+    private SwitchPreference mButtoncsretry;
     private Preference mLteDataServicePref;
     private CheckBoxPreference mButtonPreferredLte;
 
@@ -214,6 +216,8 @@ public class MobileNetworkSettings extends PreferenceActivity
         } else if (preference == mButtonPreferredLte) {
             setPreferredLte(mButtonPreferredLte.isChecked());
             return true;
+        } else if (preference.getKey().equals(BUTTON_CS_RETRY_KEY)) {
+            return true;
         } else {
             // if the button is anything but the simple toggle preference,
             // we'll need to disable all preferences to reject all click
@@ -229,6 +233,13 @@ public class MobileNetworkSettings extends PreferenceActivity
         android.provider.Settings.Global.putInt(
                   mPhone.getContext().getContentResolver(),
                   android.provider.Settings.Global.ENHANCED_4G_MODE_ENABLED, value);
+    }
+
+    private void setCsRetry(boolean turnOn) {
+        int value = (turnOn) ? 1:0;
+        android.provider.Settings.Global.putInt(
+                  mPhone.getContext().getContentResolver(),
+                  android.provider.Settings.Global.IMS_TO_CS_RETRY_ENABLED, value);
     }
 
     @Override
@@ -254,6 +265,10 @@ public class MobileNetworkSettings extends PreferenceActivity
 
         mButton4glte.setOnPreferenceChangeListener(this);
         mButton4glte.setChecked(ImsManager.isEnhanced4gLteModeSettingEnabledByUser(this));
+
+        mButtoncsretry = (SwitchPreference)findPreference(BUTTON_CS_RETRY_KEY);
+        mButtoncsretry.setOnPreferenceChangeListener(this);
+        mButtoncsretry.setChecked(ImsManager.isCsRetrySettingEnabledByUser(this));
 
         try {
             Context con = createPackageContext("com.android.systemui", 0);
@@ -318,6 +333,15 @@ public class MobileNetworkSettings extends PreferenceActivity
                 break;
         }
 
+        boolean showRegionalNetworkMode = getResources().getBoolean(com.android.internal.R.bool
+                .config_regional_preferred_network_customization);
+
+        if(showRegionalNetworkMode){
+            mButtonPreferredNetworkMode.setEntries(
+                    R.array.preferred_network_mode_choices_regional);
+            mButtonPreferredNetworkMode.setEntryValues(
+                    R.array.preferred_network_mode_values_regional);
+        }
         if (ImsManager.isVolteEnabledByPlatform(this)
                 && ImsManager.isVolteProvisionedOnDevice(this)) {
             TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
@@ -428,6 +452,14 @@ public class MobileNetworkSettings extends PreferenceActivity
         if (!(ImsManager.isVolteEnabledByPlatform(this)
                 && ImsManager.isVolteProvisionedOnDevice(this))) {
             Preference pref = prefSet.findPreference(BUTTON_4G_LTE_KEY);
+            if (pref != null) {
+                prefSet.removePreference(pref);
+            }
+        }
+
+        // Enable CS Retry settings depending on whether support on platform
+        if (!ImsManager.isCsRetrySettingEnabledByPlatform(this)) {
+            Preference pref = prefSet.findPreference(BUTTON_CS_RETRY_KEY);
             if (pref != null) {
                 prefSet.removePreference(pref);
             }
@@ -662,6 +694,10 @@ public class MobileNetworkSettings extends PreferenceActivity
                 mPhone.setDataRoamingEnabled(false);
             }
             return true;
+        } else if (preference == mButtoncsretry) {
+            SwitchPreference csRetryPref = (SwitchPreference)preference;
+            csRetryPref.setChecked(!csRetryPref.isChecked());
+            setCsRetry(csRetryPref.isChecked());
         }
 
         // always let the preference setting proceed.
@@ -847,14 +883,27 @@ public class MobileNetworkSettings extends PreferenceActivity
     private void UpdatePreferredNetworkModeSummary(int NetworkMode) {
         int networkFeature = SystemProperties.getInt(Constants.PERSIST_RADIO_NETWORK_FEATURE,
                 Constants.NETWORK_MODE_DEFAULT);
+        boolean showRegionalNetworkMode = getResources().getBoolean(com.android.internal.R.bool
+                .config_regional_preferred_network_customization);
+
         switch(NetworkMode) {
             case Phone.NT_MODE_WCDMA_PREF:
-                mButtonPreferredNetworkMode.setSummary(
-                        R.string.preferred_network_mode_wcdma_perf_summary);
+                if(showRegionalNetworkMode){
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_wcdma_perf_summary_regional);
+                } else {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_wcdma_perf_summary);
+                }
                 break;
             case Phone.NT_MODE_GSM_ONLY:
-                mButtonPreferredNetworkMode.setSummary(
-                        R.string.preferred_network_mode_gsm_only_summary);
+                if(showRegionalNetworkMode){
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_gsm_only_summary_regional);
+                } else {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_gsm_only_summary);
+                }
                 break;
             case Phone.NT_MODE_WCDMA_ONLY:
                 mButtonPreferredNetworkMode.setSummary(
@@ -890,8 +939,13 @@ public class MobileNetworkSettings extends PreferenceActivity
                         R.string.preferred_network_mode_lte_summary);
                 break;
             case Phone.NT_MODE_LTE_GSM_WCDMA:
-                mButtonPreferredNetworkMode.setSummary(
-                        R.string.preferred_network_mode_lte_gsm_wcdma_summary);
+                if(showRegionalNetworkMode){
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_lte_gsm_wcdma_summary_regional);
+                } else {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_lte_gsm_wcdma_summary);
+                }
                 break;
             case Phone.NT_MODE_LTE_CDMA_AND_EVDO:
                 mButtonPreferredNetworkMode.setSummary(
