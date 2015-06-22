@@ -359,6 +359,7 @@ public class TelephonyConnectionService extends ConnectionService {
             if (mTelephonyConferenceController[i].shouldRecalculate()) {
                  mTelephonyConferenceController[i].recalculate();
             }
+            mImsConferenceController[i].recalculate();
         }
     }
 
