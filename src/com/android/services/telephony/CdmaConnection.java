@@ -93,6 +93,10 @@ final class CdmaConnection extends TelephonyConnection {
         if (mIsCallWaiting && !isImsCall) {
             startCallWaitingTimer();
         }
+        // Register receiver for ECBM exit
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED);
+        TelephonyGlobals.getApplicationContext().registerReceiver(mEcmExitReceiver, filter);
     }
 
     CdmaConnection(
@@ -109,6 +113,10 @@ final class CdmaConnection extends TelephonyConnection {
         if (mIsCallWaiting) {
             startCallWaitingTimer();
         }
+        // Register receiver for ECBM exit
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED);
+        TelephonyGlobals.getApplicationContext().registerReceiver(mEcmExitReceiver, filter);
     }
 
     /** {@inheritDoc} */
@@ -314,20 +322,9 @@ final class CdmaConnection extends TelephonyConnection {
     }
 
     @Override
-    void clearOriginalConnection() {
-        if (getPhone() != null) {
-            getPhone().getContext().unregisterReceiver(mEcmExitReceiver);
-        }
-        super.clearOriginalConnection();
-    }
-
-    @Override
-    void setOriginalConnection(com.android.internal.telephony.Connection con) {
-        super.setOriginalConnection(con);
-        // Register receiver for ECBM exit
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED);
-        getPhone().getContext().registerReceiver(mEcmExitReceiver, filter);
+    void close() {
+        TelephonyGlobals.getApplicationContext().unregisterReceiver(mEcmExitReceiver);
+        super.close();
     }
 
     /**

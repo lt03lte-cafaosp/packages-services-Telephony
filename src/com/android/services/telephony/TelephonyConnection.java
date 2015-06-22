@@ -1043,7 +1043,7 @@ protected final void updateCallCapabilities() {
         setActive();
     }
 
-    private void close() {
+    void close() {
         Log.v(this, "close");
         if (getPhone() != null) {
             if (getPhone().getState() == PhoneConstants.State.IDLE) {
