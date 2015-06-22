@@ -377,4 +377,6 @@ as an enum (NONE, HFA, OTASP). -->
        By default CELLULAR_ONLY, this can be customized
        depends on operator requirements -->
    <integer name="config_default_wifi_calling_preference">4</integer>
+   <!-- To  show VMNotification always until user reads it-->
+   <bool name="config_show_vm_notification_always" translatable="false">false</bool>
 </resources>
