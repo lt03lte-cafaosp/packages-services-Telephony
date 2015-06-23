@@ -361,6 +361,10 @@ as an enum (NONE, HFA, OTASP). -->
     <!-- config for showing dial option when fdn contact is selected.
          By default feature is disabled -->
     <bool name="config_fdn_direct_dial">false</bool>
+
+    <!-- Flag indicating if SIP settings ennbled -->
+    <bool name="sip_settings_on">true</bool>
+
     <!-- config for Ims account setting -->
     <bool name="config_show_ims_account_setting">true</bool>
     <integer name="config_default_vibrate_after_connected">1</integer>
