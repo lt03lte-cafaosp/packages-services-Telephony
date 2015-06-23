@@ -86,11 +86,7 @@ public class DisconnectCauseUtil {
                 return DisconnectCause.CANCELED;
 
             case android.telephony.DisconnectCause.INCOMING_MISSED:
-                if ((mNotificationType == 0xFF) && (mNotificationCode == 0xFF)) {
-                    return DisconnectCause.MISSED;
-                } else {
-                    return DisconnectCause.RESTRICTED;
-                }
+                return DisconnectCause.MISSED;
 
             case android.telephony.DisconnectCause.INCOMING_REJECTED:
                 return DisconnectCause.REJECTED;
