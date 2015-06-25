@@ -556,4 +556,5 @@
     <string name="china_mobile">中国移动</string>
     <string name="china_unicom">中国联通</string>
     <string name="china_telecom">中国电信</string>
+    <string name="sim_card_number_title">"卡 %1$d"</string>
 </resources>

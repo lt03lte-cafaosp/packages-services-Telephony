@@ -1580,4 +1580,5 @@
     <string name="ims_vt_call_quality_high">High</string>
     <string name="ims_vt_call_quality_unknown">Unknown</string>
     <string name="ims_vt_call_quality_set_failed">Failed to set video quality</string>
+    <string name="sim_card_number_title">SIM %1$d</string>
 </resources>
