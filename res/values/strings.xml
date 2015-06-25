@@ -1803,4 +1803,5 @@
     </string-array>
     <string name="wifi_calling_settings_menu_help">Help</string>
     <string name="wifi_calling_connection_pref_title">Connection preferences</string>
+    <string name="sim_card_number_title">SIM %1$d</string>
 </resources>
