@@ -351,15 +351,18 @@ public class WifiCallingSettings extends PreferenceActivity
                     updateSelection(prefence);
                 }
             }
-            Intent intent = new Intent(isTurnOn ? "com.android.wificall.TURNON"
-                    : "com.android.wificall.TURNOFF");
-            intent.putExtra("preference", preference);
-            sendBroadcast(intent);
         }
         if (mWifiCallingPreference != null) {
             mWifiCallingPreference.setValue(String.valueOf(preference));
             mWifiCallingPreference.setSummary(getWifiPreferenceString(preference));
         }
+    }
+
+    private void broadcastWifiCallingStatus(boolean isTurnOn, int preference) {
+        Intent intent = new Intent(isTurnOn ? "com.android.wificall.TURNON"
+                    : "com.android.wificall.TURNOFF");
+        intent.putExtra("preference", preference);
+        sendBroadcast(intent);
     }
 
     private void getWifiCallingPreference() {
@@ -389,6 +392,7 @@ public class WifiCallingSettings extends PreferenceActivity
             Log.e(TAG, "setWifiCallingPreference failed. Exception = " + e);
             return false;
         }
+        broadcastWifiCallingStatus(wifiCallingStatus == 1, wifiCallingPreference);
         return true;
     }
 
