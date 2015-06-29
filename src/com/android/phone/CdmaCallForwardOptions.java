@@ -41,6 +41,7 @@ import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.MenuItem;
 
 import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.PhoneConstants;
@@ -202,5 +203,15 @@ public class CdmaCallForwardOptions extends PreferenceActivity {
         if (cursor != null) {
             cursor.close();
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        final int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

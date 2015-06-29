@@ -19,6 +19,7 @@ package com.android.phone;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.AsyncResult;
@@ -40,7 +41,9 @@ public class CdmaCallOptions extends PreferenceActivity {
 
     public static final int CALL_WAITING = 7;
     private static final String BUTTON_VP_KEY = "button_voice_privacy_key";
+    private static final String BUTTON_CALLWAITING_SETTING_KEY = "button_cw_key";
     private CheckBoxPreference mButtonVoicePrivacy;
+    private PreferenceScreen mCallWaitingSettings;
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -54,6 +57,7 @@ public class CdmaCallOptions extends PreferenceActivity {
         initCallWaitingPref(this, phone.getPhoneId());
 
         mButtonVoicePrivacy = (CheckBoxPreference) findPreference(BUTTON_VP_KEY);
+        mCallWaitingSettings = (PreferenceScreen) findPreference(BUTTON_CALLWAITING_SETTING_KEY);
         if (phone.getPhoneType() != PhoneConstants.PHONE_TYPE_CDMA
                 || getResources().getBoolean(R.bool.config_voice_privacy_disable)) {
             //disable the entire screen
@@ -85,6 +89,12 @@ public class CdmaCallOptions extends PreferenceActivity {
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
         if (preference.getKey().equals(BUTTON_VP_KEY)) {
+            return true;
+        } else if (preference == mCallWaitingSettings) {
+            final Dialog dialog = mCallWaitingSettings.getDialog();
+            if (dialog != null) {
+                dialog.getActionBar().setDisplayHomeAsUpEnabled(false);
+            }
             return true;
         }
         return false;
