@@ -1885,8 +1885,11 @@ public class CallFeaturesSetting extends PreferenceActivity
                 }
                 if (!getResources().getBoolean(R.bool.config_voice_privacy_disable)) {
                     addPreferencesFromResource(R.xml.cdma_call_privacy);
-                    mCallWaitingSettings = (PreferenceScreen) findPreference(BUTTON_CALLWAITING_SETTING_KEY);
-                    CdmaCallOptions.initCallWaitingPref(this, mPhone.getPhoneId());
+                    if (getResources().getBoolean(R.bool.config_cdma_cw_cf_enabled)) {
+                        mCallWaitingSettings =
+                                (PreferenceScreen) findPreference(BUTTON_CALLWAITING_SETTING_KEY);
+                        CdmaCallOptions.initCallWaitingPref(this, mPhone.getPhoneId());
+                    }
                 }
             } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
                 if (getResources().getBoolean(R.bool.config_additional_call_setting)) {
