@@ -137,7 +137,7 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
 
         if (DBG) log("onCreate");
 
-        mPhone = PhoneGlobals.getInstance().getPhone();
+        mPhone = PhoneUtils.getPhoneFromIntent(getIntent());
 
         PreferenceScreen prefSet = getPreferenceScreen();
 
