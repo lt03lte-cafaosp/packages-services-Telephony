@@ -24,11 +24,15 @@ import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneBase;
+import com.android.internal.telephony.SubscriptionController;
 import com.android.internal.telephony.TelephonyCapabilities;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.cdma.CdmaInformationRecords.CdmaDisplayInfoRec;
 import com.android.internal.telephony.cdma.CdmaInformationRecords.CdmaSignalInfoRec;
 import com.android.internal.telephony.cdma.SignalToneUtil;
+import com.android.internal.telephony.uicc.IccCardStatus.CardState;
+import com.android.internal.telephony.uicc.UiccCard;
+import com.android.internal.telephony.uicc.UiccController;
 
 import android.app.ActivityManagerNative;
 import android.bluetooth.BluetoothAdapter;
@@ -308,7 +312,15 @@ public class CallNotifier extends Handler {
             @Override
             public void onCallForwardingIndicatorChanged(boolean cfi) {
                 Phone phone = PhoneUtils.getPhoneFromSubId(mSubId);
-                onCfiChanged(cfi, phone);
+                UiccController uiccController = UiccController.getInstance();
+                UiccCard uicc = uiccController.getUiccCard(phone.getPhoneId());
+                SubscriptionController sub = SubscriptionController.getInstance();
+                if (((uicc != null ) && uicc.getCardState().isCardPresent())
+                        && sub.getSubState(mSubId) == SubscriptionManager.ACTIVE) {
+                    onCfiChanged(cfi, phone);
+                } else {
+                    Log.d(LOG_TAG,"SIM deactivated or removed");
+                }
             }
         };
         return mPhoneStateListener[phoneId];
