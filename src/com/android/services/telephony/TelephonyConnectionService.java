@@ -226,8 +226,9 @@ public class TelephonyConnectionService extends ConnectionService {
         // when voice RAT is OOS but Data RAT is present.
         int state = phone.getServiceState().getState();
         if (state == ServiceState.STATE_OUT_OF_SERVICE) {
-            if (phone.getServiceState().getDataNetworkType() ==
-                    ServiceState.RIL_RADIO_TECHNOLOGY_LTE) {
+            int dataNetType = phone.getServiceState().getDataNetworkType();
+            if (dataNetType == ServiceState.RIL_RADIO_TECHNOLOGY_LTE ||
+                    dataNetType == ServiceState.RIL_RADIO_TECHNOLOGY_LTE_CA) {
                 state = phone.getServiceState().getDataRegState();
             }
         }
@@ -629,9 +630,8 @@ public class TelephonyConnectionService extends ConnectionService {
 
         if (phoneId == -1) {
             for (int phId = 0; phId < phoneCount; phId++) {
-                int[] subId = scontrol.getSubId(phId);
                 if ((tm.getSimState(phId) == TelephonyManager.SIM_STATE_READY) &&
-                        (scontrol.getSubState(subId[0]) == SubscriptionManager.ACTIVE)) {
+                        (PhoneFactory.getSubInfoRecordUpdater().IsStackActivated(phId) == true)) {
                     phoneId = phId;
                     if (phoneId == voicePhoneId) break;
                 }

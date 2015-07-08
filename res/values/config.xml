@@ -361,6 +361,10 @@ as an enum (NONE, HFA, OTASP). -->
     <!-- config for showing dial option when fdn contact is selected.
          By default feature is disabled -->
     <bool name="config_fdn_direct_dial">false</bool>
+
+    <!-- Flag indicating if SIP settings ennbled -->
+    <bool name="sip_settings_on">true</bool>
+
     <!-- config for Ims account setting -->
     <bool name="config_show_ims_account_setting">true</bool>
     <integer name="config_default_vibrate_after_connected">1</integer>
@@ -377,4 +381,6 @@ as an enum (NONE, HFA, OTASP). -->
        By default CELLULAR_ONLY, this can be customized
        depends on operator requirements -->
    <integer name="config_default_wifi_calling_preference">4</integer>
+   <!-- To  show VMNotification always until user reads it-->
+   <bool name="config_show_vm_notification_always" translatable="false">false</bool>
 </resources>

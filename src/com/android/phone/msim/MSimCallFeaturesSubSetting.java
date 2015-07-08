@@ -192,8 +192,11 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
 
     private static final String BUTTON_CF_EXPAND_KEY = "button_cf_expand_key";
     private static final String BUTTON_MORE_EXPAND_KEY = "button_more_expand_key";
+    private static final String BUTTON_CB_EXPAND_KEY = "button_callbarring_expand_key";
 
     private static final String BUTTON_IPPREFIX_KEY = "button_ipprefix_key";
+
+    private static final String BUTTON_CALLWAITING_SETTING_KEY = "button_cw_key";
 
     private static final String BUTTON_INTERNATIONAL_PREFIX_KEY
             = "button_international_prefix_key";
@@ -258,6 +261,7 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
     private PreferenceScreen mSubscriptionPrefCDMA;
     private PreferenceScreen mSubscriptionPrefEXPAND;
     private PreferenceScreen mSubscriptionPrefMOREEXPAND;
+    private PreferenceScreen mSubscriptionPrefCB;
 
     private PreferenceScreen mIPPrefixPreference;
     private PreferenceScreen mButtonVideoCallFallback;
@@ -291,6 +295,7 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
     private PreferenceScreen mVoicemailSettings;
     private Preference mVoicemailNotificationRingtone;
     private CheckBoxPreference mVoicemailNotificationVibrate;
+    private PreferenceScreen mCallWaitingSettings;
 
     private int mSubId;
     private int mSlotId;
@@ -599,6 +604,12 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
             Settings.System.putInt(getContentResolver(),
                     SETTINGS_INTERNATIONAL_PREFIX_ENABLE
                     + mSubId, mInternationalPrefixEnable.isChecked() ? 1 : 0);
+            return true;
+        } else if (preference == mCallWaitingSettings) {
+            final Dialog dialog = mCallWaitingSettings.getDialog();
+            if (dialog != null) {
+                dialog.getActionBar().setDisplayHomeAsUpEnabled(false);
+            }
             return true;
         }
         return false;
@@ -1648,6 +1659,7 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
                     prefSet.removePreference(fdnButton);
                 if (!getResources().getBoolean(R.bool.config_voice_privacy_disable)) {
                     addPreferencesFromResource(R.xml.cdma_call_privacy);
+                    mCallWaitingSettings = (PreferenceScreen) findPreference(BUTTON_CALLWAITING_SETTING_KEY);
                     CdmaCallOptions.initCallWaitingPref(this, mPhone.getPhoneId());
                     ((PreferenceScreen) findPreference(BUTTON_CF_EXPAND_KEY)).getIntent().putExtra(
                             SUBSCRIPTION_KEY, mPhone.getPhoneId());
@@ -1659,6 +1671,8 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
                         (PreferenceScreen) findPreference(BUTTON_MORE_EXPAND_KEY);
                 mSubscriptionPrefEXPAND.getIntent().putExtra(SUBSCRIPTION_KEY, mSubId);
                 mSubscriptionPrefMOREEXPAND.getIntent().putExtra(SUBSCRIPTION_KEY, mSubId);
+                mSubscriptionPrefCB = (PreferenceScreen) findPreference(BUTTON_CB_EXPAND_KEY);
+                mSubscriptionPrefCB.getIntent().putExtra(SUBSCRIPTION_KEY, mSubId);
             } else {
                 throw new IllegalStateException("Unexpected phone type: " + phoneType);
             }

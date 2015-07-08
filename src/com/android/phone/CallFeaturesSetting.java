@@ -206,6 +206,8 @@ public class CallFeaturesSetting extends PreferenceActivity
     private static final String BUTTON_GSM_UMTS_OPTIONS = "button_gsm_more_expand_key";
     private static final String BUTTON_CDMA_OPTIONS = "button_cdma_more_expand_key";
 
+    private static final String BUTTON_CALLWAITING_SETTING_KEY = "button_cw_key";
+
     private static final String VM_NUMBERS_SHARED_PREFERENCES_NAME = "vm_numbers";
 
     private static final String DEFAULT_OUTGOING_ACCOUNT_KEY = "default_outgoing_account";
@@ -307,6 +309,7 @@ public class CallFeaturesSetting extends PreferenceActivity
     private boolean isSpeedDialListStarted = false;
     private PreferenceScreen mButtonBlacklist;
     private Preference mSdnButton;
+    private PreferenceScreen mCallWaitingSettings;
 
     private class VoiceMailProvider {
         public VoiceMailProvider(String name, Intent intent) {
@@ -633,6 +636,12 @@ public class CallFeaturesSetting extends PreferenceActivity
             return true;
         } else if (preference == mButtonVideoCallPictureSelect) {
             startActivity(getVTCallImageSettingsIntent());
+            return true;
+        } else if (preference == mCallWaitingSettings) {
+            final Dialog dialog = mCallWaitingSettings.getDialog();
+            if (dialog != null) {
+                dialog.getActionBar().setDisplayHomeAsUpEnabled(false);
+            }
             return true;
         }
         return false;
@@ -1876,6 +1885,7 @@ public class CallFeaturesSetting extends PreferenceActivity
                 }
                 if (!getResources().getBoolean(R.bool.config_voice_privacy_disable)) {
                     addPreferencesFromResource(R.xml.cdma_call_privacy);
+                    mCallWaitingSettings = (PreferenceScreen) findPreference(BUTTON_CALLWAITING_SETTING_KEY);
                     CdmaCallOptions.initCallWaitingPref(this, mPhone.getPhoneId());
                 }
             } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
