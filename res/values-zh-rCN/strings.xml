@@ -680,4 +680,5 @@
     <string name="China_Unicom">中国联通</string>
     <string name="China_Telecom">中国电信</string>
     <string name="roamingTextSearching">"正在搜索服务"</string>
+    <string name="sim_card_number_title">"卡 %1$d"</string>
 </resources>
