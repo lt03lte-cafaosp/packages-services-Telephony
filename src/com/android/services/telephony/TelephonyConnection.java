@@ -1029,7 +1029,7 @@ abstract class TelephonyConnection extends Connection {
      * if there is no such actual call, or if the associated call is not incoming (See
      * {@link Call.State#isRinging}).
      */
-    private boolean isValidRingingCall() {
+    protected boolean isValidRingingCall() {
         if (getPhone() == null) {
             Log.v(this, "isValidRingingCall, phone is null");
             return false;
