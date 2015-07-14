@@ -38,10 +38,6 @@
 <iins>
     <iin pattern="^(?!8986)" app_type="APPTYPE_SIM" priority="0" network="18" />
     <iin pattern="^(?!8986)" app_type="APPTYPE_USIM" priority="1" network="20" />
-    <iin pattern="^898600" app_type="APPTYPE_SIM" priority="2" network="18" />
-    <iin pattern="^898602" app_type="APPTYPE_SIM" priority="2" network="18" />
-    <iin pattern="^898607" app_type="APPTYPE_SIM" priority="2" network="18" />
-    <iin pattern="^898600" app_type="APPTYPE_USIM" priority="3" network="20" />
-    <iin pattern="^898602" app_type="APPTYPE_USIM" priority="3" network="20" />
-    <iin pattern="^898607" app_type="APPTYPE_USIM" priority="3" network="20" />
+    <iin pattern="^8986(?!01|03|09|11)" app_type="APPTYPE_SIM" priority="2" network="18" />
+    <iin pattern="^8986(?!01|03|09|11)" app_type="APPTYPE_USIM" priority="3" network="20" />
 </iins>
