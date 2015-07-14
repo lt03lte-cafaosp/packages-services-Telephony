@@ -469,8 +469,8 @@
     <string name="no_change">No changes were made.</string>
     <!-- Call settings screen, "Voicemail" provider setting summary text when no provider is selected -->
     <string name="sum_voicemail_choose_provider">Choose voicemail service</string>
-    <!-- Call settings screen, "Voicemail" screen, default option - Your Carrier -->
-    <string name="voicemail_default">Your carrier</string>
+    <!-- Call settings screen, "Voicemail" screen, default option - My Carrier -->
+    <string name="voicemail_default">My carrier</string>
 
     <!-- networks setting strings --><skip/>
     <!-- Mobile network settings screen title -->
