@@ -299,6 +299,37 @@ final class CdmaConnection extends TelephonyConnection {
         }
     }
 
+    @Override
+    protected void hangup(int telephonyDisconnectCode) {
+        if (mOriginalConnection != null) {
+            try {
+                // Hanging up a ringing call requires that we invoke call.hangup() as opposed to
+                // connection.hangup(). Without this change, the party originating the call will not
+                // get sent to voicemail if the user opts to reject the call.
+                if (isValidRingingCall()) {
+                    Call call = getCall();
+                    if (call != null) {
+                        if (mOriginalConnection.getState() == Call.State.WAITING) {
+                            hangupCallWaiting(telephonyDisconnectCode);
+                        } else {
+                            call.hangupWithReason(telephonyDisconnectCode);
+                        }
+                    } else {
+                        Log.w(this, "Attempting to hangup a connection without backing call.");
+                    }
+                } else {
+                    // We still prefer to call connection.hangup() for non-ringing calls in order
+                    // to support hanging-up specific calls within a conference call. If we invoked
+                    // call.hangup() while in a conference, we would end up hanging up the entire
+                    // conference call instead of the specific connection.
+                    mOriginalConnection.hangupWithReason(telephonyDisconnectCode);
+                }
+            } catch (CallStateException e) {
+                Log.e(this, e, "Call to Connection.hangup failed with exception");
+            }
+        }
+    }
+
     /**
      * Read the settings to determine which type of DTMF method this CDMA phone calls.
      */
