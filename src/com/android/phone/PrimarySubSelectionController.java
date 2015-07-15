@@ -403,6 +403,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
         int slot = -1;
         if (!isPrimarySetable()) {
             logd("primary is not setable in any sub!");
+            return;
         } else {
             int prefPrimarySlot = getPrefPrimarySlot();
             int primarySlot = getPrimarySlot();
