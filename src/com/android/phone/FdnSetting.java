@@ -280,7 +280,8 @@ public class FdnSetting extends PreferenceActivity
                             log("Handle EVENT_PIN2_CHANGE_COMPLETE");
                         AsyncResult ar = (AsyncResult) msg.obj;
                         if (ar.exception != null) {
-                            if (ar.exception instanceof RuntimeException) {
+                            if (ar.exception instanceof RuntimeException &&
+                                    !(ar.exception instanceof CommandException)) {
                                 int slotId = SubscriptionManager.getSlotId(mPhone.getSubId());
                                 int simState = TelephonyManager.getDefault().getSimState(slotId);
                                 if (simState == TelephonyManager.SIM_STATE_ABSENT) {
