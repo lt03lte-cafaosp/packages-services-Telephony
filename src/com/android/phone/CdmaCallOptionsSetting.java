@@ -33,6 +33,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SqliteWrapper;
 import android.net.Uri;
+import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -160,7 +161,8 @@ public class CdmaCallOptionsSetting {
 
     private String getOperatorNumeric() {
         String numeric;
-        numeric = TelephonyManager.getDefault().getSimOperator(mPhoneId);
+        numeric = TelephonyManager.getDefault().getSimOperator(SubscriptionManager
+                .getSubId(mPhoneId)[0]);
         if (DEBUG) {
             Log.d(TAG, "numeric: " + numeric + " mSubscription: " + mPhoneId);
         }
