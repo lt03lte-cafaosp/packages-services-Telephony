@@ -53,8 +53,23 @@ public class CdmaCallOptions extends PreferenceActivity {
 
         Phone phone = PhoneUtils.getPhoneFromIntent(getIntent());
         Log.d(LOG_TAG, "Get CDMACallOptions phoneId = " + phone.getPhoneId());
-
-        initCallWaitingPref(this, phone.getPhoneId());
+        if (getResources().getBoolean(R.bool.config_cdma_cw_cf_enabled)) {
+            Log.d(LOG_TAG, "Enabled CW CF");
+            initCallWaitingPref(this, phone.getPhoneId());
+        } else {
+            Log.d(LOG_TAG, "Disabled CW CF");
+            PreferenceScreen prefScreen = getPreferenceScreen();
+            PreferenceScreen prefCW = (PreferenceScreen)
+                    prefScreen.findPreference("button_cw_key");
+            if (prefCW != null) {
+                prefScreen.removePreference(prefCW);
+            }
+            PreferenceScreen prefCF = (PreferenceScreen)
+                    prefScreen.findPreference("button_cf_expand_key");
+            if (prefCF != null) {
+                prefScreen.removePreference(prefCF);
+            }
+        }
 
         mButtonVoicePrivacy = (CheckBoxPreference) findPreference(BUTTON_VP_KEY);
         mCallWaitingSettings = (PreferenceScreen) findPreference(BUTTON_CALLWAITING_SETTING_KEY);

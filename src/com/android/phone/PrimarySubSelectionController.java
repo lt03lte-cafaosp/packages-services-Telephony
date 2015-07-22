@@ -361,7 +361,8 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
     public String getSimName(int slot) {
         SubscriptionInfo subInfo = SubscriptionManager.from(mContext).getActiveSubscriptionInfo(
                 SubscriptionManager.getSubId(slot)[0]);
-        return subInfo == null ? null : subInfo.getDisplayName().toString();
+        return subInfo == null ? mContext.getResources().getString(R.string.sim_card_number_title,
+                slot + 1) : subInfo.getDisplayName().toString();
     }
 
     private String getSimCardInfo(int slot) {
@@ -399,6 +400,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
         int slot = -1;
         if (!isPrimarySetable()) {
             logd("primary is not setable in any sub!");
+            return;
         } else {
             int prefPrimarySlot = getPrefPrimarySlot();
             int primarySlot = getPrimarySlot();
