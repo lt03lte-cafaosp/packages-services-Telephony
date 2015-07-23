@@ -123,6 +123,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     private static final int CMD_GET_ATR = 33;
     private static final int EVENT_GET_ATR_DONE = 34;
     private static final int CMD_OPEN_CHANNEL_WITH_P2 = 35;
+    // No need to declare EVENT_OPEN_CHANNEL_OPEN_WITH_P2_DONE,
+    // we reuse EVENT_OPEN_CHANNEL_DONE
 
     /** The singleton instance. */
     private static PhoneInterfaceManager sInstance;
@@ -437,7 +439,6 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                     break;
 
                 case CMD_OPEN_CHANNEL:
-
                     request = (MainThreadRequest) msg.obj;
                     if (uiccCard == null) {
                         loge("iccOpenLogicalChannel: No UICC");
