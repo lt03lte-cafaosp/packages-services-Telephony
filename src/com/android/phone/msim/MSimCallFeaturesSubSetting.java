@@ -171,6 +171,8 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
     private static final String BUTTON_VOICEMAIL_PROVIDER_KEY = "button_voicemail_provider_key";
     private static final String BUTTON_VOICEMAIL_SETTING_KEY = "button_voicemail_setting_key";
 
+    public static final String VIDEOCALL_FALL_BACK_SETTING = "videocall_fallback_setting";
+
     // New preference key for voicemail notification vibration
     /* package */ static final String BUTTON_VOICEMAIL_NOTIFICATION_VIBRATE_KEY =
             "button_voicemail_notification_vibrate_key";
@@ -1802,6 +1804,10 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
         }
 
         if (mButtonVideoCallFallback != null) {
+            int videoCallFallback = Settings.System.getInt(getContentResolver(),
+                    VIDEOCALL_FALL_BACK_SETTING,0);
+            String[]  items = getResources().getStringArray(R.array.videocall_fb_setting_entries);
+            mButtonVideoCallFallback.setSummary(items[videoCallFallback]);
             mButtonVideoCallFallback.setOnPreferenceChangeListener(this);
         }
 
