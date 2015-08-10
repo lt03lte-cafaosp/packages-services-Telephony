@@ -1894,6 +1894,18 @@ public class CallFeaturesSetting extends PreferenceActivity
                         mCallWaitingSettings =
                                 (PreferenceScreen) findPreference(BUTTON_CALLWAITING_SETTING_KEY);
                         CdmaCallOptions.initCallWaitingPref(this, mPhone.getPhoneId());
+                    } else {
+                        Log.d(LOG_TAG, "Disabled CW CF");
+                        PreferenceScreen prefCW = (PreferenceScreen)
+                        prefSet.findPreference("button_cw_key");
+                        if (prefCW != null) {
+                            prefSet.removePreference(prefCW);
+                        }
+                        PreferenceScreen prefCF = (PreferenceScreen)
+                        prefSet.findPreference("button_cf_expand_key");
+                        if (prefCF != null) {
+                            prefSet.removePreference(prefCF);
+                        }
                     }
                 }
             } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
