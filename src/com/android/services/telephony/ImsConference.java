@@ -241,12 +241,12 @@ public class ImsConference extends Conference {
 
     }
     private int applyMergeCapabilities(int conferenceCapabilities, int capabilities) {
-        if (PhoneCapabilities.can(capabilities, PhoneCapabilities.MERGE_CONFERENCE)) {
+        if (PhoneCapabilities.can(capabilities, PhoneCapabilities.SHOW_MERGE_CONFERENCE)) {
             conferenceCapabilities = applyCapability(conferenceCapabilities,
-                    PhoneCapabilities.MERGE_CONFERENCE);
+                    PhoneCapabilities.SHOW_MERGE_CONFERENCE);
         } else {
             conferenceCapabilities = removeCapability(conferenceCapabilities,
-                    PhoneCapabilities.MERGE_CONFERENCE);
+                    PhoneCapabilities.SHOW_MERGE_CONFERENCE);
         }
         return conferenceCapabilities;
     }

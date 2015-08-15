@@ -39,7 +39,7 @@ public class TelephonyConference extends Conference {
                 Connection.CAPABILITY_HOLD |
                 Connection.CAPABILITY_MUTE |
                 Connection.CAPABILITY_MANAGE_CONFERENCE |
-                Connection.CAPABILITY_MERGE_CONFERENCE);
+                Connection.CAPABILITY_SHOW_MERGE_CONFERENCE);
         setActive();
     }
 
