@@ -35,6 +35,8 @@ import android.telecom.TelecomManager;
 import android.util.Log;
 import android.view.MenuItem;
 
+import static com.android.internal.telephony.PhoneConstants.SUBSCRIPTION_KEY;
+
 public class CdmaCallOptions extends PreferenceActivity {
     private static final String LOG_TAG = "CdmaCallOptions";
     private final boolean DBG = (PhoneGlobals.DBG_LEVEL >= 2);
@@ -42,6 +44,7 @@ public class CdmaCallOptions extends PreferenceActivity {
     public static final int CALL_WAITING = 7;
     private static final String BUTTON_VP_KEY = "button_voice_privacy_key";
     private static final String BUTTON_CALLWAITING_SETTING_KEY = "button_cw_key";
+    private static final String BUTTON_CF_EXPAND_KEY = "button_cf_expand_key";
     private CheckBoxPreference mButtonVoicePrivacy;
     private PreferenceScreen mCallWaitingSettings;
 
@@ -56,6 +59,8 @@ public class CdmaCallOptions extends PreferenceActivity {
         if (getResources().getBoolean(R.bool.config_cdma_cw_cf_enabled)) {
             Log.d(LOG_TAG, "Enabled CW CF");
             initCallWaitingPref(this, phone.getPhoneId());
+            ((PreferenceScreen) findPreference(BUTTON_CF_EXPAND_KEY)).
+                    getIntent().putExtra(SUBSCRIPTION_KEY, phone.getPhoneId());
         } else {
             Log.d(LOG_TAG, "Disabled CW CF");
             PreferenceScreen prefScreen = getPreferenceScreen();
