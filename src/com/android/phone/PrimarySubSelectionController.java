@@ -93,9 +93,13 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
     private boolean mNeedHandleModemReadyEvent = false;
     private boolean mRestoreDdsToPrimarySub = false;
     private boolean[] mIccLoaded;
+    private static boolean mIsCtCardPresent = false;
 
     public static final String CONFIG_LTE_SUB_SELECT_MODE = "config_lte_sub_select_mode";
     public static final String CONFIG_PRIMARY_SUB_SETABLE = "config_primary_sub_setable";
+    public static final String CHINA_TELECOM_SPN = "China Telecom";
+    public static final String CHINA_UNICOM_SPN = "China Unicom";
+    public static final String CONFIG_CT_CARD_PRESENT = "config_ct_card_present";
 
     private static final String SETTING_USER_PREF_DATA_SUB = "user_preferred_data_sub";
 
@@ -471,6 +475,64 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
         saveSubscriptions();
         saveLteSubSelectMode();
         savePrimarySetable();
+        configureCtIfRequired();
+    }
+
+    public void configureCtIfRequired() {
+        int numCTSims = 0;
+        int numCUSims = 0;
+        int numCardsPresent = 0;
+        int ctIndex = -1;
+        int cuIndex = -1;
+        mIsCtCardPresent = false;
+        boolean is7_5_modeEnabled =
+                SystemProperties.getBoolean("persist.radio.primary_7_5_mode", false);
+
+        if (!is7_5_modeEnabled) {
+            logd("7+5 mode not enabled. No need to check for card info.");
+            return;
+        }
+
+        for (int index = 0; index < PHONE_COUNT; index++) {
+            String iccId = mCardStateMonitor.getIccId(index);
+            String spnName = IINList.getDefault(mContext).getSpn(iccId);
+            if (!TextUtils.isEmpty(spnName) && spnName.equals(CHINA_TELECOM_SPN)) {
+                numCTSims++;
+                ctIndex = index;
+            } else if (!TextUtils.isEmpty(spnName) && spnName.equals(CHINA_UNICOM_SPN)) {
+                numCUSims++;
+                cuIndex = index;
+            }
+            if (mCardStateMonitor.getCardInfo(index).isCardAvailable()) numCardsPresent++;
+        }
+
+        //If only one CT SIM is present
+        //  i)Set nwMode 1x/DO/G/W on that slot.
+        if (numCTSims == 1 && ctIndex != -1) {
+            mIsCtCardPresent = true;
+            new PrefNetworkRequest(mContext, ctIndex, Phone.NT_MODE_GLOBAL, null).loop();
+        }
+        //  ii)save ct mode, so that Settings app can enable/disable the DDS option.
+        Settings.Global.putInt(mContext.getContentResolver(),
+                CONFIG_CT_CARD_PRESENT, mIsCtCardPresent ? 1 : 0);
+
+        //If only CT card is present set DDS to that sub.
+        if (numCardsPresent == 1 && numCTSims == 1 && ctIndex != -1) {
+            int subId = SubscriptionManager.getSubId(ctIndex)[0];
+            SubscriptionManager.from(mContext).setDefaultDataSubId(subId);
+        }
+        //In Case of CU+CT, set DDS and nwMode GSM on CU Card
+        if (numCardsPresent == 2 && numCTSims == 1 && ctIndex != -1
+                && numCUSims == 1 && cuIndex != -1) {
+            int subId = SubscriptionManager.getSubId(cuIndex)[0];
+            SubscriptionManager.from(mContext).setDefaultDataSubId(subId);
+            new PrefNetworkRequest(mContext, cuIndex, Phone.NT_MODE_GSM_ONLY, null).loop();
+        }
+
+    }
+
+    public static boolean isCtCardPresent() {
+        return mIsCtCardPresent;
     }
 
     @Override
