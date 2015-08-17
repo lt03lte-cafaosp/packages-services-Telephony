@@ -278,8 +278,9 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             case Constants.NETWORK_MODE_CMCC:
                 if (UiccController.getInstance().getUiccCard(mPhone.getPhoneId()) != null &&
                         UiccController.getInstance().getUiccCard(mPhone.getPhoneId())
-                                .isApplicationOnIcc(AppType.APPTYPE_USIM) &&
-                        getPreferredNetworkMode() != Phone.NT_MODE_GSM_ONLY) {
+                        .isApplicationOnIcc(AppType.APPTYPE_USIM) &&
+                        getPreferredNetworkMode() != Phone.NT_MODE_GSM_ONLY &&
+                        getPreferredNetworkMode() != Phone.NT_MODE_GLOBAL) {
                     mButtonPreferredNetworkMode
                             .setDialogTitle(R.string.preferred_network_mode_dialogtitle_cmcc);
                     mButtonPreferredNetworkMode.setEntries(

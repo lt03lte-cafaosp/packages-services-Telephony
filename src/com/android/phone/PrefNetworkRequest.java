@@ -146,7 +146,7 @@ public class PrefNetworkRequest extends SyncQueue.SyncRequest {
         commands = new ArrayList<PrefNetworkSetCommand>();
         if (networkMode != Phone.NT_MODE_GSM_ONLY) {
             for (int index = 0; index < PrimarySubSelectionController.PHONE_COUNT; index++) {
-                if (index != slot)
+                if (index != slot && !PrimarySubSelectionController.isCtCardPresent())
                     commands.add(new PrefNetworkSetCommand(index, Phone.NT_MODE_GSM_ONLY));
             }
         }
