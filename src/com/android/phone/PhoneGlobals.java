@@ -17,6 +17,7 @@
 package com.android.phone;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.KeyguardManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
@@ -66,6 +67,9 @@ import com.android.internal.telephony.imsphone.ImsPhone;
 import com.android.internal.telephony.util.BlacklistUtils;
 import com.android.phone.common.CallLogAsync;
 import com.android.server.sip.SipService;
+import com.suntek.mway.rcs.client.api.basic.BasicApi;
+import com.suntek.mway.rcs.client.api.support.SupportApi;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -213,6 +217,19 @@ public class PhoneGlobals extends ContextWrapper {
     public OtaUtils.CdmaOtaScreenState cdmaOtaScreenState;
     public OtaUtils.CdmaOtaInCallScreenUiState cdmaOtaInCallScreenUiState;
 
+    boolean mIsRcsOnline = false;
+
+    private String ACTION_UNREGISTER_FINISHED = "com.suntek.mway.rcs.app.service.ACTION_UNREGISTER_FINISHED";
+    public static boolean isRcsOnline() {
+        if (SupportApi.getInstance().isRcsSupported()) {
+            try {
+                return BasicApi.getInstance().isOnline();
+            } catch (Exception e) {
+                return false;
+            }
+        }
+       return false;
+    }
 
 
     /**
@@ -535,6 +552,7 @@ public class PhoneGlobals extends ContextWrapper {
             intentFilter.addAction(TelephonyIntents.ACTION_SERVICE_STATE_CHANGED);
             intentFilter.addAction(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED);
             intentFilter.addAction(TelephonyIntents.ACTION_MANAGED_ROAMING_IND);
+            intentFilter.addAction(ACTION_UNREGISTER_FINISHED);
             registerReceiver(mReceiver, intentFilter);
 
             //set the default values for the preferences in the phone.
@@ -923,8 +941,28 @@ public class PhoneGlobals extends ContextWrapper {
             if (action.equals(Intent.ACTION_AIRPLANE_MODE_CHANGED)) {
                 boolean enabled = System.getInt(getContentResolver(),
                         System.AIRPLANE_MODE_ON, 0) == 0;
+
+                Log.e(LOG_TAG, "enabled= "+enabled);
+                if (!enabled) {
+                    mIsRcsOnline = isRcsOnline();
+                    if (mIsRcsOnline) {
+                        Intent intentrcs = new Intent(ACTION_UNREGISTER_FINISHED);
+                        PendingIntent pi = PendingIntent.getBroadcast(PhoneGlobals.this, 0, intentrcs,
+                                PendingIntent.FLAG_UPDATE_CURRENT);
+                        AlarmManager alarmMgr = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+                        alarmMgr.set(AlarmManager.RTC_WAKEUP, 1000 * 1, pi);
+                        return;
+                      }
+                }
+                Log.e(LOG_TAG, "setRadioPower before air plane");
                 for (Phone ph : mPhones) {
                     ph.setRadioPower(enabled);
+                }
+            } else if (action.equals(ACTION_UNREGISTER_FINISHED)) {
+                mIsRcsOnline = false;
+                Log.e(LOG_TAG, "setRadioPower after air plane");
+                for (Phone ph : mPhones) {
+                    ph.setRadioPower(false);
                 }
             } else if (action.equals(TelephonyIntents.ACTION_ANY_DATA_CONNECTION_STATE_CHANGED)) {
                 if (VDBG) Log.d(LOG_TAG, "mReceiver: ACTION_ANY_DATA_CONNECTION_STATE_CHANGED");

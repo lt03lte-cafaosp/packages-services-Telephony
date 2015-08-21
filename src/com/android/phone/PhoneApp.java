@@ -22,6 +22,10 @@ import android.os.UserHandle;
 
 import com.android.services.telephony.TelephonyGlobals;
 
+import com.suntek.mway.rcs.client.api.ClientApi;
+import com.suntek.mway.rcs.client.api.ServiceListener;
+import com.suntek.mway.rcs.client.api.support.SupportApi;
+import com.suntek.rcs.ui.common.RcsLog;
 /**
  * Top-level Application class for the Phone app.
  */
@@ -43,5 +47,19 @@ public class PhoneApp extends Application {
             mTelephonyGlobals = new TelephonyGlobals(this);
             mTelephonyGlobals.onCreate();
         }
+        SupportApi.getInstance().initApi(this);
+        ServiceListener listener = new ServiceListener() {
+            @Override
+            public void onServiceDisconnected() {
+                RcsLog.i("ClientApi disconnected");
+            }
+
+            @Override
+            public void onServiceConnected() {
+                RcsLog.i("ClientApi connected");
+            }
+        };
+        new ClientApi().init(this, listener, listener);
+
     }
 }
