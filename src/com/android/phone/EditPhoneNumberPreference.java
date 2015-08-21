@@ -167,8 +167,8 @@ public class EditPhoneNumberPreference extends EditTextPreference
         setDialogLayoutResource(R.layout.pref_dialog_editphonenumber);
 
         //create intent to bring up contact list
-        mContactListIntent = new Intent(Intent.ACTION_GET_CONTENT);
-        mContactListIntent.setType(Phone.CONTENT_ITEM_TYPE);
+        mContactListIntent = new Intent(Intent.ACTION_PICK);
+        mContactListIntent.setType(Phone.CONTENT_TYPE);
 
         //get the edit phone number default settings
         TypedArray a = context.obtainStyledAttributes(attrs,
@@ -509,13 +509,13 @@ public class EditPhoneNumberPreference extends EditTextPreference
             mTimePeriodString = " all day";
         } else {
             String fomatedStartTimeString = formateTime(mStartDate,
-                    mStartTimeHour, mStartTimeMinute);
+                    mValidStartTimeHour, mValidStartTimeMinute);
             String fomatedEndTimeString = formateTime(mEndDate,
-                    mEndTimeHour, mEndTimeMinute);
+                    mValidEndTimeHour, mValidEndTimeMinute);
             mTimePeriodString = " from " + fomatedStartTimeString
                     + " to " + fomatedEndTimeString;
-            if (mEndTimeHour*60 + mEndTimeMinute
-                    < mStartTimeHour*60 + mStartTimeMinute){
+            if (mValidEndTimeHour*60 + mValidEndTimeMinute
+                    < mValidStartTimeHour*60 + mValidStartTimeMinute){
                 mTimePeriodString = mTimePeriodString + " next day";
             }
         }

@@ -425,7 +425,11 @@ public class SimContacts extends ADNList {
     private void smsToNumber(int position) {
         if (mCursor.moveToPosition(position)) {
             String phoneNumber = mCursor.getString(NUMBER_COLUMN);
-            phoneNumber = PhoneNumberUtils.formatNumber(phoneNumber);
+            if (phoneNumber != null) {
+                phoneNumber = PhoneNumberUtils.formatNumber(phoneNumber);
+            } else {
+                Log.e(LOG_TAG, " There is no number in contact ...");
+            }
             Intent intent = new Intent(Intent.ACTION_SENDTO,
                     Uri.fromParts(PhoneAccount.SCHEME_SMSTO, phoneNumber, null));
             startActivity(intent);

@@ -26,6 +26,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.telephony.SubscriptionManager;
 import android.util.Log;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.android.ims.ImsConfig;
@@ -147,6 +148,15 @@ public class ImsEditor extends PreferenceActivity
         public void onSetFeatureResponse(int feature, int network, int value, int status) {
             //TODO not required as of now
         }
+
+        public void onGetWifiCallingPreference(int status, int wifiCallingStatus,
+                int wifiCallingPreference) {
+            //TODO not required as of now
+        }
+
+        public void onSetWifiCallingPreference(int status) {
+            //TODO not required as of now
+        }
     };
 
     private void onPcPrefClicked() {
@@ -265,5 +275,15 @@ public class ImsEditor extends PreferenceActivity
     private boolean isRtpStatisticsQueryEnabled() {
         return getApplicationContext().getResources().getBoolean(
                 R.bool.config_ims_enable_rtp_statistics);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        final int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

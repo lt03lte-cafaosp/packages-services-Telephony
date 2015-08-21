@@ -174,7 +174,7 @@ public class ImsConference extends Conference {
             Log.d(this, "onConnectionCapabilitiesChanged: Connection: %s, callCapabilities: %s", c,
                     callCapabilities);
             int capabilites = ImsConference.this.getCapabilities();
-            setCapabilities(applyVideoCapabilities(capabilites, callCapabilities));
+            setCapabilities(applyCallCapabilities(capabilites, callCapabilities));
         }
     };
 
@@ -298,13 +298,13 @@ public class ImsConference extends Conference {
                 Connection.CAPABILITY_HOLD |
                 Connection.CAPABILITY_MUTE | Connection.ADD_PARTICIPANT;
 
-        capabilities = applyVideoCapabilities(capabilities, mConferenceHost.getCallCapabilities());
+        capabilities = applyCallCapabilities(capabilities, mConferenceHost.getCallCapabilities());
         setCapabilities(capabilities);
 
     }
 
     // FIXME MR1_INTERNAL, move IMS capabilities
-    private int applyVideoCapabilities(int conferenceCapabilities, int capabilities) {
+    private int applyCallCapabilities(int conferenceCapabilities, int capabilities) {
         if (PhoneCapabilities.can(capabilities, PhoneCapabilities.SUPPORTS_VT_LOCAL)) {
             conferenceCapabilities = applyCapability(conferenceCapabilities,
                     PhoneCapabilities.SUPPORTS_VT_LOCAL);
@@ -319,6 +319,24 @@ public class ImsConference extends Conference {
         } else {
             conferenceCapabilities = removeCapability(conferenceCapabilities,
                     PhoneCapabilities.SUPPORTS_VT_REMOTE);
+        }
+
+        if (PhoneCapabilities.can(capabilities,
+                PhoneCapabilities.SUPPORTS_DOWNGRADE_TO_VOICE_LOCAL)) {
+            conferenceCapabilities = applyCapability(conferenceCapabilities,
+                    PhoneCapabilities.SUPPORTS_DOWNGRADE_TO_VOICE_LOCAL);
+        } else {
+            conferenceCapabilities = removeCapability(conferenceCapabilities,
+                    PhoneCapabilities.SUPPORTS_DOWNGRADE_TO_VOICE_LOCAL);
+        }
+
+        if (PhoneCapabilities.can(capabilities,
+                PhoneCapabilities.SUPPORTS_DOWNGRADE_TO_VOICE_REMOTE)) {
+            conferenceCapabilities = applyCapability(conferenceCapabilities,
+                    PhoneCapabilities.SUPPORTS_DOWNGRADE_TO_VOICE_REMOTE);
+        } else {
+            conferenceCapabilities = removeCapability(conferenceCapabilities,
+                    PhoneCapabilities.SUPPORTS_DOWNGRADE_TO_VOICE_REMOTE);
         }
 
         if (PhoneCapabilities.can(capabilities, PhoneCapabilities.CALL_TYPE_MODIFIABLE)) {

@@ -16,6 +16,10 @@
 
 package com.android.services.telephony;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.Message;
 
@@ -28,6 +32,7 @@ import com.android.internal.telephony.CallStateException;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.imsphone.ImsPhoneConnection;
 import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.TelephonyIntents;
 import com.android.phone.Constants;
 
 import java.util.LinkedList;
@@ -68,7 +73,7 @@ final class CdmaConnection extends TelephonyConnection {
     /**
      * {@code True} if the CDMA connection should allow mute.
      */
-    private final boolean mAllowMute;
+    private boolean mAllowMute;
     // Queue of pending short-DTMF characters.
     private final Queue<Character> mDtmfQueue = new LinkedList<>();
     private final EmergencyTonePlayer mEmergencyTonePlayer;
@@ -93,6 +98,10 @@ final class CdmaConnection extends TelephonyConnection {
         if (mIsCallWaiting && !isImsCall) {
             startCallWaitingTimer();
         }
+        // Register receiver for ECBM exit
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED);
+        TelephonyGlobals.getApplicationContext().registerReceiver(mEcmExitReceiver, filter);
     }
 
     CdmaConnection(
@@ -109,6 +118,10 @@ final class CdmaConnection extends TelephonyConnection {
         if (mIsCallWaiting) {
             startCallWaitingTimer();
         }
+        // Register receiver for ECBM exit
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED);
+        TelephonyGlobals.getApplicationContext().registerReceiver(mEcmExitReceiver, filter);
     }
 
     /** {@inheritDoc} */
@@ -208,11 +221,20 @@ final class CdmaConnection extends TelephonyConnection {
 
     @Override
     protected void close() {
-        super.close();
         if (getPhone() != null) {
             getPhone().unregisterForLineControlInfo(mHandler);
         }
+        TelephonyGlobals.getApplicationContext().unregisterReceiver(mEcmExitReceiver);
+        super.close();
         mConnectionTimeReset = false;
+    }
+
+    @Override
+    void clearOriginalConnection() {
+        if (getPhone() != null) {
+            getPhone().unregisterForLineControlInfo(mHandler);
+        }
+        super.clearOriginalConnection();
     }
 
     private void onCdmaLineControlInfoRec() {
@@ -277,6 +299,37 @@ final class CdmaConnection extends TelephonyConnection {
         }
     }
 
+    @Override
+    protected void hangup(int telephonyDisconnectCode) {
+        if (mOriginalConnection != null) {
+            try {
+                // Hanging up a ringing call requires that we invoke call.hangup() as opposed to
+                // connection.hangup(). Without this change, the party originating the call will not
+                // get sent to voicemail if the user opts to reject the call.
+                if (isValidRingingCall()) {
+                    Call call = getCall();
+                    if (call != null) {
+                        if (mOriginalConnection.getState() == Call.State.WAITING) {
+                            hangupCallWaiting(telephonyDisconnectCode);
+                        } else {
+                            call.hangupWithReason(telephonyDisconnectCode);
+                        }
+                    } else {
+                        Log.w(this, "Attempting to hangup a connection without backing call.");
+                    }
+                } else {
+                    // We still prefer to call connection.hangup() for non-ringing calls in order
+                    // to support hanging-up specific calls within a conference call. If we invoked
+                    // call.hangup() while in a conference, we would end up hanging up the entire
+                    // conference call instead of the specific connection.
+                    mOriginalConnection.hangupWithReason(telephonyDisconnectCode);
+                }
+            } catch (CallStateException e) {
+                Log.e(this, e, "Call to Connection.hangup failed with exception");
+            }
+        }
+    }
+
     /**
      * Read the settings to determine which type of DTMF method this CDMA phone calls.
      */
@@ -336,4 +389,22 @@ final class CdmaConnection extends TelephonyConnection {
                 PhoneNumberUtils.isLocalEmergencyNumber(
                     phone.getContext(), getAddress().getSchemeSpecificPart());
     }
+
+    /**
+     * Listens for Emergency Callback Mode state change intents
+     */
+    private BroadcastReceiver mEcmExitReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Received exit Emergency Callback Mode notification and update mute state
+            if (intent.getAction().equals(
+                    TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED)) {
+                Log.d(this,"Received ACTION_EMERGENCY_CALLBACK_MODE_CHANGED");
+                if ((intent.getBooleanExtra("phoneinECMState", false) == false) && !mAllowMute) {
+                    mAllowMute = true;
+                    updateConnectionCapabilities();
+                }
+            }
+        }
+    };
 }

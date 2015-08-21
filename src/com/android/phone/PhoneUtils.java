@@ -28,6 +28,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.media.AudioManager;
 import android.net.Uri;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
@@ -905,7 +906,14 @@ public class PhoneUtils {
                 // the FAILED case.
 
             case FAILED:
-                text = mmiCode.getMessage();
+                if (context.getResources().getBoolean(
+                        com.android.internal.R.bool.
+                        config_regional_ussd_hide_error_from_network_enable)
+                        && (state == MmiCode.State.FAILED)) {
+                    text = context.getString(R.string.hide_error_from_network_text);
+                } else {
+                    text = mmiCode.getMessage();
+                }
                 if (DBG) log("- using text from MMI message: '" + text + "'");
                 break;
             default:
@@ -971,7 +979,7 @@ public class PhoneUtils {
                             .create();
 
                     sUssdDialog.getWindow().setType(
-                            WindowManager.LayoutParams.TYPE_SYSTEM_DIALOG);
+                            WindowManager.LayoutParams.TYPE_KEYGUARD_DIALOG);
                     sUssdDialog.getWindow().addFlags(
                             WindowManager.LayoutParams.FLAG_DIM_BEHIND);
                 }
@@ -984,6 +992,13 @@ public class PhoneUtils {
                 sUssdMsg.insert(0, text);
                 sUssdDialog.setMessage(sUssdMsg.toString());
                 sUssdDialog.show();
+                if (context.getResources().getBoolean(
+                        com.android.internal.R.bool.
+                        config_regional_ussd_hide_error_from_network_enable)
+                         && (state == MmiCode.State.FAILED)) {
+                    TimeCount tmpTC = new TimeCount(5000, 1000, sUssdDialog);
+                    tmpTC.start();
+                }
             } else {
                 if (DBG) log("USSD code has requested user input. Constructing input dialog.");
 
@@ -2496,5 +2511,24 @@ public class PhoneUtils {
             || network == Phone.NT_MODE_LTE_GSM_WCDMA
             || network == Phone.NT_MODE_LTE_CDMA_AND_EVDO
             || network == Phone.NT_MODE_LTE_CDMA_EVDO_GSM);
+    }
+
+    public static class TimeCount extends CountDownTimer {
+        private AlertDialog mAlertDialog = null;
+        public TimeCount(long millisInFuture, long countDownInterval, AlertDialog alertDlg)
+        {
+            super(millisInFuture, countDownInterval);
+            mAlertDialog = alertDlg;
+        }
+
+        public void onTick(long millisUntilFinished) {
+        }
+
+        @Override
+        public void onFinish() {
+            if (mAlertDialog != null) {
+                mAlertDialog.dismiss();
+            }
+        }
     }
 }

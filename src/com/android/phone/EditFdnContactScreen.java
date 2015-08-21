@@ -34,6 +34,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Contacts.PeopleColumns;
 import android.provider.Contacts.PhonesColumns;
+import android.provider.ContactsContract.Contacts;
+import android.provider.ContactsContract.CommonDataKinds;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.telephony.PhoneNumberUtils;
 import android.text.Selection;
 import android.text.Spannable;
@@ -51,7 +54,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.internal.telephony.IccCardConstants;
-import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
 import static com.android.internal.telephony.PhoneConstants.SUBSCRIPTION_KEY;
 import com.android.internal.telephony.TelephonyIntents;
@@ -96,13 +98,13 @@ public class EditFdnContactScreen extends Activity {
     /** request code when invoking subactivity */
     private static final int CONTACTS_PICKER_CODE = 200;
     /** projection for phone number query */
-    private static final String NUM_PROJECTION[] = {PeopleColumns.DISPLAY_NAME,
-        PhonesColumns.NUMBER};
+    private static final String NUM_PROJECTION[] = {Contacts.DISPLAY_NAME, Phone.NUMBER};
+
     /** static intent to invoke phone number picker */
     private static final Intent CONTACT_IMPORT_INTENT;
     static {
-        CONTACT_IMPORT_INTENT = new Intent(Intent.ACTION_GET_CONTENT);
-        CONTACT_IMPORT_INTENT.setType(android.provider.Contacts.Phones.CONTENT_ITEM_TYPE);
+        CONTACT_IMPORT_INTENT = new Intent(Intent.ACTION_PICK);
+        CONTACT_IMPORT_INTENT.setType(Phone.CONTENT_TYPE);
     }
     /** flag to track saving state */
     private boolean mDataBusy;
@@ -470,6 +472,12 @@ public class EditFdnContactScreen extends Activity {
             } else if (v == mNumberField) {
                 mButton.requestFocus();
             } else if (v == mButton) {
+                final String number = PhoneNumberUtils.convertAndStrip(getNumberFromTextField());
+
+                if ((number.length() > 20) || (number.length() <= 0)) {
+                    handleResult(false, true);
+                    return;
+                }
                 // Authenticate the pin AFTER the contact information
                 // is entered, and if we're not busy.
                 if (!mDataBusy) {

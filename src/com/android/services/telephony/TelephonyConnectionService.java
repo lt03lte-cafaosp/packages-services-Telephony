@@ -226,8 +226,9 @@ public class TelephonyConnectionService extends ConnectionService {
         // when voice RAT is OOS but Data RAT is present.
         int state = phone.getServiceState().getState();
         if (state == ServiceState.STATE_OUT_OF_SERVICE) {
-            if (phone.getServiceState().getDataNetworkType() ==
-                    ServiceState.RIL_RADIO_TECHNOLOGY_LTE) {
+            int dataNetType = phone.getServiceState().getDataNetworkType();
+            if (dataNetType == ServiceState.RIL_RADIO_TECHNOLOGY_LTE ||
+                    dataNetType == ServiceState.RIL_RADIO_TECHNOLOGY_LTE_CA) {
                 state = phone.getServiceState().getDataRegState();
             }
         }
@@ -359,6 +360,7 @@ public class TelephonyConnectionService extends ConnectionService {
             if (mTelephonyConferenceController[i].shouldRecalculate()) {
                  mTelephonyConferenceController[i].recalculate();
             }
+            mImsConferenceController[i].recalculate();
         }
     }
 
@@ -380,12 +382,18 @@ public class TelephonyConnectionService extends ConnectionService {
             allConnections.addAll(ringingCall.getConnections());
         }
         final Call foregroundCall = phone.getForegroundCall();
-        if (foregroundCall.hasConnections()) {
+        final Call.State fgCallState = foregroundCall.getState();
+        if ((fgCallState != Call.State.DISCONNECTED &&
+                fgCallState != Call.State.DISCONNECTING) &&
+                foregroundCall.hasConnections()) {
             allConnections.addAll(foregroundCall.getConnections());
         }
         if (phone.getImsPhone() != null) {
             final Call imsFgCall = phone.getImsPhone().getForegroundCall();
-            if (imsFgCall.hasConnections()) {
+            final Call.State imsFgCallState = imsFgCall.getState();
+            if ((imsFgCallState != Call.State.DISCONNECTED
+                    && imsFgCallState != Call.State.DISCONNECTING) &&
+                    imsFgCall.hasConnections()) {
                 allConnections.addAll(imsFgCall.getConnections());
             }
 
@@ -404,6 +412,7 @@ public class TelephonyConnectionService extends ConnectionService {
             if ((!isOriginalConnectionKnown(telephonyConnection)) &&
                     !isConferenceHostOriginalConnection(telephonyConnection)) {
                 unknownConnection = telephonyConnection;
+                Log.d(this, "onCreateUnknownConnection: conn = " + unknownConnection);
                 break;
             }
         }
@@ -628,9 +637,8 @@ public class TelephonyConnectionService extends ConnectionService {
 
         if (phoneId == -1) {
             for (int phId = 0; phId < phoneCount; phId++) {
-                int[] subId = scontrol.getSubId(phId);
                 if ((tm.getSimState(phId) == TelephonyManager.SIM_STATE_READY) &&
-                        (scontrol.getSubState(subId[0]) == SubscriptionManager.ACTIVE)) {
+                        (PhoneFactory.getSubInfoRecordUpdater().IsStackActivated(phId) == true)) {
                     phoneId = phId;
                     if (phoneId == voicePhoneId) break;
                 }
@@ -698,6 +706,8 @@ public class TelephonyConnectionService extends ConnectionService {
                 Log.d(this, "Adding CDMA connection to conference controller: " + connection);
                 mCdmaConferenceController[phoneId].add((CdmaConnection)connection);
             }
+            Log.d(this, "Removing connection from IMS conference controller: " + connection);
+            mImsConferenceController[phoneId].remove(connection);
         }
     }
 }

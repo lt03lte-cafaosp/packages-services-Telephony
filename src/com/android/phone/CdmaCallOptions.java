@@ -19,6 +19,7 @@ package com.android.phone;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.AsyncResult;
@@ -34,13 +35,18 @@ import android.telecom.TelecomManager;
 import android.util.Log;
 import android.view.MenuItem;
 
+import static com.android.internal.telephony.PhoneConstants.SUBSCRIPTION_KEY;
+
 public class CdmaCallOptions extends PreferenceActivity {
     private static final String LOG_TAG = "CdmaCallOptions";
     private final boolean DBG = (PhoneGlobals.DBG_LEVEL >= 2);
 
     public static final int CALL_WAITING = 7;
     private static final String BUTTON_VP_KEY = "button_voice_privacy_key";
+    private static final String BUTTON_CALLWAITING_SETTING_KEY = "button_cw_key";
+    private static final String BUTTON_CF_EXPAND_KEY = "button_cf_expand_key";
     private CheckBoxPreference mButtonVoicePrivacy;
+    private PreferenceScreen mCallWaitingSettings;
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -50,10 +56,28 @@ public class CdmaCallOptions extends PreferenceActivity {
 
         Phone phone = PhoneUtils.getPhoneFromIntent(getIntent());
         Log.d(LOG_TAG, "Get CDMACallOptions phoneId = " + phone.getPhoneId());
-
-        initCallWaitingPref(this, phone.getPhoneId());
+        if (getResources().getBoolean(R.bool.config_cdma_cw_cf_enabled)) {
+            Log.d(LOG_TAG, "Enabled CW CF");
+            initCallWaitingPref(this, phone.getPhoneId());
+            ((PreferenceScreen) findPreference(BUTTON_CF_EXPAND_KEY)).
+                    getIntent().putExtra(SUBSCRIPTION_KEY, phone.getPhoneId());
+        } else {
+            Log.d(LOG_TAG, "Disabled CW CF");
+            PreferenceScreen prefScreen = getPreferenceScreen();
+            PreferenceScreen prefCW = (PreferenceScreen)
+                    prefScreen.findPreference("button_cw_key");
+            if (prefCW != null) {
+                prefScreen.removePreference(prefCW);
+            }
+            PreferenceScreen prefCF = (PreferenceScreen)
+                    prefScreen.findPreference("button_cf_expand_key");
+            if (prefCF != null) {
+                prefScreen.removePreference(prefCF);
+            }
+        }
 
         mButtonVoicePrivacy = (CheckBoxPreference) findPreference(BUTTON_VP_KEY);
+        mCallWaitingSettings = (PreferenceScreen) findPreference(BUTTON_CALLWAITING_SETTING_KEY);
         if (phone.getPhoneType() != PhoneConstants.PHONE_TYPE_CDMA
                 || getResources().getBoolean(R.bool.config_voice_privacy_disable)) {
             //disable the entire screen
@@ -85,6 +109,12 @@ public class CdmaCallOptions extends PreferenceActivity {
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
         if (preference.getKey().equals(BUTTON_VP_KEY)) {
+            return true;
+        } else if (preference == mCallWaitingSettings) {
+            final Dialog dialog = mCallWaitingSettings.getDialog();
+            if (dialog != null) {
+                dialog.getActionBar().setDisplayHomeAsUpEnabled(false);
+            }
             return true;
         }
         return false;

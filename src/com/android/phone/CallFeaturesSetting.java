@@ -171,6 +171,8 @@ public class CallFeaturesSetting extends PreferenceActivity
     // string constants
     private static final String NUM_PROJECTION[] = {CommonDataKinds.Phone.NUMBER};
 
+    public static final String VIDEOCALL_FALL_BACK_SETTING = "videocall_fallback_setting";
+
     // String keys for preference lookup
     // TODO: Naming these "BUTTON_*" is confusing since they're not actually buttons(!)
     private static final String BUTTON_VOICEMAIL_CATEGORY_KEY = "button_voicemail_category_key";
@@ -205,6 +207,8 @@ public class CallFeaturesSetting extends PreferenceActivity
 
     private static final String BUTTON_GSM_UMTS_OPTIONS = "button_gsm_more_expand_key";
     private static final String BUTTON_CDMA_OPTIONS = "button_cdma_more_expand_key";
+
+    private static final String BUTTON_CALLWAITING_SETTING_KEY = "button_cw_key";
 
     private static final String VM_NUMBERS_SHARED_PREFERENCES_NAME = "vm_numbers";
 
@@ -307,6 +311,7 @@ public class CallFeaturesSetting extends PreferenceActivity
     private boolean isSpeedDialListStarted = false;
     private PreferenceScreen mButtonBlacklist;
     private Preference mSdnButton;
+    private PreferenceScreen mCallWaitingSettings;
 
     private class VoiceMailProvider {
         public VoiceMailProvider(String name, Intent intent) {
@@ -633,6 +638,12 @@ public class CallFeaturesSetting extends PreferenceActivity
             return true;
         } else if (preference == mButtonVideoCallPictureSelect) {
             startActivity(getVTCallImageSettingsIntent());
+            return true;
+        } else if (preference == mCallWaitingSettings) {
+            final Dialog dialog = mCallWaitingSettings.getDialog();
+            if (dialog != null) {
+                dialog.getActionBar().setDisplayHomeAsUpEnabled(false);
+            }
             return true;
         }
         return false;
@@ -1781,14 +1792,19 @@ public class CallFeaturesSetting extends PreferenceActivity
 
         if (mVoicemailProviders != null) {
             mVoicemailProviders.setOnPreferenceChangeListener(this);
-            mVoicemailSettings = (PreferenceScreen)findPreference(BUTTON_VOICEMAIL_SETTING_KEY);
+            mVoicemailSettings = (PreferenceScreen)mVoicemailCategory.findPreference(BUTTON_VOICEMAIL_SETTING_KEY);
+            if (getResources().getBoolean(
+                    com.android.internal.R.bool.config_regional_voicemail_address_editable)) {
+                mVoicemailSettings.removePreference(mSubMenuVoicemailSettings);
+                mVoicemailCategory.removePreference(mVoicemailSettings);
+            }
+
             mVoicemailNotificationRingtone =
                     findPreference(BUTTON_VOICEMAIL_NOTIFICATION_RINGTONE_KEY);
             mVoicemailNotificationVibrate =
                     (CheckBoxPreference) findPreference(BUTTON_VOICEMAIL_NOTIFICATION_VIBRATE_KEY);
             initVoiceMailProviders();
         }
-
 
         if (mButtonDTMF != null) {
             if (getResources().getBoolean(R.bool.dtmf_type_enabled)) {
@@ -1800,6 +1816,10 @@ public class CallFeaturesSetting extends PreferenceActivity
         }
 
         if (mButtonVideoCallFallback != null) {
+            int videoCallFallback = Settings.System.getInt(getContentResolver(),
+                    VIDEOCALL_FALL_BACK_SETTING,0);
+            String[]  items = getResources().getStringArray(R.array.videocall_fb_setting_entries);
+            mButtonVideoCallFallback.setSummary(items[videoCallFallback]);
             mButtonVideoCallFallback.setOnPreferenceChangeListener(this);
         }
 
@@ -1870,7 +1890,23 @@ public class CallFeaturesSetting extends PreferenceActivity
                 }
                 if (!getResources().getBoolean(R.bool.config_voice_privacy_disable)) {
                     addPreferencesFromResource(R.xml.cdma_call_privacy);
-                    CdmaCallOptions.initCallWaitingPref(this, mPhone.getPhoneId());
+                    if (getResources().getBoolean(R.bool.config_cdma_cw_cf_enabled)) {
+                        mCallWaitingSettings =
+                                (PreferenceScreen) findPreference(BUTTON_CALLWAITING_SETTING_KEY);
+                        CdmaCallOptions.initCallWaitingPref(this, mPhone.getPhoneId());
+                    } else {
+                        Log.d(LOG_TAG, "Disabled CW CF");
+                        PreferenceScreen prefCW = (PreferenceScreen)
+                        prefSet.findPreference("button_cw_key");
+                        if (prefCW != null) {
+                            prefSet.removePreference(prefCW);
+                        }
+                        PreferenceScreen prefCF = (PreferenceScreen)
+                        prefSet.findPreference("button_cf_expand_key");
+                        if (prefCF != null) {
+                            prefSet.removePreference(prefCF);
+                        }
+                    }
                 }
             } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
                 if (getResources().getBoolean(R.bool.config_additional_call_setting)) {
@@ -2025,11 +2061,15 @@ public class CallFeaturesSetting extends PreferenceActivity
         }
 
         if (ImsUtil.isImsEnabled(mPhone.getContext()) && ENABLE_VT_FLAG) {
-            mEnableVideoCalling.setChecked(
-                    PhoneGlobals.getInstance().phoneMgr.isVideoCallingEnabled());
-            mEnableVideoCalling.setOnPreferenceChangeListener(this);
+            if (mEnableVideoCalling != null) {
+                mEnableVideoCalling.setChecked(
+                        PhoneGlobals.getInstance().phoneMgr.isVideoCallingEnabled());
+                mEnableVideoCalling.setOnPreferenceChangeListener(this);
+            }
         } else {
-            prefSet.removePreference(mEnableVideoCalling);
+            if (mEnableVideoCalling != null) {
+                prefSet.removePreference(mEnableVideoCalling);
+            }
         }
 
         // Look up the voicemail ringtone name asynchronously and update its preference.

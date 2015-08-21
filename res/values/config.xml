@@ -361,10 +361,28 @@ as an enum (NONE, HFA, OTASP). -->
     <!-- config for showing dial option when fdn contact is selected.
          By default feature is disabled -->
     <bool name="config_fdn_direct_dial">false</bool>
+
+    <!-- Flag indicating if SIP settings ennbled -->
+    <bool name="sip_settings_on">true</bool>
+
     <!-- config for Ims account setting -->
     <bool name="config_show_ims_account_setting">true</bool>
     <integer name="config_default_vibrate_after_connected">1</integer>
 
    <!-- Config to enable/disable Packet Count/Packet Error Count UI option -->
    <bool name="config_ims_enable_rtp_statistics">false</bool>
+
+   <!-- Wifi calling settings -->
+
+   <!-- Config to show/hide Wifi Preference UI option -->
+   <bool name="config_wifi_calling_preference_supported" translatable="false">true</bool>
+   <!-- Default value for wifi preference option as defined in
+       com.android.ims.ImsConfig#WifiCallingPreference.
+       By default CELLULAR_ONLY, this can be customized
+       depends on operator requirements -->
+   <integer name="config_default_wifi_calling_preference">4</integer>
+   <!-- To  show VMNotification always until user reads it-->
+   <bool name="config_show_vm_notification_always" translatable="false">false</bool>
+   <!-- CDMA call waiting and call forwarding options to dispaly on UI-->
+   <bool name="config_cdma_cw_cf_enabled">false</bool>
 </resources>
