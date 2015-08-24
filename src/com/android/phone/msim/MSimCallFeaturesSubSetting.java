@@ -1667,6 +1667,18 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
                         CdmaCallOptions.initCallWaitingPref(this, mPhone.getPhoneId());
                                 ((PreferenceScreen) findPreference(BUTTON_CF_EXPAND_KEY)).
                                 getIntent().putExtra(SUBSCRIPTION_KEY, mPhone.getPhoneId());
+                    } else {
+                        Log.d(LOG_TAG, "Disabled CW CF");
+                        PreferenceScreen prefCW = (PreferenceScreen)
+                        prefSet.findPreference("button_cw_key");
+                        if (prefCW != null) {
+                            prefSet.removePreference(prefCW);
+                        }
+                        PreferenceScreen prefCF = (PreferenceScreen)
+                        prefSet.findPreference("button_cf_expand_key");
+                        if (prefCF != null) {
+                            prefSet.removePreference(prefCF);
+                        }
                     }
                 }
             } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
