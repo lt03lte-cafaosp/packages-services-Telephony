@@ -507,7 +507,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
 
     public static void init(Context context) {
         synchronized (PrimarySubSelectionController.class) {
-            if (instance == null && isPrimaryLteSubEnabled()) {
+            if (instance == null) {
                 instance = new PrimarySubSelectionController(context);
             }
         }
@@ -548,7 +548,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
         return unsetableCount < priorities.size();
     }
 
-    public static boolean isPrimaryLteSubEnabled() {
+    public boolean isPrimaryLteSubEnabled() {
         return SystemProperties.getBoolean("persist.radio.primarycard", false)
                 && (PHONE_COUNT > 1);
     }
