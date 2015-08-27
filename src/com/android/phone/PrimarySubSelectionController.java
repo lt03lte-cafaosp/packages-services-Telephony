@@ -420,33 +420,47 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
                 obtainMessage(MSG_CONFIG_LTE_DONE).sendToTarget();
                 return;
             } else if (slot == -1) {
-                logd("card not changed and primary sub is correct, do nothing");
+                logd("card not changed and primary sub is correct");
+                boolean is7_5_modeEnabled =
+                        SystemProperties.getBoolean("persist.radio.primary_7_5_mode", false);
+                if (is7_5_modeEnabled) {
+                    trySetDdsToPrimarySub();
+                }
                 return;
             }
         }
         setPreferredNetwork(slot, obtainMessage(MSG_CONFIG_LTE_DONE));
     }
 
-    protected void onConfigLteDone(Message msg) {
+    private boolean trySetDdsToPrimarySub(){
+        boolean set = false;
         int primarySlot = getPrimarySlot();
         int currentDds = SubscriptionManager.getSlotId(SubscriptionManager
                 .getDefaultDataSubId());
         if (primarySlot != -1) {
-            logd("onConfigLteDone primary Slot " + primarySlot + ", currentDds = " + currentDds
+            String iccId = mCardStateMonitor.getIccId(primarySlot);
+            logd("trySetDdsToPrimarySub primary Slot " + primarySlot
+                    + ", currentDds = " + currentDds
                     + ", mIccLoaded[" + primarySlot
-                    + "] =" + mIccLoaded[primarySlot]);
-            if (mIccLoaded[primarySlot]
+                    + "] =" + mIccLoaded[primarySlot]
+                    + "Icc Id = " + iccId);
+            if ((mIccLoaded[primarySlot] || !TextUtils.isEmpty(iccId))
                     && currentDds != primarySlot) {
                 int subId = SubscriptionManager.getSubId(primarySlot)[0];
                 SubscriptionManager.from(mContext).setDefaultDataSubId(subId);
                 setUserPrefDataSubIdInDB(subId);
                 mRestoreDdsToPrimarySub = false;
-            } else {
-                mRestoreDdsToPrimarySub = true;
+                set = true;
             }
         }
+        return set;
+    }
 
+    protected void onConfigLteDone(Message msg) {
         boolean isManualConfigMode = isManualConfigMode();
+        if (!trySetDdsToPrimarySub()) {
+            mRestoreDdsToPrimarySub = true;
+        }
         logd("onConfigLteDone isManualConfigMode " + isManualConfigMode);
         if(isAutoConfigMode()){
             alertSIMChanged();
@@ -525,6 +539,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
                 && numCUSims == 1 && cuIndex != -1) {
             int subId = SubscriptionManager.getSubId(cuIndex)[0];
             SubscriptionManager.from(mContext).setDefaultDataSubId(subId);
+            setUserPrefDataSubIdInDB(subId); // update fallback sub id
             new PrefNetworkRequest(mContext, cuIndex, Phone.NT_MODE_GSM_ONLY, null).loop();
         }
 
