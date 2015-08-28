@@ -42,6 +42,8 @@ import android.provider.Settings.SettingNotFoundException;
 import android.provider.Settings;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+import android.telephony.SubscriptionManager;
+import android.telephony.SubscriptionInfo;
 import android.util.Log;
 import android.view.MenuItem;
 
@@ -56,6 +58,7 @@ import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppType;
 import com.android.internal.telephony.uicc.UiccController;
 import com.android.phone.R;
 
+import java.util.List;
 
 /**
  * "Mobile network settings" screen.  This preference screen lets you
@@ -81,6 +84,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     //String keys for preference lookup
     private static final String BUTTON_ROAMING_KEY = "button_roaming_key";
     private static final String BUTTON_4G_LTE_KEY = "enhanced_4g_lte";
+    private static final String BUTTON_ENABLE_4G_KEY = "enable_4g_settings";
     private static final String BUTTON_PREFERED_NETWORK_MODE = "preferred_network_mode_key";
     private static final String KEY_PREFERRED_LTE = "toggle_preferred_lte";
     private static final String BUTTON_UPLMN_KEY = "button_uplmn_key";
@@ -93,11 +97,13 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             "com.android.settings.Settings$WirelessSettingsActivity";
 
     private static final String PROPERTY_GTA_OPEN_KEY = "persist.radio.multisim.gta";
+    private static final String PROPERTY_CT_CLASS_C = "persist.radio.ct_class_c";
 
     //UI objects
     private ListPreference mButtonPreferredNetworkMode;
     private CheckBoxPreference mButtonDataRoam;
     private SwitchPreference mButton4glte;
+    private SwitchPreference mButtonEnable4g;
     private CheckBoxPreference mButtonPreferredLte;
 
     private static final String iface = "rmnet0"; //TODO: this will go away
@@ -189,6 +195,8 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             return true;
         } else if (preference.getKey().equals(BUTTON_4G_LTE_KEY)) {
             return true;
+        } else if (preference.getKey().equals(BUTTON_ENABLE_4G_KEY)) {
+            return true;
         } else {
             // if the button is anything but the simple toggle preference,
             // we'll need to disable all preferences to reject all click
@@ -269,6 +277,15 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         mButton4glte = (SwitchPreference)findPreference(BUTTON_4G_LTE_KEY);
         mButton4glte.setOnPreferenceChangeListener(this);
         mButton4glte.setChecked(ImsManager.isEnhanced4gLteModeSettingEnabledByUser(this));
+
+        mButtonEnable4g = (SwitchPreference)findPreference(BUTTON_ENABLE_4G_KEY);
+        if (SystemProperties.getBoolean(PROPERTY_CT_CLASS_C, false)) {
+            mButtonEnable4g.setOnPreferenceChangeListener(this);
+            updateButtonEnable4g();
+        } else {
+            prefSet.removePreference(mButtonEnable4g);
+            mButtonEnable4g = null;
+        }
 
         int networkFeature = SystemProperties.getInt(Constants.PERSIST_RADIO_NETWORK_FEATURE,
             Constants.NETWORK_MODE_DEFAULT);
@@ -357,6 +374,100 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         }
     }
 
+    private boolean checkForCtCard(String iccId) {
+        // iin length is 6 or 7
+        if (iccId == null || iccId.length() < 6) {
+            return false;
+        }
+        boolean isCtCard = false;
+        if (iccId.substring(0, 6).equals("898611") || iccId.substring(0, 6).equals("898603")) {
+            isCtCard = true;
+        }
+        return isCtCard;
+    }
+
+    private void handleEnable4gChange() {
+        int networkType = Phone.NT_MODE_GSM_ONLY;
+        boolean isCtCard = false;
+
+        //Disable the option until response is received
+        mButtonEnable4g.setEnabled(false);
+
+        int subId = mPhone.getSubId();
+        List<SubscriptionInfo> sirList =
+                    SubscriptionManager.from(mPhone.getContext()).getActiveSubscriptionInfoList();
+        if (sirList != null ) {
+            for (SubscriptionInfo sir : sirList) {
+                if (sir != null && sir.getSimSlotIndex() >= 0
+                        && sir.getSubscriptionId() == subId) {
+                    String iccId = sir.getIccId();
+                    isCtCard = checkForCtCard(iccId);
+                    break;
+                }
+            }
+        }
+
+        if (isCtCard) {
+            networkType = mButtonEnable4g.isChecked() ? Phone.NT_MODE_LTE_CDMA_EVDO_GSM_WCDMA
+                    : Phone.NT_MODE_GLOBAL;
+        } else {
+            networkType = mButtonEnable4g.isChecked() ? Phone.NT_MODE_TD_SCDMA_GSM_WCDMA_LTE
+                    : Phone.NT_MODE_TD_SCDMA_GSM_WCDMA;
+        }
+        log("Enable 4G option: isCtCard - " + isCtCard + ", set networkType - " + networkType);
+        setPreferredNetworkType(networkType);
+    }
+
+    private boolean isNwModeLte() {
+        //if present nwMode is LTE return true.
+        int type = getPreferredNetworkMode();
+        if (type == Phone.NT_MODE_TD_SCDMA_LTE_CDMA_EVDO_GSM_WCDMA
+                || type == Phone.NT_MODE_TD_SCDMA_GSM_WCDMA_LTE
+                || type == Phone.NT_MODE_TD_SCDMA_WCDMA_LTE
+                || type == Phone.NT_MODE_TD_SCDMA_GSM_LTE
+                || type == Phone.NT_MODE_TD_SCDMA_LTE
+                || type == Phone.NT_MODE_LTE_WCDMA
+                || type == Phone.NT_MODE_LTE_ONLY
+                || type == Phone.NT_MODE_LTE_CDMA_EVDO_GSM_WCDMA
+                || type == Phone.NT_MODE_LTE_GSM_WCDMA
+                || type == Phone.NT_MODE_LTE_CDMA_AND_EVDO
+                || type == Phone.NT_MODE_LTE_CDMA_EVDO_GSM
+                ) {
+            return true;
+        }
+        return false;
+    }
+
+    private void updateButtonEnable4g() {
+        if (mButtonEnable4g == null) {
+            return;
+        }
+        boolean enabled = false;
+
+        mButtonEnable4g.setChecked(isNwModeLte());
+
+        int simState = TelephonyManager.getDefault().getSimState(mPhone.getPhoneId());
+        enabled = (Settings.System.getInt(mPhone.getContext().getContentResolver(),
+                Settings.System.AIRPLANE_MODE_ON, 0) == 0)
+                && (simState == TelephonyManager.SIM_STATE_READY);
+
+        //if there is no valid subid to get IccId info, disable the option.
+        int subId = mPhone.getSubId();
+        List<SubscriptionInfo> sirList =
+                    SubscriptionManager.from(mPhone.getContext()).getActiveSubscriptionInfoList();
+        if (enabled && sirList != null ) {
+            for (SubscriptionInfo sir : sirList) {
+                if (sir != null && sir.getSimSlotIndex() >= 0
+                        && sir.getSubscriptionId() == subId) {
+                    String iccId = sir.getIccId();
+                    enabled = (iccId != null && iccId.length() >= 6) ? true : false;
+                    break;
+                }
+            }
+        }
+        mButtonEnable4g.setEnabled(enabled);
+    }
+
     private void updateButtonPreferredLte() {
         if (mButtonPreferredLte == null) {
             return;
@@ -393,6 +504,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         // and the UI state would be inconsistent with actual state
         mButtonDataRoam.setChecked(multiSimGetDataRoaming());
         updateButtonPreferredLte();
+        updateButtonEnable4g();
 
         if (getPreferenceScreen().findPreference(BUTTON_PREFERED_NETWORK_MODE) != null)  {
             mPhone.getPreferredNetworkType(mHandler.obtainMessage(
@@ -485,6 +597,10 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                     // do nothing
                 }
             }
+        } else if (mButtonEnable4g != null && preference == mButtonEnable4g) {
+            SwitchPreference enable4g = (SwitchPreference)preference;
+            enable4g.setChecked(!enable4g.isChecked());
+            handleEnable4gChange();
         }
         // always let the preference setting proceed.
         return true;
@@ -591,6 +707,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                 UpdatePreferredNetworkModeSummary(getPreferredNetworkMode());
             }
             updateButtonPreferredLte();
+            updateButtonEnable4g();
         }
 
         private void handleGetPreferredNetworkTypeResponse(Message msg) {
@@ -665,6 +782,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                     resetNetworkModeToDefault();
                 }
                 updateButtonPreferredLte();
+                updateButtonEnable4g();
             }
         }
 
@@ -676,6 +794,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                         mButtonPreferredNetworkMode.getValue()).intValue();
                 setPreferredNetworkMode(networkMode);
                 updateButtonPreferredLte();
+                updateButtonEnable4g();
                 if (SystemProperties.getBoolean(PROPERTY_GTA_OPEN_KEY, false))
                     setPrefNetworkTypeInDb(networkMode);
             } else {

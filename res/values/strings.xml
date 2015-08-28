@@ -681,6 +681,12 @@
     <string name="enhanced_4g_lte_mode_title">Enhanced 4G LTE Mode</string>
     <!-- Cellular network 4G summary [CHAR LIMIT=80] -->
     <string name="enhanced_4g_lte_mode_summary">Use LTE services to improve voice and other communications (recommended)</string>
+    <!-- Enable 4G title.   -->
+    <string name="lte_4g_settings_title">Enable/Disable 4G</string>
+    <!-- Enable 4G summary.    -->
+    <string name="lte_4g_settings_summaryOn">The phone will change to 3G/2G and 4G will be disabled.</string>
+    <!-- Enable 4G dialog prompt text.   -->
+    <string name="lte_4g_settings_summaryOff">The phone will change from 3G/2G to 4G, some active task may be stopped.</string>
     <!-- Mobile network settings screen, data enabling checkbox name -->
     <string name="data_enabled">Data enabled</string>
     <!-- Mobile network settings screen, setting summary text when check box is not selected (explains what selecting it would do) [CHAR LIMITS=40] -->
