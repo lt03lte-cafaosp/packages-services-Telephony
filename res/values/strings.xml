@@ -221,6 +221,9 @@
     <string name="mobile_network_settings_not_available">Cellular network settings are not available for this user</string>
     <!-- GSM Call settings screen, setting option name -->
     <string name="labelGSMMore">GSM call settings</string>
+    <string name="labelCFType">Call Forward Setting</string>
+    <string name="labelCFVoice">Voice</string>
+    <string name="labelCFVideo">Video</string>
     <!-- CDM Call settings screen, setting option name -->
     <string name="labelCDMAMore">CDMA call settings</string>
     <!-- Mobile network settings screen, setting option name -->
@@ -697,6 +700,7 @@
     <string name=" hide_error_from_network_text">Unable to Process Request</string>
 
     <string name="gsm_umts_options">GSM/UMTS Options</string>
+    <string name="call_forward_option">CallForward Options</string>
     <string name="cdma_options">CDMA Options</string>
     <string name="network_settings_sel_sub">SUBS Settings</string>
     <string name="summary_manage_subscriptions">Manage Network settings of each subscriptions</string>
