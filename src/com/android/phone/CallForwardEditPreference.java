@@ -53,8 +53,6 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
 
         TypedArray a = context.obtainStyledAttributes(attrs,
                 R.styleable.CallForwardEditPreference, 0, R.style.EditPhoneNumberPreference);
-        mServiceClass = a.getInt(R.styleable.CallForwardEditPreference_serviceClass,
-                CommandsInterface.SERVICE_CLASS_VOICE);
         reason = a.getInt(R.styleable.CallForwardEditPreference_reason,
                 CommandsInterface.CF_REASON_UNCONDITIONAL);
         a.recycle();
@@ -66,10 +64,12 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
         this(context, null);
     }
 
-    void init(TimeConsumingPreferenceListener listener, boolean skipReading, int phoneId) {
+    void init(TimeConsumingPreferenceListener listener, boolean skipReading, int phoneId,
+            int serviceClass) {
 
         // getting selected subscription
         if (DBG) Log.d(LOG_TAG, "Getting CallForwardEditPreference phoneId = " + phoneId);
+        mServiceClass = serviceClass;
         mPhone = PhoneUtils.getPhoneFromPhoneId(phoneId);
 
         if (PhoneGlobals.getInstance().isImsPhoneActive(mPhone)){
@@ -79,7 +79,7 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
 
         tcpListener = listener;
         if (!skipReading) {
-            mPhone.getCallForwardingOption(reason,
+            mPhone.getCallForwardingOption(reason, mServiceClass,
                     mHandler.obtainMessage(MyHandler.MESSAGE_GET_CF,
                             // unused in this case
                             CommandsInterface.CF_ACTION_DISABLE,
@@ -180,6 +180,7 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
                 mPhone.setCallForwardingOption(action,
                         reason,
                         number,
+                        mServiceClass,
                         time,
                         mHandler.obtainMessage(MyHandler.MESSAGE_SET_CF,
                                 action,
@@ -337,7 +338,7 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
                 ar.exception = null;
             }
             if (DBG) Log.d(LOG_TAG, "handleSetCFResponse: re get");
-            mPhone.getCallForwardingOption(reason,
+            mPhone.getCallForwardingOption(reason, mServiceClass,
                     obtainMessage(MESSAGE_GET_CF, msg.arg1, MESSAGE_SET_CF, ar.exception));
         }
     }
