@@ -25,6 +25,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.provider.Settings;
+import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
@@ -47,7 +48,7 @@ public class CdmaOptions {
     private static final String BUTTON_CDMA_ACTIVATE_DEVICE_KEY = "cdma_activate_device_key";
     private static final String BUTTON_CARRIER_SETTINGS_KEY = "carrier_settings_key";
     private static final String BUTTON_APN_EXPAND_KEY = "button_apn_key";
-    private static final String BUTTON_OPERATOR_SELECTION_EXPAND_KEY = "button_carrier_sel_key";
+    private static final String BUTTON_OPERATOR_SELECTION_EXPAND_KEY = "button_carrier_sel_key_cdma";
 
     private PreferenceActivity mPrefActivity;
     private PreferenceScreen mPrefScreen;
@@ -109,7 +110,9 @@ public class CdmaOptions {
 
         mButtonOperatorSelectionExpand =
                 (PreferenceScreen) mPrefScreen.findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY);
-        if (res.getBoolean(R.bool.config_disable_operator_selection_menu)) {
+        Resources subRes = SubscriptionManager.getResourcesForSubId(
+                        mPhone.getContext(), mPhone.getSubId());
+        if (subRes.getBoolean(R.bool.config_disable_operator_selection_menu)) {
             mButtonOperatorSelectionExpand.setEnabled(false);
         } else {
             mPrefScreen.removePreference(mButtonOperatorSelectionExpand);
