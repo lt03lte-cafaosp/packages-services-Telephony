@@ -28,7 +28,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
-
+import android.os.SystemProperties;
 import android.provider.Settings;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
@@ -195,7 +195,8 @@ public class GsmUmtsOptions {
     }
 
     protected boolean needDisableSub2Apn(int sub) {
-        if (mPrefActivity.getResources().getBoolean(R.bool.disable_data_sub2)) {
+        if (mPrefActivity.getResources().getBoolean(R.bool.disable_data_sub2) &&
+                !SystemProperties.getBoolean("persist.radio.ct_class_c", false)) {
             // When current SUB is SUB2, in DSDS mode, all 2 subscriptions are
             // active, we need disable current apn option.
             return (PhoneConstants.SUB2 == sub
