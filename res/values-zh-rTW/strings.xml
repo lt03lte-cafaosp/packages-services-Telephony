@@ -524,4 +524,7 @@
     <string name="enable_video_calling_dialog_msg" msgid="6547569773866546434">"如要開啟視訊通話，您必須在系統設定中啟用進階 4G LTE 模式。"</string>
     <string name="enable_video_calling_dialog_settings" msgid="576528473599603249">"網路設定"</string>
     <string name="enable_video_calling_dialog_close" msgid="7411471282167927991">"關閉"</string>
+    <string name="enhanced_4g_lte_mode_title">加強型 4G LTE 模式</string>
+    <string name="callind_multi_sim">Sim卡設置</string>
+    <string name="enhanced_4g_lte_mode_summary">使用LTE服務來改善語音和其他通信 (推薦)</string>
 </resources>
