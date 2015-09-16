@@ -516,7 +516,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
                 numCUSims++;
                 cuIndex = index;
             }
-            if (mCardStateMonitor.getCardInfo(index).isCardAvailable()) numCardsPresent++;
+            if (mCardStateMonitor.getCardInfo(index).isCardPresent()) numCardsPresent++;
         }
 
         //If only one CT SIM is present
