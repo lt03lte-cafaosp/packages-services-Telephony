@@ -85,6 +85,11 @@ public class CardStateMonitor extends Handler {
                             .isEmpty(mIccId));
         }
 
+        boolean isCardPresent() {
+            return !isCardStateEquals(null) && isCardStateEquals(CardState
+                    .CARDSTATE_PRESENT.toString()) && !TextUtils.isEmpty(mIccId);
+        }
+
         private void reset() {
             mLoadingIcc = false;
             mIccId = null;
