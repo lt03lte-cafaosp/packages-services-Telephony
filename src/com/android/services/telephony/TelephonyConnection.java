@@ -961,6 +961,9 @@ abstract class TelephonyConnection extends Connection {
             } catch (CallStateException e) {
                 Log.e(this, e, "Call to Connection.hangup failed with exception");
             }
+        } else {
+            Log.i(this, "Attempting to hangup a connection without original connection.");
+            setDisconnected(DisconnectCauseUtil.toTelecomDisconnectCause(telephonyDisconnectCode));
         }
     }
 
