@@ -109,6 +109,8 @@ public class WifiCallingSettings extends PreferenceActivity
         mWifiCallingPreference = (ListPreference)screen.findPreference(WIFI_CALLING_PREFERENCE_KEY);
         mWifiCallingPreference.setOnPreferenceChangeListener(this);
 
+        mSwitch = new Switch(this);
+
         ActionBar actionBar = getActionBar();
         if (actionBar != null) {
             // android.R.id.home will be triggered in onOptionsItemSelected()
@@ -157,7 +159,6 @@ public class WifiCallingSettings extends PreferenceActivity
             if (mWifiCallingPreference != null) {
                 screen.removePreference(mWifiCallingPreference);
             }
-            mSwitch = new Switch(this);
             mSwitch.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 
                 @Override
@@ -463,8 +464,17 @@ public class WifiCallingSettings extends PreferenceActivity
             screen.removePreference(mPrefCate);
             screen.addPreference(mWifiCallingConnectPre);
             screen.addPreference(mWifiCallingHelp);
-            mSwitch.setVisibility(View.GONE);
+            mSwitch.setVisibility(View.VISIBLE);
             mStatus = 1;
+            ActionBar actionBar = getActionBar();
+            if (actionBar != null && mSwitch != null) {
+                actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM,
+                        ActionBar.DISPLAY_SHOW_CUSTOM);
+                actionBar.setCustomView(mSwitch, new ActionBar.LayoutParams(
+                        ActionBar.LayoutParams.WRAP_CONTENT,
+                        ActionBar.LayoutParams.WRAP_CONTENT,
+                        Gravity.CENTER_VERTICAL | Gravity.RIGHT));
+            }
         } else {
             super.onBackPressed();
         }
