@@ -746,7 +746,7 @@
     <string name="psw_reenter_new">Reenter your password</string>
     <string name="no_call_barring">No callbarring</string>
     <string name="cb_psw_dont_match">Password do not match</string>
-    <string name="operation_successfully">Operation successfully!</string>
+    <string name="operation_successfully">Operation successful!</string>
 
     <!-- Screen option on the mobile network settings to go into data usage settings -->
     <string name="throttle_data_usage">Data usage</string>
