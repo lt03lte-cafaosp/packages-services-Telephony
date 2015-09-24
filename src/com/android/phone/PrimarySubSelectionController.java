@@ -430,7 +430,17 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
                 boolean is7_5_modeEnabled =
                         SystemProperties.getBoolean("persist.radio.primary_7_5_mode", false);
                 if (is7_5_modeEnabled) {
-                    trySetDdsToPrimarySub();
+                    for (int index = 0; index < PHONE_COUNT; index++) {
+                        String iccId = mCardStateMonitor.getIccId(index);
+                        String spnName = IINList.getDefault(mContext).getSpn(iccId);
+                        if (!TextUtils.isEmpty(spnName) && spnName.equals(CHINA_TELECOM_SPN)) {
+                            // When CT card present, need try to restore DDS to primary SUB
+                            // Else keep the orignal logic
+                            logd("CT card present, try to restore dds to primary SUB");
+                            trySetDdsToPrimarySub();
+                            break;
+                        }
+                    }
                 }
                 return;
             }
