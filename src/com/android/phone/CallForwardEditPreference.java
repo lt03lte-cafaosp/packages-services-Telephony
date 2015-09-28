@@ -72,7 +72,7 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
         mServiceClass = serviceClass;
         mPhone = PhoneUtils.getPhoneFromPhoneId(phoneId);
 
-        if (PhoneGlobals.getInstance().isImsPhoneActive(mPhone)){
+        if (PhoneGlobals.getInstance().isUtEnabled(mPhone)) {
             setTimeSettingVisibility(true);
             canSetTimer = true;
         }
@@ -217,7 +217,7 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
             CharSequence summaryOn;
             String number = getRawPhoneNumber();
             if (reason == CommandsInterface.CF_REASON_UNCONDITIONAL
-                    && PhoneGlobals.getInstance().isImsPhoneActive(mPhone)){
+                    && PhoneGlobals.getInstance().isUtEnabled(mPhone)) {
                 number = getRawPhoneNumberWithTime();
             }
             if (number != null && number.length() > 0) {
