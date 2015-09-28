@@ -1100,14 +1100,12 @@ public class PhoneGlobals extends ContextWrapper {
      */
     private static final long CALL_ORIGIN_EXPIRATION_MILLIS = 30 * 1000;
 
-    public boolean isImsPhoneActive(Phone mPhone){
+    public boolean isUtEnabled(Phone mPhone) {
         if (SystemProperties.getBoolean("persist.radio.cfu.timer", false)){
             return true;
         }
-        Phone imsPhone = mPhone.getImsPhone();
-        if (SystemProperties.getBoolean("persist.radio.ims.cmcc", false) && (imsPhone != null)
-                && (imsPhone.getServiceState().getState()
-                    == ServiceState.STATE_IN_SERVICE)) {
+        if (SystemProperties.getBoolean("persist.radio.ims.cmcc", false)
+                && (mPhone.isUtEnabled())) {
             return true;
         }
         return false;
