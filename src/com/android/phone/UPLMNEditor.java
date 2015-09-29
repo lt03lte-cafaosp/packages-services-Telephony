@@ -160,7 +160,7 @@ public class UPLMNEditor extends PreferenceActivity implements
             String summary = "";
             int index = Integer.parseInt(value);
             summary = getResources().getStringArray(
-                    R.array.uplmn_prefer_network_mode_td_choices)[index];
+                    selectNetworkChoices(mNWIDPref.getSummary().toString()))[index];
             mNWMPref.setSummary(summary);
         }
         return true;
@@ -302,11 +302,19 @@ public class UPLMNEditor extends PreferenceActivity implements
         }
         String summary = "";
         mNWMPref.setEntries(getResources().getTextArray(
-                R.array.uplmn_prefer_network_mode_td_choices));
+                selectNetworkChoices(number)));
         summary = getResources().getStringArray(
-                R.array.uplmn_prefer_network_mode_td_choices)[act];
+                selectNetworkChoices(number))[act];
         mNWMPref.setSummary(summary);
         mNWMPref.setValue(String.valueOf(act));
+    }
+
+    public static int selectNetworkChoices(String plmn) {
+        if (plmn == "46001" || plmn == "46005" || plmn == "46007") {
+            return R.array.uplmn_prefer_network_mode_w_choices;
+        } else {
+            return R.array.uplmn_prefer_network_mode_td_choices;
+        }
     }
 
     private String genText(String value) {

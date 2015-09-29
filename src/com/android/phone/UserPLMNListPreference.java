@@ -345,7 +345,7 @@ public class UserPLMNListPreference extends TimeConsumingPreferenceActivity {
     private void addUPLMNPreference(UPLMNInfoWithEf network) {
         Preference pref = new Preference(this);
         String plmnName = network.getOperatorNumeric();
-        String extendName = getNetWorkModeString(network.getNetworMode());
+        String extendName = getNetWorkModeString(network.getNetworMode(), plmnName);
         pref.setTitle(plmnName + "(" + extendName + ")");
         mUPLMNListContainer.addPreference(pref);
         mPreferenceMap.put(pref, network);
@@ -691,11 +691,11 @@ public class UserPLMNListPreference extends TimeConsumingPreferenceActivity {
         }
     }
 
-    private String getNetWorkModeString(int EFNWMode) {
+    private String getNetWorkModeString(int EFNWMode, String plmn) {
         int index = UPLMNEditor.convertEFMode2Ap(EFNWMode);
         String summary = "";
         summary = getResources().getStringArray(
-                R.array.uplmn_prefer_network_mode_td_choices)[index];
+                UPLMNEditor.selectNetworkChoices(plmn))[index];
         return summary;
     }
 
