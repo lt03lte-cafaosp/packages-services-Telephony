@@ -37,6 +37,7 @@ import android.R.integer;
 import android.app.ActionBar;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.SystemProperties;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -412,8 +413,10 @@ public class WifiCallingSettings extends PreferenceActivity
     }
 
     private boolean isWifiCallingPreferenceSupported() {
+        boolean isWfcNonImsPdn = SystemProperties.getBoolean(
+                "persist.radio.wfc_non-ims_pdn", false);
         return getApplicationContext().getResources().getBoolean(
-                R.bool.config_wifi_calling_preference_supported);
+                R.bool.config_wifi_calling_preference_supported) || isWfcNonImsPdn;
     }
 
     private int getDefaultWifiCallingPreference() {
