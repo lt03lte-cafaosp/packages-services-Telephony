@@ -1298,7 +1298,8 @@ abstract class TelephonyConnection extends Connection {
         final boolean canModifySession =
                 (callState == STATE_ACTIVE || callState == STATE_HOLDING) &&
                 ( (VideoProfile.VideoState.isAudioOnly(getVideoState()) && isVideoCapable()) ||
-                VideoProfile.VideoState.isVideo(getVideoState()) );
+                ( VideoProfile.VideoState.isVideo(getVideoState()) &&
+                (isAudioCapable() || isVideoCapable()) ) );
 
         if (canModifySession) {
             currentCapabilities |= mCallCapability;
@@ -1314,6 +1315,11 @@ abstract class TelephonyConnection extends Connection {
     private boolean isVideoCapable() {
         return can(mCallCapability, CAPABILITY_SUPPORTS_VT_REMOTE)
                 && can(mCallCapability, CAPABILITY_SUPPORTS_VT_LOCAL);
+    }
+
+    private boolean isAudioCapable() {
+        return can(mCallCapability, CAPABILITY_SUPPORTS_DOWNGRADE_TO_VOICE_LOCAL)
+                && can(mCallCapability, CAPABILITY_SUPPORTS_DOWNGRADE_TO_VOICE_REMOTE);
     }
 
     /**
