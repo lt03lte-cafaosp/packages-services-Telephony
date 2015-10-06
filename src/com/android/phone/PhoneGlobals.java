@@ -1105,7 +1105,7 @@ public class PhoneGlobals extends ContextWrapper {
             return true;
         }
         Phone imsPhone = mPhone.getImsPhone();
-        if ((imsPhone != null)
+        if (SystemProperties.getBoolean("persist.radio.ims.cmcc", false) && (imsPhone != null)
                 && (imsPhone.getServiceState().getState()
                     == ServiceState.STATE_IN_SERVICE)) {
             return true;
