@@ -227,8 +227,8 @@ public class TelephonyConnectionService extends ConnectionService {
         int state = phone.getServiceState().getState();
         if (state == ServiceState.STATE_OUT_OF_SERVICE) {
             int dataNetType = phone.getServiceState().getDataNetworkType();
-            if (dataNetType == ServiceState.RIL_RADIO_TECHNOLOGY_LTE ||
-                    dataNetType == ServiceState.RIL_RADIO_TECHNOLOGY_LTE_CA) {
+            if (dataNetType == TelephonyManager.NETWORK_TYPE_LTE ||
+                    dataNetType == TelephonyManager.NETWORK_TYPE_LTE_CA) {
                 state = phone.getServiceState().getDataRegState();
             }
         }
