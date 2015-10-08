@@ -57,10 +57,6 @@
     <PreferenceScreen
         android:key="wifi_calling_tutorial"
         android:title="@string/wifi_calling_settings_menu_help" >
-        <intent
-        android:action="android.intent.action.MAIN"
-        android:targetPackage="com.android.settings"
-        android:targetClass="com.android.settings.wificall.WifiCallingWizardActivity" />
     </PreferenceScreen>
 
 

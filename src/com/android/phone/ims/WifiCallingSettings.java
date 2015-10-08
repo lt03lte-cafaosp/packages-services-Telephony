@@ -35,6 +35,9 @@ import java.util.Set;
 
 import android.R.integer;
 import android.app.ActionBar;
+import android.app.AlertDialog;
+import android.content.Intent;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
@@ -136,6 +139,7 @@ public class WifiCallingSettings extends PreferenceActivity
         mWifiCallingPreCarrier = screen
                 .findPreference(WIFI_CALLING_PREFERENCE_KEY);
         mWifiCallingHelp = screen.findPreference("wifi_calling_tutorial");
+        mWifiCallingHelp.setOnPreferenceClickListener(this);
         mWifiCallingConnectPre = screen
                 .findPreference(KEY_WIFI_CALLING_CONNECTION_PREFERENCE);
         mWifiCallingConnectPre.setOnPreferenceClickListener(this);
@@ -423,6 +427,29 @@ public class WifiCallingSettings extends PreferenceActivity
 
     @Override
     public boolean onPreferenceClick(Preference preference) {
+        if (preference.getKey().equals("wifi_calling_tutorial")) {
+            final Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_MAIN);
+            intent.setClassName("com.android.settings",
+                    "com.android.settings.wificall.WifiCallingWizardActivity");
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            final String[] options = {getString(R.string.wifi_help_option_tutorial),
+                                            getString(R.string.wifi_help_option_top_questions)};
+            builder.setTitle(getString(R.string.wifi_help_title));
+            builder.setItems(options, new DialogInterface.OnClickListener() {
+                @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (which == 0) {
+                            intent.putExtra("triggeredFromHelp", true);
+                        } else {
+                            intent.putExtra("triggeredFromHelp", false);
+                        }
+                        startActivity(intent);
+                    }
+                }
+            );
+            builder.show();
+        }
         if (preference.getKey().equals(KEY_WIFI_CALLING_CONNECTION_PREFERENCE)) {
             changeToPreference();
             return true;
