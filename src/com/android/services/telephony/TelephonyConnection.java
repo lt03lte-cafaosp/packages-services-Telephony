@@ -152,7 +152,7 @@ abstract class TelephonyConnection extends Connection {
                         onSuppServiceNotification(ssn);
                     }
                 case MSG_CONFERENCE_MERGE_FAILED:
-                    notifyConferenceMergeFailed();
+                    removeAndAddHoldCapability();
                     break;
                 case MSG_PHONE_VP_ON:
                     if (!mVoicePrivacyState) {
@@ -1350,6 +1350,25 @@ abstract class TelephonyConnection extends Connection {
                     PhoneCapabilities.CALL_TYPE_MODIFIABLE);
         }
         return currentCapabilities;
+    }
+
+    private void removeAndAddHoldCapability() {
+        int newCapabilities = buildConnectionCapabilities();
+        newCapabilities = applyAudioQualityCapabilities(newCapabilities);
+        newCapabilities = applyConferenceTerminationCapabilities(newCapabilities);
+        newCapabilities = applyVoicePrivacyCapabilities(newCapabilities);
+        newCapabilities = applyAddParticipantCapabilities(newCapabilities);
+        newCapabilities = applyConferenceCapabilities(newCapabilities);
+        //This is hack way of triggering state change at InCallUI to reenable
+        //merge icon.
+        newCapabilities = removeCapability(newCapabilities, CAPABILITY_HOLD);
+        if (getConnectionCapabilities() != newCapabilities) {
+            setConnectionCapabilities(newCapabilities);
+        }
+        newCapabilities = applyCapability(newCapabilities, CAPABILITY_HOLD);
+        if (getConnectionCapabilities() != newCapabilities) {
+            setConnectionCapabilities(newCapabilities);
+        }
     }
 
     /**
