@@ -1796,6 +1796,9 @@
     <string name="wifi_only">Wifi Only</string>
     <string name="cellular_preferred">Cellular Preferred</string>
     <string name="cellular_only">Cellular Only</string>
+    <string name="wifi_help_option_tutorial">Tutorial</string>
+    <string name="wifi_help_option_top_questions">Top questions</string>
+    <string name="wifi_help_title">Help</string>
 
     <string-array name="wifi_calling_preference_choices">
         <item>@string/wifi_preferred</item>
