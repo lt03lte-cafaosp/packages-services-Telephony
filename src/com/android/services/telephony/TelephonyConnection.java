@@ -78,6 +78,7 @@ abstract class TelephonyConnection extends Connection {
     private static final int MSG_SET_AUDIO_QUALITY = 13;
     private static final int MSG_SET_CALL_SUBSTATE = 14;
     private static final int MSG_SET_CONFERENCE_PARTICIPANTS = 15;
+    private static final int MSG_CONFERENCE_MERGE_FAILED = 16;
 
     private static final String ACTION_SUPP_SERVICE_FAILURE =
             "org.codeaurora.ACTION_SUPP_SERVICE_FAILURE";
@@ -150,6 +151,8 @@ abstract class TelephonyConnection extends Connection {
                     if (ssn != null) {
                         onSuppServiceNotification(ssn);
                     }
+                case MSG_CONFERENCE_MERGE_FAILED:
+                    removeAndAddHoldCapability();
                     break;
                 case MSG_PHONE_VP_ON:
                     if (!mVoicePrivacyState) {
@@ -513,6 +516,14 @@ abstract class TelephonyConnection extends Connection {
         @Override
         public void onConferenceParticipantsChanged(List<ConferenceParticipant> participants) {
             mHandler.obtainMessage(MSG_SET_CONFERENCE_PARTICIPANTS, participants).sendToTarget();
+        }
+
+        /**
+         * Handles the event that the request to merge calls failed.
+         */
+        @Override
+        public void onConferenceMergedFailed() {
+            handleConferenceMergeFailed();
         }
     };
 
@@ -1254,6 +1265,15 @@ abstract class TelephonyConnection extends Connection {
         }
     }
 
+    /**
+     * Handles a failure when merging calls into a conference.
+     * {@link com.android.internal.telephony.Connection.Listener#onConferenceMergedFailed()}
+     * listener.
+     */
+    private void handleConferenceMergeFailed(){
+        mHandler.obtainMessage(MSG_CONFERENCE_MERGE_FAILED).sendToTarget();
+    }
+
     private void setActiveInternal() {
         if (getState() == STATE_ACTIVE) {
             Log.w(this, "Should not be called if this is already ACTIVE");
@@ -1330,6 +1350,25 @@ abstract class TelephonyConnection extends Connection {
                     PhoneCapabilities.CALL_TYPE_MODIFIABLE);
         }
         return currentCapabilities;
+    }
+
+    private void removeAndAddHoldCapability() {
+        int newCapabilities = buildConnectionCapabilities();
+        newCapabilities = applyAudioQualityCapabilities(newCapabilities);
+        newCapabilities = applyConferenceTerminationCapabilities(newCapabilities);
+        newCapabilities = applyVoicePrivacyCapabilities(newCapabilities);
+        newCapabilities = applyAddParticipantCapabilities(newCapabilities);
+        newCapabilities = applyConferenceCapabilities(newCapabilities);
+        //This is hack way of triggering state change at InCallUI to reenable
+        //merge icon.
+        newCapabilities = removeCapability(newCapabilities, CAPABILITY_HOLD);
+        if (getConnectionCapabilities() != newCapabilities) {
+            setConnectionCapabilities(newCapabilities);
+        }
+        newCapabilities = applyCapability(newCapabilities, CAPABILITY_HOLD);
+        if (getConnectionCapabilities() != newCapabilities) {
+            setConnectionCapabilities(newCapabilities);
+        }
     }
 
     /**
