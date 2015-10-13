@@ -78,6 +78,7 @@ abstract class TelephonyConnection extends Connection {
     private static final int MSG_SET_AUDIO_QUALITY = 13;
     private static final int MSG_SET_CALL_SUBSTATE = 14;
     private static final int MSG_SET_CONFERENCE_PARTICIPANTS = 15;
+    private static final int MSG_CONFERENCE_MERGE_FAILED = 16;
 
     private static final String ACTION_SUPP_SERVICE_FAILURE =
             "org.codeaurora.ACTION_SUPP_SERVICE_FAILURE";
@@ -151,6 +152,8 @@ abstract class TelephonyConnection extends Connection {
                     if (ssn != null) {
                         onSuppServiceNotification(ssn);
                     }
+                case MSG_CONFERENCE_MERGE_FAILED:
+                    notifyConferenceMergeFailed();
                     break;
                 case MSG_PHONE_VP_ON:
                     if (!mVoicePrivacyState) {
@@ -497,6 +500,14 @@ abstract class TelephonyConnection extends Connection {
         @Override
         public void onConferenceParticipantsChanged(List<ConferenceParticipant> participants) {
             mHandler.obtainMessage(MSG_SET_CONFERENCE_PARTICIPANTS, participants).sendToTarget();
+        }
+
+        /**
+         * Handles the event that the request to merge calls failed.
+         */
+        @Override
+        public void onConferenceMergedFailed() {
+            handleConferenceMergeFailed();
         }
     };
 
@@ -1235,6 +1246,15 @@ abstract class TelephonyConnection extends Connection {
         for (int i = 0; i < TelephonyManager.getDefault().getPhoneCount(); i++) {
             mIsPermDiscCauseReceived[i] = false;
         }
+    }
+
+    /**
+     * Handles a failure when merging calls into a conference.
+     * {@link com.android.internal.telephony.Connection.Listener#onConferenceMergedFailed()}
+     * listener.
+     */
+    private void handleConferenceMergeFailed(){
+        mHandler.obtainMessage(MSG_CONFERENCE_MERGE_FAILED).sendToTarget();
     }
 
     private void setActiveInternal() {
