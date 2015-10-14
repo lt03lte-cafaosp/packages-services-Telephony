@@ -310,7 +310,9 @@ public class UPLMNEditor extends PreferenceActivity implements
     }
 
     public static int selectNetworkChoices(String plmn) {
-        if (plmn == "46001" || plmn == "46005" || plmn == "46007") {
+        Log.d(LOG_TAG, "plmn = " + plmn);
+
+        if (plmn.equals("46001") || plmn.equals("46005") || plmn.equals("46007")) {
             return R.array.uplmn_prefer_network_mode_w_choices;
         } else {
             return R.array.uplmn_prefer_network_mode_td_choices;
