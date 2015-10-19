@@ -309,14 +309,13 @@ public class UPLMNEditor extends PreferenceActivity implements
         mNWMPref.setValue(String.valueOf(act));
     }
 
-    public static int selectNetworkChoices(String plmn) {
+    public int selectNetworkChoices(String plmn) {
         Log.d(LOG_TAG, "plmn = " + plmn);
-
-        if (plmn.equals("46001") || plmn.equals("46005") || plmn.equals("46007")) {
-            return R.array.uplmn_prefer_network_mode_w_choices;
-        } else {
-            return R.array.uplmn_prefer_network_mode_td_choices;
+        String[] CuPlmnArray = getResources().getStringArray(R.array.uplmn_cu_mcc_mnc_values);
+        for (String CuPlmn : CuPlmnArray) {
+            if (plmn.equals(CuPlmn)) return R.array.uplmn_prefer_network_mode_w_choices;
         }
+        return R.array.uplmn_prefer_network_mode_td_choices;
     }
 
     private String genText(String value) {

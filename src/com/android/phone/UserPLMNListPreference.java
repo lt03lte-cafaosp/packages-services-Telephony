@@ -692,11 +692,16 @@ public class UserPLMNListPreference extends TimeConsumingPreferenceActivity {
     }
 
     private String getNetWorkModeString(int EFNWMode, String plmn) {
+        Log.d(LOG_TAG, "plmn = " + plmn);
         int index = UPLMNEditor.convertEFMode2Ap(EFNWMode);
-        String summary = "";
-        summary = getResources().getStringArray(
-                UPLMNEditor.selectNetworkChoices(plmn))[index];
-        return summary;
+        String[] CuPlmnArray = getResources().getStringArray(R.array.uplmn_cu_mcc_mnc_values);
+        for (String CuPlmn : CuPlmnArray) {
+            if (plmn.equals(CuPlmn)) {
+                return getResources().getStringArray
+                        (R.array.uplmn_prefer_network_mode_w_choices)[index];
+             }
+        }
+        return getResources().getStringArray(R.array.uplmn_prefer_network_mode_td_choices)[index];
     }
 
     private void setScreenEnabled() {
