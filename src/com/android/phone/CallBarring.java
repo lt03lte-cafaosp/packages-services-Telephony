@@ -37,6 +37,7 @@ import android.os.AsyncResult;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemProperties;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -146,6 +147,10 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
         mListOutgoing.setOnPreferenceChangeListener(this);
         mListIncoming.setOnPreferenceChangeListener(this);
 
+        if (SystemProperties.getBoolean("persist.radio.ims.cmcc", false)) {
+            mListOutgoing.setEnabled(false);
+        }
+
         mDialogCancelAll = (EditPinPreference) prefSet.findPreference(CALL_BARRING_CANCEL_ALL_KEY);
         mDialogChangePSW = (EditPinPreference) prefSet.findPreference(CALL_BARRING_CHANGE_PSW_KEY);
         mDialogCancelAll.setOnPinEnteredListener(this);
@@ -221,8 +226,13 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
     // Request to begin querying for call barring.
     private void queryAllCBOptions() {
         showDialog(INITIAL_BUSY_DIALOG);
-        mPhone.getCallBarringOption (CommandsInterface.CB_FACILITY_BAOC, "",
-                Message.obtain(mGetAllCBOptionsComplete, EVENT_CB_QUERY_ALL, CB_BAOC, 0));
+        if (SystemProperties.getBoolean("persist.radio.ims.cmcc", false)) {
+            mPhone.getCallBarringOption (CommandsInterface.CB_FACILITY_BAIC, "",
+                    Message.obtain(mGetAllCBOptionsComplete,EVENT_CB_QUERY_ALL, CB_BAIC, 0));
+        } else {
+            mPhone.getCallBarringOption (CommandsInterface.CB_FACILITY_BAOC, "",
+                    Message.obtain(mGetAllCBOptionsComplete, EVENT_CB_QUERY_ALL, CB_BAOC, 0));
+        }
     }
 
     // callback after each step of querying for all options.
