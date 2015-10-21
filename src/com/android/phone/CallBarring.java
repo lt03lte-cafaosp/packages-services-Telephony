@@ -147,6 +147,10 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
         mListOutgoing.setOnPreferenceChangeListener(this);
         mListIncoming.setOnPreferenceChangeListener(this);
 
+        if (SystemProperties.getBoolean("persist.radio.ims.cmcc", false)) {
+            mListOutgoing.setEnabled(false);
+        }
+
         mDialogCancelAll = (EditPinPreference) prefSet.findPreference(CALL_BARRING_CANCEL_ALL_KEY);
         mDialogChangePSW = (EditPinPreference) prefSet.findPreference(CALL_BARRING_CHANGE_PSW_KEY);
         mDialogCancelAll.setOnPinEnteredListener(this);
