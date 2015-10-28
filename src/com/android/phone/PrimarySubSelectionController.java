@@ -531,6 +531,17 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
             mIsCtCardPresent = true;
             new PrefNetworkRequest(mContext, ctIndex, Phone.NT_MODE_GLOBAL, null).loop();
         }
+
+        //if 2 CT cards are present, set nwMode 1x/DO/G/W on sub 0 and GSM on sub 1
+        //Also set DDS on sub 0
+        if (numCTSims == 2) {
+            mIsCtCardPresent = true;
+            new PrefNetworkRequest(mContext, 1, Phone.NT_MODE_GSM_ONLY, null).loop();
+            new PrefNetworkRequest(mContext, 0, Phone.NT_MODE_GLOBAL, null).loop();
+            int subId = SubscriptionManager.getSubId(0)[0];
+            SubscriptionManager.from(mContext).setDefaultDataSubId(subId);
+        }
+
         //  ii)save ct mode, so that Settings app can enable/disable the DDS option.
         Settings.Global.putInt(mContext.getContentResolver(),
                 CONFIG_CT_CARD_PRESENT, mIsCtCardPresent ? 1 : 0);
