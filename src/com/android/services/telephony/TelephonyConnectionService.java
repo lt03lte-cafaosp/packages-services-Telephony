@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2014 The Android Open Source Project
  *
@@ -124,6 +125,7 @@ public class TelephonyConnectionService extends ConnectionService {
         }
         mExpectedComponentName = new ComponentName(this, this.getClass());
         mEmergencyTonePlayer = new EmergencyTonePlayer(this);
+        TelecomAccountRegistry.getInstance(this).setTelephonyConnectionService(this);
     }
 
     @Override

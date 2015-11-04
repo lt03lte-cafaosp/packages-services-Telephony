@@ -207,6 +207,9 @@ final class TelecomAccountRegistry {
     private List<AccountEntry> mAccounts = new LinkedList<AccountEntry>();
     private int mServiceState = ServiceState.STATE_POWER_OFF;
 
+    // pattern; redesign. This was added to fix a late release bug.
+    private TelephonyConnectionService mTelephonyConnectionService;
+
     TelecomAccountRegistry(Context context) {
         mContext = context;
         mTelecomManager = TelecomManager.from(context);
@@ -323,5 +326,13 @@ final class TelecomAccountRegistry {
             entry.teardown();
         }
         mAccounts.clear();
+    }
+
+    void setTelephonyConnectionService(TelephonyConnectionService telephonyConnectionService) {
+        this.mTelephonyConnectionService = telephonyConnectionService;
+    }
+
+    TelephonyConnectionService getTelephonyConnectionService() {
+        return mTelephonyConnectionService;
     }
 }
