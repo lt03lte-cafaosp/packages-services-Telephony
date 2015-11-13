@@ -37,6 +37,7 @@ import android.os.AsyncResult;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemProperties;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -197,6 +198,12 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
             mListOutgoing.setSummary(mListOutgoing.getEntry());
             mListIncoming.setValue(String.valueOf(mIncomingState));
             mListIncoming.setSummary(mListIncoming.getEntry());
+            if (SystemProperties.getBoolean("persist.radio.ims.cmcc", false)
+                    && mPhone.isUtEnabled()) {
+                mListOutgoing.setEnabled(false);
+            } else {
+                mListOutgoing.setEnabled(true);
+            }
         }
     }
 
@@ -241,9 +248,7 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
                 case EVENT_CB_QUERY_ALL:
                     status = handleGetCBMessage(ar, msg.arg1);
                     if (status != MSG_OK) {
-                        removeDialog(INITIAL_BUSY_DIALOG);
                         Log.d("CallBarring","EXCEPTION_ERROR!");
-                        return;
                     }
 
                     switch (msg.arg1) {
@@ -326,6 +331,14 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
         mListIncoming.setSummary(mListIncoming.getEntry());
         mSetOutgoing = CB_INVALID;
         mSetIncoming = CB_INVALID;
+        // only when we get the CB data and Ut is enabled, disable the preference
+        // for other cases, just enable it in case any function broken
+        if (SystemProperties.getBoolean("persist.radio.ims.cmcc", false)
+                && mPhone.isUtEnabled() && !mCBDataStale) {
+            mListOutgoing.setEnabled(false);
+        } else {
+            mListOutgoing.setEnabled(true);
+        }
     }
 
     public boolean onPreferenceChange(Preference preference, Object newValue) {
