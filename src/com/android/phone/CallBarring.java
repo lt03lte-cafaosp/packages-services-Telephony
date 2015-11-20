@@ -152,11 +152,6 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
         mListOutgoing.setOnPreferenceChangeListener(this);
         mListIncoming.setOnPreferenceChangeListener(this);
 
-        if (mCfgResUtil.getBooleanValue(mPhone.getContext(),"config_enable_callbarring_over_ims")
-                && mPhone.isUtEnabled()) {
-            mListOutgoing.setEnabled(false);
-        }
-
         mDialogCancelAll = (EditPinPreference) prefSet.findPreference(CALL_BARRING_CANCEL_ALL_KEY);
         mDialogChangePSW = (EditPinPreference) prefSet.findPreference(CALL_BARRING_CHANGE_PSW_KEY);
         mDialogCancelAll.setOnPinEnteredListener(this);
@@ -208,6 +203,12 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
             mListOutgoing.setSummary(mListOutgoing.getEntry());
             mListIncoming.setValue(String.valueOf(mIncomingState));
             mListIncoming.setSummary(mListIncoming.getEntry());
+            if (mCfgResUtil.getBooleanValue(mPhone.getContext(),"config_enable_callbarring_over_ims")
+                    && mPhone.isUtEnabled()) {
+                mListOutgoing.setEnabled(false);
+            } else {
+                mListOutgoing.setEnabled(true);
+            }
         }
     }
 
@@ -232,14 +233,8 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
     // Request to begin querying for call barring.
     private void queryAllCBOptions() {
         showDialog(INITIAL_BUSY_DIALOG);
-        if (mCfgResUtil.getBooleanValue(mPhone.getContext(),"config_enable_callbarring_over_ims")
-                && mPhone.isUtEnabled()) {
-            mPhone.getCallBarringOption (CommandsInterface.CB_FACILITY_BAIC, "",
-                    Message.obtain(mGetAllCBOptionsComplete,EVENT_CB_QUERY_ALL, CB_BAIC, 0));
-        } else {
-            mPhone.getCallBarringOption (CommandsInterface.CB_FACILITY_BAOC, "",
-                    Message.obtain(mGetAllCBOptionsComplete, EVENT_CB_QUERY_ALL, CB_BAOC, 0));
-        }
+        mPhone.getCallBarringOption (CommandsInterface.CB_FACILITY_BAOC, "",
+                Message.obtain(mGetAllCBOptionsComplete, EVENT_CB_QUERY_ALL, CB_BAOC, 0));
     }
 
     // callback after each step of querying for all options.
@@ -258,9 +253,7 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
                 case EVENT_CB_QUERY_ALL:
                     status = handleGetCBMessage(ar, msg.arg1);
                     if (status != MSG_OK) {
-                        removeDialog(INITIAL_BUSY_DIALOG);
                         Log.d("CallBarring","EXCEPTION_ERROR!");
-                        return;
                     }
 
                     switch (msg.arg1) {
@@ -343,6 +336,14 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
         mListIncoming.setSummary(mListIncoming.getEntry());
         mSetOutgoing = CB_INVALID;
         mSetIncoming = CB_INVALID;
+        // only when we get the CB data and Ut is enabled, disable the preference
+        // for other cases, just enable it in case any function broken
+        if (mCfgResUtil.getBooleanValue(mPhone.getContext(),"config_enable_callbarring_over_ims")
+                && mPhone.isUtEnabled() && !mCBDataStale) {
+            mListOutgoing.setEnabled(false);
+        } else {
+            mListOutgoing.setEnabled(true);
+        }
     }
 
     public boolean onPreferenceChange(Preference preference, Object newValue) {
