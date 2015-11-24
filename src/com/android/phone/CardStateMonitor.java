@@ -39,7 +39,10 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Registrant;
 import android.os.RegistrantList;
+import android.os.SystemProperties;
 import android.provider.Settings;
+import android.telephony.SubInfoRecord;
+import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -59,6 +62,8 @@ import com.android.internal.telephony.uicc.UiccCard;
 import com.android.internal.telephony.uicc.UiccCardApplication;
 import com.android.internal.telephony.uicc.UiccController;
 
+import java.util.List;
+
 public class CardStateMonitor extends Handler {
 
     private static final String TAG = "CardStateMonitor";
@@ -69,11 +74,40 @@ public class CardStateMonitor extends Handler {
 
     private static final int EVENT_ICC_CHANGED = 1;
     private static final int EVENT_ICCID_LOAD_DONE = 2;
+    private static final int EVENT_READ_EF_HPLMNWACT_DONE = 3;
+
+    //Indicate Card type if it is 2G, 3G or 4G card.
+    private static final int CARD_TYPE_INVALID = 1;
+    private static final int CARD_TYPE_2G = 2;
+    private static final int CARD_TYPE_3G = 3;
+    private static final int CARD_TYPE_4G = 4;
+
+    //Read state for EF_HPLMNwACT to determine 4G cards.
+    private static final int EF_READ_NOT_NEEDED = 0;
+    private static final int EF_READ_INIT = 1;
+    private static final int EF_READ_IN_PROGRESS = 2;
+    private static final int EF_READ_COMPLETED = 3;
+    private static final int EF_READ_FAILED_OR_NOT_PRESENT = 4;
+
+    public static final long DUMMY_SUB_ID_BASE = SubscriptionManager.DEFAULT_SUB_ID
+            - PhoneConstants.MAX_PHONE_COUNT_TRI_SIM;
+
+    /* 5n bytes:
+    1 to 3  nth PLMN (highest priority)
+    4 to 5  nth PLMN Access Technology Identifier */
+    private static final int HPLMN_SEL_DATA_LEN = 5;
 
     static class CardInfo {
         boolean mLoadingIcc;
         String mIccId;
         String mCardState;
+        int mEfReadState = EF_READ_INIT;
+        int mCardType = CARD_TYPE_INVALID;
+
+        boolean isEfReadCompleted() {
+            return (mEfReadState == EF_READ_NOT_NEEDED || mEfReadState == EF_READ_COMPLETED ||
+                    mEfReadState == EF_READ_FAILED_OR_NOT_PRESENT);
+        }
 
         boolean isCardStateEquals(String cardState) {
             return TextUtils.equals(mCardState, cardState);
@@ -89,6 +123,8 @@ public class CardStateMonitor extends Handler {
             mLoadingIcc = false;
             mIccId = null;
             mCardState = null;
+            mEfReadState = EF_READ_INIT;
+            mCardType = CARD_TYPE_INVALID;
         }
     }
 
@@ -165,6 +201,17 @@ public class CardStateMonitor extends Handler {
         return uiccCard;
     }
 
+    public int get4gCardSlot() {
+        int slotId = -1;
+        for (int index = 0; index < PHONE_COUNT; index++) {
+            if (mCards[index].mCardType == CARD_TYPE_4G) {
+                slotId = index;
+                break;
+            }
+        }
+        return slotId;
+    }
+
     @Override
     public void handleMessage(Message msg) {
         switch (msg.what) {
@@ -176,7 +223,40 @@ public class CardStateMonitor extends Handler {
                 logd("on EVENT_ICCID_LOAD_DONE");
                 onIccIdLoaded((AsyncResult) msg.obj);
                 break;
+            case EVENT_READ_EF_HPLMNWACT_DONE:
+                logd("on EVENT_READ_EF_HPLMNWACT_DONE");
+                onEfLoaded((AsyncResult) msg.obj);
+                break;
         }
+    }
+
+    private void onEfLoaded(AsyncResult ar) {
+        int cardIndex = (Integer) ar.userObj;
+
+        logd("onEfLoaded: Started");
+
+        if (ar.exception != null) {
+            logd("EF_HPLMNWACT read with exception = " + ar.exception);
+            mCards[cardIndex].mEfReadState = EF_READ_FAILED_OR_NOT_PRESENT;
+            notifyAllCardsAvailableIfNeed();
+        } else {
+            byte[] data = (byte[]) ar.result;
+            logd("result=" + IccUtils.bytesToHexString(data));
+            int numRec = data.length / HPLMN_SEL_DATA_LEN;
+            logd("number of Records=" + numRec);
+
+            for (int i = 0; i < numRec; i++) {
+                if ((data[i * HPLMN_SEL_DATA_LEN + 3] & 0x40) != 0) {
+                    mCards[cardIndex].mCardType = CARD_TYPE_4G;
+                    break;
+                }
+            }
+            mCards[cardIndex].mEfReadState = EF_READ_COMPLETED;
+            notifyAllCardsAvailableIfNeed();
+        }
+        logd("onEfLoaded: Exit. Slot = " + cardIndex + ", mCardType = " +
+                mCards[cardIndex].mCardType + ", mEf State = " + mCards[cardIndex].mEfReadState);
+
     }
 
     private void onIccIdLoaded(AsyncResult iccIdResult) {
@@ -216,6 +296,8 @@ public class CardStateMonitor extends Handler {
 
     private void loadIccId(int sub, UiccCard uiccCard) {
         mCards[sub].mLoadingIcc = true;
+        mCards[sub].mEfReadState = EF_READ_INIT;
+        mCards[sub].mCardType = CARD_TYPE_INVALID;
         boolean request = false;
         UiccCardApplication validApp = null;
         int numApps = uiccCard.getNumApplications();
@@ -245,6 +327,8 @@ public class CardStateMonitor extends Handler {
                 logd("notifyCardAvailableIfNeed sim hot swap");
                 mCards[sub].mLoadingIcc = false;
                 mCards[sub].mIccId = null;
+                mCards[sub].mEfReadState = EF_READ_INIT;
+                mCards[sub].mCardType = CARD_TYPE_INVALID;
             }
 
             if (CardState.CARDSTATE_PRESENT == uiccCard.getCardState()
@@ -256,6 +340,8 @@ public class CardStateMonitor extends Handler {
                 mCards[sub].mCardState = uiccCard.getCardState().toString();
                 notifyAllCardsAvailableIfNeed();
             }
+
+            readEfHplmnwActIfNeed(sub, uiccCard);
         } else {
             // card is null, means card info is inavailable or the device is in
             // APM, need to reset all card info, otherwise no change will be
@@ -264,9 +350,83 @@ public class CardStateMonitor extends Handler {
         }
     }
 
+    private boolean isCardDeactivated(int cardIndex) {
+        boolean isSubDeactivated = false;
+        List<SubInfoRecord> sirList =
+                SubscriptionManager.getActiveSubInfoList();
+        if (sirList != null ) {
+            for (SubInfoRecord sir : sirList) {
+                if (sir != null && cardIndex == sir.slotId) {
+                    if (sir.subId > 0 &&
+                            sir.subId < DUMMY_SUB_ID_BASE &&
+                            sir.slotId >= 0 &&
+                            sir.mStatus == SubscriptionManager.INACTIVE) {
+                        isSubDeactivated = true;
+                    }
+                    break;
+                }
+            }
+        }
+        return isSubDeactivated;
+    }
+
+    public boolean isDetect4gCardEnabled() {
+        return SystemProperties.getBoolean("persist.radio.detect4gcard", false)
+                && (PHONE_COUNT > 1);
+    }
+
+    private void readEfHplmnwActIfNeed(int cardIndex, UiccCard uiccCard) {
+        UiccCardApplication app = uiccCard.getApplication(UiccController.APP_FAM_3GPP);
+
+        logd("readEfHplmnwActIfNeed: Started");
+
+        if (!isDetect4gCardEnabled() || CardState.CARDSTATE_PRESENT != uiccCard.getCardState()) {
+            //Card is not present or feature not enabled, no need to read the EF.
+            logd("readEfHplmnwActIfNeed: Card is Absent or Property Disabled. EXIT!!!");
+            mCards[cardIndex].mCardType = CARD_TYPE_INVALID;
+            if (mCards[cardIndex].mEfReadState != EF_READ_NOT_NEEDED) {
+                mCards[cardIndex].mEfReadState = EF_READ_NOT_NEEDED;
+                notifyAllCardsAvailableIfNeed();
+            }
+        } else if (isCardDeactivated(cardIndex)) {
+            //card is deactivated, no need to read the EF
+            logd("readEfHplmnwActIfNeed: Card is Deactivated. EXIT!!");
+            if (mCards[cardIndex].mEfReadState != EF_READ_NOT_NEEDED) {
+                mCards[cardIndex].mEfReadState = EF_READ_NOT_NEEDED;
+                notifyAllCardsAvailableIfNeed();
+            }
+        } else if (app != null && app.getType() != AppType.APPTYPE_USIM &&
+                app.getState() == AppState.APPSTATE_READY) {
+            //card is not 3G/4G, no need to read the EF
+            logd("readEfHplmnwActIfNeed: Not an USIM. EXIT!!!");
+            mCards[cardIndex].mCardType = CARD_TYPE_2G;
+            if (mCards[cardIndex].mEfReadState != EF_READ_FAILED_OR_NOT_PRESENT) {
+                mCards[cardIndex].mEfReadState = EF_READ_FAILED_OR_NOT_PRESENT;
+                notifyAllCardsAvailableIfNeed();
+            }
+        } else if (app != null && app.getState() == AppState.APPSTATE_READY &&
+                mCards[cardIndex].mEfReadState != EF_READ_IN_PROGRESS &&
+                mCards[cardIndex].mEfReadState != EF_READ_COMPLETED) {
+            logd("readEfHplmnwActIfNeed: EF_HPLMNwACT Start read...");
+            IccFileHandler iccFh = app.getIccFileHandler();
+
+            if (iccFh != null) {
+                //card is atleast 3G card, Read the EF to check if it supports 4G or not.
+                mCards[cardIndex].mCardType = CARD_TYPE_3G;
+                mCards[cardIndex].mEfReadState = EF_READ_IN_PROGRESS;
+                iccFh.loadEFTransparent(IccConstants.EF_HPLMNWACT,
+                    obtainMessage(EVENT_READ_EF_HPLMNWACT_DONE, cardIndex));
+            } else {
+                Log.w(TAG, "IccFileHandler is null");
+            }
+        }
+        logd("readEfHplmnwActIfNeed: Exit. Slot = " + cardIndex + ", mCardType = " +
+                mCards[cardIndex].mCardType + ", mEf State = " + mCards[cardIndex].mEfReadState);
+    }
+
     private void notifyAllCardsAvailableIfNeed() {
         for (int index = 0; index < PHONE_COUNT; index++) {
-            if (!mCards[index].isCardAvailable()) {
+            if (!mCards[index].isCardAvailable() || !mCards[index].isEfReadCompleted()) {
                 return;
             }
         }

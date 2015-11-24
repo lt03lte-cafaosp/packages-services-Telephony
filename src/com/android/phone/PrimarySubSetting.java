@@ -56,7 +56,7 @@ import com.android.internal.telephony.Phone;
 public class PrimarySubSetting extends Activity implements View.OnClickListener {
 
     private static final String TAG = "PrimarySubSetting";
-    private TextView mRecognizeText;
+    private TextView mRecognizeText, mSelectText;
     private RadioGroup mRadioGroup;
     private Button mOKbutton;
     private CheckBox mDdsChecBox;
@@ -75,8 +75,10 @@ public class PrimarySubSetting extends Activity implements View.OnClickListener 
         mPrimarySubSelectionController = PrimarySubSelectionController.getInstance();
         mIsPrimaryLteSubEnabled = mPrimarySubSelectionController.isPrimaryLteSubEnabled()
                 && mPrimarySubSelectionController.isPrimarySetable()
-                && mPrimarySubSelectionController.getPrefPrimarySlot() == -1;
+                && (mPrimarySubSelectionController.getPrefPrimarySlot() == -1
+                || mPrimarySubSelectionController.isDetect4gCardEnabled());
         mRecognizeText = (TextView) findViewById(R.id.recognize_text);
+        mSelectText = (TextView) findViewById(R.id.lte_text);
 
         mRadioGroup = (RadioGroup) findViewById(R.id.radiogroup);
         for (int i = 0; i < PrimarySubSelectionController.PHONE_COUNT; i++) {
@@ -85,11 +87,17 @@ public class PrimarySubSetting extends Activity implements View.OnClickListener 
                     LayoutParams.WRAP_CONTENT));
             radioButton.setEnabled(mIsPrimaryLteSubEnabled);
             radioButton.setTag(i);
-            radioButton.setText(mPrimarySubSelectionController.getSimName(i));
+            radioButton.setText(mPrimarySubSelectionController.getSimCardInfo(i));
             radioButton.setOnClickListener(this);
         }
         mDdsChecBox = (CheckBox) findViewById(R.id.lte_checkBox);
         mDdsChecBox.setEnabled(mIsPrimaryLteSubEnabled);
+
+        if (mPrimarySubSelectionController.isDetect4gCardEnabled()) {
+            mRecognizeText.setText(R.string.lte_recognize_summary_generic);
+            mSelectText.setText(R.string.lte_select_summary_generic);
+            mDdsChecBox.setVisibility(View.GONE);
+        }
         if (CONFIG_ACTION.equals(getIntent().getAction())) {
             setTitle(R.string.lte_select_title);
             mRecognizeText.setVisibility(View.GONE);
@@ -148,7 +156,11 @@ public class PrimarySubSetting extends Activity implements View.OnClickListener 
             mOKbutton.setEnabled(true);
         } else if (v == mOKbutton) {
             mProgressDialog.show();
-            mPrimarySubSelectionController.setPreferredNetwork((Integer) mOKbutton.getTag(),
+            int targetSub = (Integer) mOKbutton.getTag();
+            android.util.Log.d(TAG, "Set primary card to : " + targetSub);
+            mPrimarySubSelectionController.setUserPrefPrimarySubIdInDB(
+                    SubscriptionManager.getSubId(targetSub)[0]);
+            mPrimarySubSelectionController.setPreferredNetwork(targetSub,
                     mHandler.obtainMessage(SET_LTE_SUB_MSG));
         }
     }
@@ -158,11 +170,16 @@ public class PrimarySubSetting extends Activity implements View.OnClickListener 
             switch (msg.what) {
                 case SET_LTE_SUB_MSG:
                     int targetSub = (Integer) mOKbutton.getTag();
+                    android.util.Log.d(TAG, "SET_LTE_SUB_MSG: " + targetSub);
                     if (targetSub != mPrimarySubSelectionController.getPrimarySlot()) {
                         showFailedDialog(targetSub);
+                        updateState();
+                        if (mProgressDialog != null && mProgressDialog.isShowing())
+                            mProgressDialog.dismiss();
                     } else {
                         long ddsSubId = SubscriptionManager.getDefaultDataSubId();
-                        if (mDdsChecBox.isChecked()) {
+                        if (mDdsChecBox.isChecked() ||
+                                mPrimarySubSelectionController.isDetect4gCardEnabled()) {
                             // After set NW mode done, in any case set dds to
                             // primary sub,
                             // if failed, then restore dds to primary sub once
@@ -177,12 +194,15 @@ public class PrimarySubSetting extends Activity implements View.OnClickListener 
 
                         SubscriptionManager.setDefaultDataSubId(ddsSubId);
                         mPrimarySubSelectionController.setUserPrefDataSubIdInDB(ddsSubId);
-                        Toast.makeText(PrimarySubSetting.this, getString(R.string.reg_suc),
-                                Toast.LENGTH_LONG).show();
+                        if (!mPrimarySubSelectionController.isDetect4gCardEnabled()) {
+                            Toast.makeText(PrimarySubSetting.this, getString(R.string.reg_suc),
+                                    Toast.LENGTH_LONG).show();
+                        }
+                        updateState();
+                        if (mProgressDialog != null && mProgressDialog.isShowing())
+                            mProgressDialog.dismiss();
+                        finish();
                     }
-                    updateState();
-                    if (mProgressDialog != null && mProgressDialog.isShowing())
-                        mProgressDialog.dismiss();
                     break;
                 default:
                     break;
