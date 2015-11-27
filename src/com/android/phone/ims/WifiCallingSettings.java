@@ -29,12 +29,15 @@
 package com.android.phone;
 
 import android.app.ActionBar;
+import android.content.Context;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.preference.SwitchPreference;
+import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.util.Log;
 import android.view.MenuItem;
@@ -44,6 +47,8 @@ import com.android.ims.ImsConfig;
 import com.android.ims.ImsConfigListener;
 import com.android.ims.ImsException;
 import com.android.ims.ImsManager;
+
+import java.util.List;
 
 public class WifiCallingSettings extends PreferenceActivity
         implements Preference.OnPreferenceChangeListener {
@@ -279,12 +284,48 @@ public class WifiCallingSettings extends PreferenceActivity
     }
 
     private boolean isWifiCallingPreferenceSupported() {
-        return getApplicationContext().getResources().getBoolean(
-                R.bool.config_wifi_calling_preference_supported);
+        boolean isWifiCallingPreferenceSupported = true;
+        Context context = getApplicationContext();
+        List<SubscriptionInfo> subInfoList =
+                SubscriptionManager.from(context).getActiveSubscriptionInfoList();
+
+        if (subInfoList != null) {
+            for (SubscriptionInfo sir : subInfoList) {
+                if (SubscriptionManager.isValidSubscriptionId(sir.getSubscriptionId())) {
+                    Resources subRes = SubscriptionManager.getResourcesForSubId(context,
+                            sir.getSubscriptionId());
+                    isWifiCallingPreferenceSupported = subRes.getBoolean(R.bool.
+                            config_wifi_calling_preference_supported);
+                    if (!isWifiCallingPreferenceSupported) break;
+                }
+            }
+        } else {
+            Log.e(TAG, "isWifiCallingPreferenceSupported: Invalid SubscriptionInfo");
+        }
+
+        return isWifiCallingPreferenceSupported;
     }
 
     private int getDefaultWifiCallingPreference() {
-        return getApplicationContext().getResources().getInteger(
-                R.integer.config_default_wifi_calling_preference);
+        int wifiCallingPreference = CELLULAR_ONLY;
+        Context context = getApplicationContext();
+        List<SubscriptionInfo> subInfoList =
+                SubscriptionManager.from(context).getActiveSubscriptionInfoList();
+
+        if (subInfoList != null) {
+            for (SubscriptionInfo sir : subInfoList) {
+                if (SubscriptionManager.isValidSubscriptionId(sir.getSubscriptionId())) {
+                    Resources subRes = SubscriptionManager.getResourcesForSubId(context,
+                            sir.getSubscriptionId());
+                    wifiCallingPreference = subRes.getInteger(R.integer.
+                            config_default_wifi_calling_preference);
+                    if (wifiCallingPreference == WIFI_PREFERRED) break;
+                }
+            }
+        } else {
+            Log.e(TAG, "getDefaultWifiCallingPreference: Invalid SubscriptionInfo");
+        }
+
+        return wifiCallingPreference;
     }
 }
