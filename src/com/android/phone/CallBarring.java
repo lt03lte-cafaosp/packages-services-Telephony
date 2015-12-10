@@ -228,8 +228,8 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
     // Request to begin querying for call barring.
     private void queryAllCBOptions() {
         showDialog(INITIAL_BUSY_DIALOG);
-        mPhone.getCallBarringOption (CommandsInterface.CB_FACILITY_BAOC, "",
-                Message.obtain(mGetAllCBOptionsComplete, EVENT_CB_QUERY_ALL, CB_BAOC, 0));
+        mPhone.getCallBarringOption (CommandsInterface.CB_FACILITY_BAIC, "",
+                Message.obtain(mGetAllCBOptionsComplete, EVENT_CB_QUERY_ALL, CB_BAIC, 0));
     }
 
     // callback after each step of querying for all options.
@@ -252,6 +252,23 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
                     }
 
                     switch (msg.arg1) {
+                        case CB_BAIC:
+                            mPhone.getCallBarringOption (CommandsInterface.CB_FACILITY_BAICr, "",
+                                    Message.obtain(mGetAllCBOptionsComplete,
+                                            EVENT_CB_QUERY_ALL, CB_BAICr, 0));
+                            break;
+                        case CB_BAICr:
+                            if (SystemProperties.getBoolean("persist.radio.ims.cmcc", false)
+                                    && mPhone.isUtEnabled()) {
+                                mCBDataStale = false;
+                                syncUiWithState();
+                                removeDialog(INITIAL_BUSY_DIALOG);
+                            } else {
+                                mPhone.getCallBarringOption (CommandsInterface.CB_FACILITY_BAOC, "",
+                                        Message.obtain(mGetAllCBOptionsComplete,
+                                                EVENT_CB_QUERY_ALL, CB_BAOC, 0));
+                            }
+                            break;
                         case CB_BAOC:
                             mPhone.getCallBarringOption (CommandsInterface.CB_FACILITY_BAOIC, "",
                                     Message.obtain(mGetAllCBOptionsComplete,
@@ -263,16 +280,6 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
                                             EVENT_CB_QUERY_ALL, CB_BAOICxH, 0));
                             break;
                         case CB_BAOICxH:
-                            mPhone.getCallBarringOption (CommandsInterface.CB_FACILITY_BAIC, "",
-                                    Message.obtain(mGetAllCBOptionsComplete,
-                                            EVENT_CB_QUERY_ALL, CB_BAIC, 0));
-                            break;
-                        case CB_BAIC:
-                            mPhone.getCallBarringOption (CommandsInterface.CB_FACILITY_BAICr, "",
-                                    Message.obtain(mGetAllCBOptionsComplete,
-                                            EVENT_CB_QUERY_ALL, CB_BAICr, 0));
-                            break;
-                        case CB_BAICr:
                             mCBDataStale = false;
                             syncUiWithState();
                             removeDialog(INITIAL_BUSY_DIALOG);
