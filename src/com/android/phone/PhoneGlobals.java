@@ -927,7 +927,8 @@ public class PhoneGlobals extends ContextWrapper {
                     ph.setRadioPower(enabled);
                 }
             } else if (action.equals(TelephonyIntents.ACTION_ANY_DATA_CONNECTION_STATE_CHANGED)) {
-                if (VDBG) Log.d(LOG_TAG, "mReceiver: ACTION_ANY_DATA_CONNECTION_STATE_CHANGED");
+                if (VDBG) Log.d(LOG_TAG, "mReceiver: ACTION_ANY_DATA_CONNECTION_STATE_CHANGED."
+                        + "sub = " + subId);
                 if (VDBG) Log.d(LOG_TAG, "- state: " + intent.getStringExtra(PhoneConstants.STATE_KEY));
                 if (VDBG) Log.d(LOG_TAG, "- reason: "
                                 + intent.getStringExtra(PhoneConstants.STATE_CHANGE_REASON_KEY));
@@ -935,11 +936,27 @@ public class PhoneGlobals extends ContextWrapper {
                 // The "data disconnected due to roaming" notification is shown
                 // if (a) you have the "data roaming" feature turned off, and
                 // (b) you just lost data connectivity because you're roaming.
-                boolean disconnectedDueToRoaming =
-                        !phone.getDataRoamingEnabled()
-                        && "DISCONNECTED".equals(intent.getStringExtra(PhoneConstants.STATE_KEY))
+
+                int ddsSubId = SubscriptionManager.getDefaultDataSubId();
+                Phone ddsPhone = getPhone(SubscriptionManager.getPhoneId(ddsSubId));
+                boolean isRoaming = ddsPhone.getServiceState().getRoaming();
+                boolean isRoamingDataEnabled = ddsPhone.getDataRoamingEnabled();
+                boolean disconnectReasonRoaming =
+                        "DISCONNECTED".equals(intent.getStringExtra(PhoneConstants.STATE_KEY))
                         && Phone.REASON_ROAMING_ON.equals(
                             intent.getStringExtra(PhoneConstants.STATE_CHANGE_REASON_KEY));
+                boolean disconnectedDueToRoaming = mDataDisconnectedDueToRoaming;
+                if (disconnectReasonRoaming && !isRoamingDataEnabled) {
+                    disconnectedDueToRoaming = true;
+                } else if (!isRoaming || isRoamingDataEnabled) {
+                    // Dismiss pop up only if phone is not roaming or dataonroaming is enabled
+                    disconnectedDueToRoaming = false;
+                }
+
+                if (VDBG) Log.d(LOG_TAG, "isRoaming = " + isRoaming + " isRoamingDataEnabled = "
+                        + isRoamingDataEnabled + " mDataDisconnectedDueToRoaming = "
+                        + mDataDisconnectedDueToRoaming);
+
                 if (mDataDisconnectedDueToRoaming != disconnectedDueToRoaming) {
                     mDataDisconnectedDueToRoaming = disconnectedDueToRoaming;
                     mHandler.sendEmptyMessage(disconnectedDueToRoaming
