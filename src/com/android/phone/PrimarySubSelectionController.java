@@ -94,6 +94,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
     ModemStackController mModemStackController;
     private boolean mAllCardsAbsent = true;
     private boolean mCardChanged = false;
+    private boolean mIsBootUp = true;
     private boolean mNeedHandleModemReadyEvent = false;
     private boolean mRestoreDdsToPrimarySub = false;
     private boolean[] mIccLoaded;
@@ -109,7 +110,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
     public static final String CONFIG_CT_CARD_PRESENT = "config_ct_card_present";
 
     private static final String SETTING_USER_PREF_DATA_SUB = "user_preferred_data_sub";
-    private static final String SETTING_USER_PREF_PRIMARY_SUB = "user_preferred_primary_sub";
+    public static final String SETTING_USER_PREF_PRIMARY_SUB = "user_preferred_primary_sub";
 
 
     private static final int MSG_ALL_CARDS_AVAILABLE = 1;
@@ -166,7 +167,6 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
                         SubscriptionManager.getDefaultDataSubId()) != primarySlot) {
                     int subId = SubscriptionManager.getSubId(primarySlot)[0];
                     SubscriptionManager.from(mContext).setDefaultDataSubId(subId);
-                    setUserPrefDataSubIdInDB(subId);
                     mRestoreDdsToPrimarySub = false;
                 } else {
                     mRestoreDdsToPrimarySub = true;
@@ -310,7 +310,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
     private void saveLteSubSelectMode() {
         Settings.Global.putInt(
                 mContext.getContentResolver(), CONFIG_LTE_SUB_SELECT_MODE,
-                ((isManualConfigMode() || isDetect4gCardEnabled()) && (mNumActiveSubs > 1))
+                (isManualConfigMode() || (isDetect4gCardEnabled() && (mNumActiveSubs > 1)))
                 ? 0 : 1);
     }
 
@@ -508,6 +508,13 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
             logd("preferred primary slot is " + prefPrimarySlot);
             logd("primary slot is " + primarySlot);
             logd("is card changed? " + mCardChanged);
+
+            //in bootup if card not changed and 2 cards are active no need to config.
+            if (mIsBootUp && !mCardChanged && mNumActiveSubs > 1) {
+                logd("Bootup Case, cards not changed. EXIT!!!");
+                return;
+            }
+            mIsBootUp = false;
             if (prefPrimarySlot == -1 && (mCardChanged || primarySlot == -1)) {
                 slot = 0;
             } else if (prefPrimarySlot != -1 && (mCardChanged || primarySlot != prefPrimarySlot)) {
@@ -768,6 +775,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
     private Map<Integer, Integer> retrievePriorities() {
         Map<Integer, Integer> priorities = new HashMap<Integer, Integer>();
         for (int index = 0; index < PHONE_COUNT; index++) {
+            if (isDetect4gCardEnabled() && !isCardActivated(index)) continue;
             String iccId = mCardStateMonitor.getIccId(index);
             UiccCard uiccCard = CardStateMonitor.getUiccCard(index);
             priorities.put(index, IINList.getDefault(mContext).getIINPriority(iccId, uiccCard));
