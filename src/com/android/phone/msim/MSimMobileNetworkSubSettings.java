@@ -490,6 +490,10 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                     mPhone.getPhoneId(), nwMode);
     }
 
+    public boolean isDetect4gCardEnabled() {
+        return SystemProperties.getBoolean("persist.radio.detect4gcard", false);
+    }
+
     private class MyHandler extends Handler {
 
         static final int MESSAGE_GET_PREFERRED_NETWORK_TYPE = 0;
@@ -528,6 +532,21 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                 UpdatePreferredNetworkModeSummary(getPreferredNetworkMode());
             }
             updateButtonPreferredLte();
+            updateUserPrefPrimarySubIdInDB();
+        }
+
+        private void updateUserPrefPrimarySubIdInDB() {
+            if (isDetect4gCardEnabled()) {
+                int nwMode = getPreferredNetworkMode();
+                if (nwMode == Phone.NT_MODE_LTE_GSM_WCDMA || nwMode == Phone.NT_MODE_GSM_UMTS) {
+                    android.provider.Settings.Global.putInt(
+                            mPhone.getContext().getContentResolver(),
+                            PrimarySubSelectionController.SETTING_USER_PREF_PRIMARY_SUB,
+                            mPhone.getSubId());
+                    log("Updating user pref primary subId: " + mPhone.getSubId() + ", in DB");
+                }
+            }
+            return;
         }
 
         private void handleGetPreferredNetworkTypeResponse(Message msg) {
@@ -613,6 +632,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                         mButtonPreferredNetworkMode.getValue()).intValue();
                 setPreferredNetworkMode(networkMode);
                 updateButtonPreferredLte();
+                updateUserPrefPrimarySubIdInDB();
                 if (SystemProperties.getBoolean(PROPERTY_GTA_OPEN_KEY, false))
                     setPrefNetworkTypeInDb(networkMode);
             } else {
