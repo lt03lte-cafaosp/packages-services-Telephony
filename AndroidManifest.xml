@@ -519,9 +519,9 @@
         </activity>
 
         <activity android:name=".PrimarySubSetting"
-                android:label="@string/multi_sim_settings_title"
+                android:label="@string/lte_recognition_title"
                 android:icon="@drawable/ic_settings_sim_display"
-                android:configChanges="orientation|screenSize|keyboardHidden" >
+                android:configChanges="orientation|screenSize|keyboardHidden|mcc|mnc" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
