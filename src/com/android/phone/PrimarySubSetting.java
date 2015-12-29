@@ -74,8 +74,8 @@ public class PrimarySubSetting extends Activity implements View.OnClickListener 
         setContentView(R.layout.primary_sub_select);
         mPrimarySubSelectionController = PrimarySubSelectionController.getInstance();
         mIsPrimaryLteSubEnabled = mPrimarySubSelectionController.isPrimaryLteSubEnabled()
-                && mPrimarySubSelectionController.isPrimarySetable()
-                && (mPrimarySubSelectionController.getPrefPrimarySlot() == -1
+                && ((mPrimarySubSelectionController.isPrimarySetable()
+                && mPrimarySubSelectionController.getPrefPrimarySlot() == -1)
                 || mPrimarySubSelectionController.isDetect4gCardEnabled());
         mRecognizeText = (TextView) findViewById(R.id.recognize_text);
         mSelectText = (TextView) findViewById(R.id.lte_text);
