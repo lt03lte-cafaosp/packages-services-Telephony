@@ -110,7 +110,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
     public static final String CONFIG_CT_CARD_PRESENT = "config_ct_card_present";
 
     private static final String SETTING_USER_PREF_DATA_SUB = "user_preferred_data_sub";
-    public static final String SETTING_USER_PREF_PRIMARY_SUB = "user_preferred_primary_sub";
+    private static final String SETTING_USER_PREF_PRIMARY_SUB = "user_preferred_primary_sub";
 
 
     private static final int MSG_ALL_CARDS_AVAILABLE = 1;
@@ -137,8 +137,6 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
         if (mModemStackController != null) {
             mModemStackController.registerForStackReady(this, MSG_MODEM_STACK_READY, null);
         }
-        mContext.getContentResolver().registerContentObserver(Settings.Global.getUriFor(
-                Settings.Global.PREFERRED_NETWORK_MODE), false, nwModeObserver);
 
         IntentFilter intentFilter = new IntentFilter(TelephonyIntents.ACTION_SIM_STATE_CHANGED);
         intentFilter.addAction(Intent.ACTION_LOCALE_CHANGED);
@@ -153,26 +151,6 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
             Log.d(TAG, message);
         }
     }
-
-    private final ContentObserver nwModeObserver =
-        new ContentObserver(new Handler()) {
-            @Override
-            public void onChange(boolean selfUpdate) {
-                logd("NwMode onChange hit !!!");
-                //On NwMode change get primary slot and set DDS to that slot.
-                int primarySlot = getPrimarySlot();
-
-                if (primarySlot != -1 && isDetect4gCardEnabled() &&
-                        mIccLoaded[primarySlot] && SubscriptionManager.getSlotId(
-                        SubscriptionManager.getDefaultDataSubId()) != primarySlot) {
-                    int subId = SubscriptionManager.getSubId(primarySlot)[0];
-                    SubscriptionManager.from(mContext).setDefaultDataSubId(subId);
-                    mRestoreDdsToPrimarySub = false;
-                } else {
-                    mRestoreDdsToPrimarySub = true;
-                }
-            }
-        };
 
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
@@ -275,7 +253,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
                 for (SubscriptionInfo sir : sirList) {
                     if (sir != null && sir.getSubscriptionId() > 0 && sir.getSimSlotIndex() >= 0
                             && sir.getSubscriptionId() < CardStateMonitor.DUMMY_SUB_ID_BASE &&
-                            getUserPrefPrimarySubIdFromDB() == sir.getSubscriptionId()&&
+                            getUserPrefPrimarySubIdFromDB() == sir.getSubscriptionId() &&
                             sir.getStatus() != SubscriptionManager.INACTIVE) {
                         return sir.getSimSlotIndex();
                     }
@@ -287,8 +265,8 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
 
     public int getUserPrefPrimarySubIdFromDB() {
         int subId = SubscriptionManager.INVALID_SUBSCRIPTION_ID;
-        subId = android.provider.Settings.Global.getInt(mContext.getContentResolver(),
-                SETTING_USER_PREF_PRIMARY_SUB, subId);
+        subId = android.provider.Settings.Global.getInt(mContext
+                .getContentResolver(), SETTING_USER_PREF_PRIMARY_SUB, subId);
         logd("getUserPrefPrimarySubIdFromDB: " + subId);
         return subId;
     }
@@ -358,7 +336,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
         }
     }
 
-    private boolean isCardActivated(int index) {
+    public boolean isCardActivated(int index) {
         UiccCard uiccCard = CardStateMonitor.getUiccCard(index);
         if (uiccCard != null && uiccCard.getCardState() != CardState.CARDSTATE_ABSENT) {
             UiccCardApplication app = uiccCard.getApplication(UiccController.APP_FAM_3GPP);
@@ -384,7 +362,14 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
     private void saveSubscriptions() {
         for (int i = 0; i < PHONE_COUNT; i++) {
             String iccId = mCardStateMonitor.getIccId(i);
-            if (iccId != null) {
+            if (isDetect4gCardEnabled() &&
+                    (iccId == null || mCardStateMonitor.isCardDeactivated(i))) {
+                //IccId is null i.e. Card is removed OR Card is deactivated,
+                // so update SP with IccId as -1
+                logd("card removed or deactivated, save iccid -1 on sub: " + i);
+                PreferenceManager.getDefaultSharedPreferences(mContext).edit()
+                        .putString(PhoneConstants.SUBSCRIPTION_KEY + i, "-1").commit();
+            } else {
                 logd("save subscription on sub" + i + ", iccId :" + iccId);
                 PreferenceManager.getDefaultSharedPreferences(mContext).edit()
                         .putString(PhoneConstants.SUBSCRIPTION_KEY + i, iccId).commit();
@@ -512,6 +497,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
             //in bootup if card not changed and 2 cards are active no need to config.
             if (mIsBootUp && !mCardChanged && mNumActiveSubs > 1) {
                 logd("Bootup Case, cards not changed. EXIT!!!");
+                mIsBootUp = false;
                 return;
             }
             mIsBootUp = false;
@@ -764,7 +750,13 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
     public int getPrimarySlot() {
         for (int index = 0; index < PHONE_COUNT; index++) {
             int current = getPreferredNetworkFromDb(index);
-            if (current == Phone.NT_MODE_TD_SCDMA_GSM_WCDMA_LTE
+            if (isDetect4gCardEnabled()) {
+                if (getUserPrefPrimarySlotFromDB() == index) {
+                    return index;
+                } else if (current != Phone.NT_MODE_GSM_ONLY) {
+                    return index;
+                }
+            } else if (current == Phone.NT_MODE_TD_SCDMA_GSM_WCDMA_LTE
                     || current == Phone.NT_MODE_TD_SCDMA_GSM_WCDMA) {
                 return index;
             }
@@ -775,7 +767,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
     private Map<Integer, Integer> retrievePriorities() {
         Map<Integer, Integer> priorities = new HashMap<Integer, Integer>();
         for (int index = 0; index < PHONE_COUNT; index++) {
-            if (isDetect4gCardEnabled() && !isCardActivated(index)) continue;
+            if (isDetect4gCardEnabled() && mCardStateMonitor.isCardDeactivated(index)) continue;
             String iccId = mCardStateMonitor.getIccId(index);
             UiccCard uiccCard = CardStateMonitor.getUiccCard(index);
             priorities.put(index, IINList.getDefault(mContext).getIINPriority(iccId, uiccCard));
@@ -816,7 +808,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
         return null;
     }
 
-    private int getPreferredNetworkFromDb(int sub) {
+    public int getPreferredNetworkFromDb(int sub) {
         int nwMode = -1;
         try {
             nwMode = TelephonyManager.getIntAtIndex(mContext.getContentResolver(),

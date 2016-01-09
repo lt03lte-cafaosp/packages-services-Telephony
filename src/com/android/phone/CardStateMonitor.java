@@ -135,7 +135,7 @@ public class CardStateMonitor extends Handler {
 
     private static boolean mIsShutDownInProgress;
     private CardInfo[] mCards = new CardInfo[PHONE_COUNT];
-    private Context mContext;
+    private static Context mContext;
     private BroadcastReceiver receiver = new BroadcastReceiver() {
 
         @Override
@@ -355,7 +355,7 @@ public class CardStateMonitor extends Handler {
         }
     }
 
-    private boolean isCardDeactivated(int cardIndex) {
+    public static boolean isCardDeactivated(int cardIndex) {
         boolean isSubDeactivated = false;
         List<SubscriptionInfo> sirList =
                 SubscriptionManager.from(mContext).getActiveSubscriptionInfoList();
@@ -375,9 +375,10 @@ public class CardStateMonitor extends Handler {
         return isSubDeactivated;
     }
 
-    public boolean isDetect4gCardEnabled() {
-        return SystemProperties.getBoolean("persist.radio.detect4gcard", false)
-                && (PHONE_COUNT > 1);
+    public static boolean isDetect4gCardEnabled() {
+        return SystemProperties.getBoolean("persist.radio.primarycard", false) &&
+                SystemProperties.getBoolean("persist.radio.detect4gcard", false) &&
+                (PHONE_COUNT > 1);
     }
 
     private void readEfHplmnwActIfNeed(int cardIndex, UiccCard uiccCard) {

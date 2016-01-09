@@ -105,6 +105,8 @@ public class PrimarySubSetting extends Activity implements View.OnClickListener 
         } else {
             setTitle(R.string.lte_recognition_title);
             mDdsChecBox.setVisibility(View.GONE);
+            mPrimarySubSelectionController.setUserPrefPrimarySubIdInDB(SubscriptionManager
+                    .getSubId(mPrimarySubSelectionController.getPrimarySlot())[0]);
         }
 
         mOKbutton = (Button) findViewById(R.id.select_ok_btn);
@@ -172,7 +174,10 @@ public class PrimarySubSetting extends Activity implements View.OnClickListener 
                 case SET_LTE_SUB_MSG:
                     int targetSub = (Integer) mOKbutton.getTag();
                     android.util.Log.d(TAG, "SET_LTE_SUB_MSG: " + targetSub);
-                    if (targetSub != mPrimarySubSelectionController.getPrimarySlot()) {
+                    if ((mPrimarySubSelectionController.isDetect4gCardEnabled() &&
+                            mPrimarySubSelectionController.getPreferredNetworkFromDb(targetSub)
+                            == Phone.NT_MODE_GSM_ONLY) ||
+                            targetSub != mPrimarySubSelectionController.getPrimarySlot()) {
                         showFailedDialog(targetSub);
                         updateState();
                         if (mProgressDialog != null && mProgressDialog.isShowing())
