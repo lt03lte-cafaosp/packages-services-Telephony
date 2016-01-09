@@ -206,6 +206,15 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             mUPLMNPref.getIntent().putExtra(PhoneConstants.SUBSCRIPTION_KEY, mPhone.getPhoneId());
         }
 
+        //Disable nwMode option in UI if sub is deactivated OR non-primary card with GSM only.
+        if (CardStateMonitor.isDetect4gCardEnabled() &&
+                (CardStateMonitor.isCardDeactivated(mPhone.getPhoneId()) ||
+                (getPreferredNetworkMode() == Phone.NT_MODE_GSM_ONLY &&
+                PrimarySubSelectionController.getInstance().getUserPrefPrimarySubIdFromDB()
+                != mPhone.getSubId()))) {
+            mButtonPreferredNetworkMode.setEnabled(false);
+        }
+
         boolean isLteOnCdma = mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE;
         if (getResources().getBoolean(R.bool.world_phone) == true) {
             // set the listener for the mButtonPreferredNetworkMode list preference so we can issue
@@ -328,10 +337,6 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                     mPhone.getPhoneId(), nwMode);
     }
 
-    public boolean isDetect4gCardEnabled() {
-        return SystemProperties.getBoolean("persist.radio.detect4gcard", false);
-    }
-
     private class MyHandler extends Handler {
 
         static final int MESSAGE_GET_PREFERRED_NETWORK_TYPE = 0;
@@ -348,20 +353,6 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                     handleSetPreferredNetworkTypeResponse(msg);
                     break;
             }
-        }
-
-        private void updateUserPrefPrimarySubIdInDB() {
-            if (isDetect4gCardEnabled()) {
-                int nwMode = getPreferredNetworkMode();
-                if (nwMode == Phone.NT_MODE_LTE_GSM_WCDMA || nwMode == Phone.NT_MODE_GSM_UMTS) {
-                    android.provider.Settings.Global.putInt(
-                            mPhone.getContext().getContentResolver(),
-                            PrimarySubSelectionController.SETTING_USER_PREF_PRIMARY_SUB,
-                            mPhone.getSubId());
-                    log("Updating user pref primary subId: " + mPhone.getSubId() + ", in DB");
-                }
-            }
-            return;
         }
 
         private void handleGetPreferredNetworkTypeResponse(Message msg) {
@@ -444,7 +435,6 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                 int networkMode = Integer.valueOf(
                         mButtonPreferredNetworkMode.getValue()).intValue();
                 setPreferredNetworkMode(networkMode);
-                updateUserPrefPrimarySubIdInDB();
                 if (SystemProperties.getBoolean(PROPERTY_GTA_OPEN_KEY, false))
                     setPrefNetworkTypeInDb(networkMode);
             } else {
