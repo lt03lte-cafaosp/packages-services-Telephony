@@ -206,6 +206,15 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             mUPLMNPref.getIntent().putExtra(PhoneConstants.SUBSCRIPTION_KEY, mPhone.getPhoneId());
         }
 
+        //Disable nwMode option in UI if sub is deactivated OR non-primary card with GSM only.
+        if (CardStateMonitor.isDetect4gCardEnabled() &&
+                (CardStateMonitor.isCardDeactivated(mPhone.getPhoneId()) ||
+                (getPreferredNetworkMode() == Phone.NT_MODE_GSM_ONLY &&
+                PrimarySubSelectionController.getInstance().getUserPrefPrimarySubIdFromDB()
+                != mPhone.getSubId()))) {
+            mButtonPreferredNetworkMode.setEnabled(false);
+        }
+
         boolean isLteOnCdma = mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE;
         if (getResources().getBoolean(R.bool.world_phone) == true) {
             // set the listener for the mButtonPreferredNetworkMode list preference so we can issue
