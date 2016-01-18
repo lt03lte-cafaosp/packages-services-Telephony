@@ -199,6 +199,16 @@
   </string-array>
     <string name="enhanced_4g_lte_mode_title" msgid="522191650223239171">"增强型 4G LTE 模式"</string>
     <string name="enhanced_4g_lte_mode_summary" msgid="2332175070522125850">"使用 LTE 服务改进语音和其他通信功能（推荐）"</string>
+
+    <string name="preferred_network_mode_global_choice">"通用"</string>
+    <string name="preferred_network_mode_evdo_only_choice">"仅 EvDo"</string>
+    <string name="preferred_network_mode_cdma_wo_evdo_choice">"CDMA，无 EvDo 功能"</string>
+    <string name="preferred_network_mode_cdma_evdo_auto_choice">"CDMA/EvDo 自动选择"</string>
+    <string name="preferred_network_mode_gsm_wcdma_auto_choice">"GSM/WCDMA 自动选择"</string>
+    <string name="preferred_network_mode_wcdma_only_choice">"仅 WCDMA"</string>
+    <string name="preferred_network_mode_gsm_only_choice">"仅 GSM"</string>
+    <string name="preferred_network_mode_gsm_wcama_preferred_choice">"首选 GSM/WCDMA"</string>
+
     <string name="data_enabled" msgid="5972538663568715366">"启用移动数据网络"</string>
     <string name="data_enable_summary" msgid="2382798156640007971">"允许使用数据流量"</string>
     <string name="roaming" msgid="8871412572928323707">"移动数据网络漫游"</string>

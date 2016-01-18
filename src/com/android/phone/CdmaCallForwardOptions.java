@@ -5,6 +5,7 @@
 
 package com.android.phone;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -189,4 +190,16 @@ public class CdmaCallForwardOptions extends PreferenceActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
+        super.onPreferenceTreeClick(preferenceScreen, preference);
+        if (preference instanceof PreferenceScreen) {
+            final Dialog dialog = ((PreferenceScreen) preference).getDialog();
+            if (dialog != null) {
+                dialog.getActionBar().setDisplayHomeAsUpEnabled(false);
+           }
+        }
+        return false;
+   }
 }

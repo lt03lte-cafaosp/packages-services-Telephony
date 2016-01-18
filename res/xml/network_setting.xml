@@ -58,4 +58,11 @@
         android:persistent="false"
         android:summary="@string/enhanced_4g_lte_mode_summary"/>
 
+    <SwitchPreference
+        android:key="enable_4g_settings"
+        android:title="@string/lte_4g_settings_title"
+        android:persistent="false"
+        android:summaryOff="@string/lte_4g_settings_summaryOff"
+        android:summaryOn="@string/lte_4g_settings_summaryOn"/>
+
 </PreferenceScreen>
