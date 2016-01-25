@@ -590,4 +590,6 @@
     <string name="CFDeactivate">禁用</string>
     <string name="null_phone_number">输入的电话号码不能为空!</string>
     <string name="labelCFDeactAll">全部禁用</string>
+    <string name="cf_setting_mobile_data_alert">请开启手机数据连接，并确保WLAN已关闭</string>
+    <string name="no_mobile_data">移动数据连接不可用</string>
 </resources>

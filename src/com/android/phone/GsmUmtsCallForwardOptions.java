@@ -5,18 +5,26 @@ import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.Phone;
 
 import android.app.ActionBar;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceScreen;
+import android.telephony.ServiceState;
 import android.util.Log;
 import android.view.MenuItem;
 
 import java.util.ArrayList;
 
 
-public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity {
+public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity
+        implements DialogInterface.OnClickListener, DialogInterface.OnCancelListener {
     private static final String LOG_TAG = "GsmUmtsCallForwardOptions";
     private final boolean DBG = (PhoneGlobals.DBG_LEVEL >= 2);
 
@@ -52,12 +60,28 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity {
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 
+        mSubscriptionInfoHelper = new SubscriptionInfoHelper(this, getIntent());
+        mPhone = mSubscriptionInfoHelper.getPhone();
+        if (mPhone.getImsPhone().getServiceState().getState() == ServiceState.STATE_IN_SERVICE
+                && getActiveNetworkType() != ConnectivityManager.TYPE_MOBILE
+                && getResources().getBoolean(R.bool.check_mobile_data_for_cf)) {
+            if (DBG) Log.d(LOG_TAG, "please open mobile network for UT settings!");
+            Dialog dialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.no_mobile_data)
+                .setMessage(R.string.cf_setting_mobile_data_alert)
+                .setIconAttribute(android.R.attr.alertDialogIcon)
+                .setPositiveButton(android.R.string.ok, this)
+                .setNegativeButton(android.R.string.cancel, this)
+                .setOnCancelListener(this)
+                .create();
+            dialog.show();
+            return;
+        }
+
         addPreferencesFromResource(R.xml.callforward_options);
 
-        mSubscriptionInfoHelper = new SubscriptionInfoHelper(this, getIntent());
         mSubscriptionInfoHelper.setActionBarTitle(
                 getActionBar(), getResources(), R.string.call_forwarding_settings_with_label);
-        mPhone = mSubscriptionInfoHelper.getPhone();
 
         PreferenceScreen prefSet = getPreferenceScreen();
         mButtonCFU = (CallForwardEditPreference) prefSet.findPreference(BUTTON_CFU_KEY);
@@ -102,6 +126,30 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity {
             // android.R.id.home will be triggered in onOptionsItemSelected()
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+    }
+
+    @Override
+    public void onClick(DialogInterface dialog, int id) {
+        if (id == DialogInterface.BUTTON_POSITIVE) {
+            Intent newIntent = new Intent("android.settings.SETTINGS");
+            newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(newIntent);
+        }
+        finish();
+        return;
+    }
+
+    private int getActiveNetworkType() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(
+                Context.CONNECTIVITY_SERVICE);
+        if (cm != null) {
+            NetworkInfo ni = cm.getActiveNetworkInfo();
+            if ((ni == null) || !ni.isConnected()){
+                return ConnectivityManager.TYPE_NONE;
+            }
+            return ni.getType();
+        }
+        return ConnectivityManager.TYPE_NONE;
     }
 
     @Override

@@ -237,7 +237,7 @@
     <string name="time_end_minute">time end minute</string>
     <string name="time_formate_am">AM</string>
     <string name="time_formate_pm">PM</string>
-    <string name="cf_mobile_date">Please turn on mobile data and make sure that WLAN is off</string>
+    <string name="cf_setting_mobile_data_alert">Please turn on mobile data and make sure that WLAN is off</string>
 
     <!-- Call forwarding settings screen, setting option name -->
     <string name="labelCFB">When busy</string>
@@ -1568,4 +1568,6 @@
 
     <string name="srvcc_video_message">"Video call has been downgraded to 2G/3G voice call, because the 4G network is not available."</string>
     <string name="srvcc_message">"4G voice call has been downgraded to 2G/3G voice call, because the 4G network is not available."</string>
+
+    <string name="no_mobile_data">Mobile data is not available</string>
 </resources>
