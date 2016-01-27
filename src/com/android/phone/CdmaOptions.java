@@ -72,7 +72,8 @@ public class CdmaOptions {
         // Some CDMA carriers want the APN settings.
         if ((!carrierConfig.getBoolean(CarrierConfigManager.KEY_SHOW_APN_SETTING_CDMA_BOOL)
                 || carrierConfig.getBoolean(CarrierConfigManager.KEY_WORLD_PHONE_BOOL))
-                && mButtonAPNExpand != null) {
+                && mButtonAPNExpand != null && mPrefActivity.getResources()
+                .getBoolean(R.bool.world_phone)) {
             mPrefScreen.removePreference(mButtonAPNExpand);
             removedAPNExpand = true;
         }

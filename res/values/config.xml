@@ -59,7 +59,7 @@
 
     <!-- Flag indicating if the phone is a world phone -->
     <!-- DEPRECATED: Use CarrierConfigManager#KEY_WORLD_PHONE_BOOL -->
-    <bool name="world_phone">false</bool>
+    <bool name="world_phone">true</bool>
 
     <!-- If true, enable vibration (haptic feedback) for key presses
          in the EmergencyDialer activity. The pattern is set on a
