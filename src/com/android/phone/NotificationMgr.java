@@ -38,6 +38,7 @@ import android.provider.Settings;
 import android.telecom.PhoneAccount;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.ServiceState;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
@@ -442,7 +443,16 @@ public class NotificationMgr {
         if (DBG) log("showDataDisconnectedRoaming()...");
 
         // "Mobile network settings" screen / dialog
-        Intent intent = new Intent(mContext, com.android.phone.MobileNetworkSettings.class);
+        Intent intent;
+        if (TelephonyManager.getDefault().getPhoneCount() > 1) {
+            intent = new Intent(mContext, com.android.phone.SelectSubscription.class);
+            intent.putExtra(SelectSubscription.PACKAGE,
+                    "com.android.phone");
+            intent.putExtra(SelectSubscription.TARGET_CLASS,
+                    "com.android.phone.MSimMobileNetworkSubSettings");
+        } else {
+            intent = new Intent(mContext, com.android.phone.MobileNetworkSettings.class);
+        }
         PendingIntent contentIntent = PendingIntent.getActivity(mContext, 0, intent, 0);
 
         final CharSequence contentText = mContext.getText(R.string.roaming_reenable_message);
