@@ -444,6 +444,7 @@ public class PhoneGlobals extends ContextWrapper {
             intentFilter.addAction(TelephonyIntents.ACTION_SERVICE_STATE_CHANGED);
             intentFilter.addAction(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED);
             intentFilter.addAction(TelephonyIntents.ACTION_MANAGED_ROAMING_IND);
+            intentFilter.addAction(TelephonyIntents.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED);
             registerReceiver(mReceiver, intentFilter);
 
             //set the default values for the preferences in the phone.
@@ -835,9 +836,9 @@ public class PhoneGlobals extends ContextWrapper {
                 for (Phone ph : mPhones) {
                     ph.setRadioPower(enabled);
                 }
-            } else if (action.equals(TelephonyIntents.ACTION_ANY_DATA_CONNECTION_STATE_CHANGED)) {
-                if (VDBG) Log.d(LOG_TAG, "mReceiver: ACTION_ANY_DATA_CONNECTION_STATE_CHANGED."
-                        + "sub = " + subId);
+            } else if (action.equals(TelephonyIntents.ACTION_ANY_DATA_CONNECTION_STATE_CHANGED) ||
+                    action.equals(TelephonyIntents.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED)) {
+                if (VDBG) Log.d(LOG_TAG, "mReceiver: " + action + ". sub = " + subId);
                 if (VDBG) Log.d(LOG_TAG, "- state: " + intent.getStringExtra(PhoneConstants.STATE_KEY));
                 if (VDBG) Log.d(LOG_TAG, "- reason: "
                                 + intent.getStringExtra(PhoneConstants.STATE_CHANGE_REASON_KEY));
@@ -854,8 +855,11 @@ public class PhoneGlobals extends ContextWrapper {
                         "DISCONNECTED".equals(intent.getStringExtra(PhoneConstants.STATE_KEY))
                         && Phone.REASON_ROAMING_ON.equals(
                             intent.getStringExtra(PhoneConstants.STATE_CHANGE_REASON_KEY));
+                boolean isDdsSwitch = action.equals(
+                        TelephonyIntents.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED);
                 boolean disconnectedDueToRoaming = mDataDisconnectedDueToRoaming;
-                if (disconnectReasonRoaming && !isRoamingDataEnabled) {
+                if ((disconnectReasonRoaming || isDdsSwitch)
+                        && !isRoamingDataEnabled && isRoaming) {
                     disconnectedDueToRoaming = true;
                 } else if (!isRoaming || isRoamingDataEnabled) {
                     // Dismiss pop up only if phone is not roaming or dataonroaming is enabled
