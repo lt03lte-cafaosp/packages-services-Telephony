@@ -265,7 +265,6 @@ public class MobileNetworkSettings extends PreferenceActivity
 
         mButton4glte.setOnPreferenceChangeListener(this);
         mButton4glte.setChecked(ImsManager.isEnhanced4gLteModeSettingEnabledByUser(this));
-
         mButtoncsretry = (SwitchPreference)findPreference(BUTTON_CS_RETRY_KEY);
         mButtoncsretry.setOnPreferenceChangeListener(this);
         mButtoncsretry.setChecked(ImsManager.isCsRetrySettingEnabledByUser(this));
@@ -288,6 +287,10 @@ public class MobileNetworkSettings extends PreferenceActivity
 
         //get UI object references
         PreferenceScreen prefSet = getPreferenceScreen();
+
+        if (getResources().getBoolean(R.bool.config_disable_enhance_4G_LTE_option)) {
+            prefSet.removePreference(mButton4glte);
+        }
 
         mButtonDataRoam = (SwitchPreference) prefSet.findPreference(BUTTON_ROAMING_KEY);
         mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
