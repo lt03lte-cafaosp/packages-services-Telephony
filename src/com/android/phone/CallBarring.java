@@ -114,6 +114,10 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
     private static final int NEW_PSW_MODE = 4;
     private static final int REENTER_PSW_MODE = 5;
 
+    /* Class bit for voice service as per
+     * Spec 27.007 sec 7.4 */
+    private static final int VOICE_SERVICE = 0x00000001;
+
     private int mOutgoingState = CB_CLOSE_OUT;
     private int mIncomingState = CB_CLOSE_IN;
     private int mSetOutgoing = CB_INVALID;
@@ -309,7 +313,7 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
                     " exception: " + ((Throwable) ar.userObj).toString());
             return MSG_UNEXPECTED_RESPONSE;
         } else {
-            int cbState = ((int[])ar.result)[0];
+            int cbState = (((int[])ar.result)[0] & VOICE_SERVICE);
             if (cbState == 0) {
                 if (mOutgoingState == reason) {
                     mOutgoingState = CB_CLOSE_OUT;
