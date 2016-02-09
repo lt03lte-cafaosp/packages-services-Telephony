@@ -326,6 +326,7 @@ public class ImsConferenceController {
         conference.setState(conferenceHostConnection.getState());
         conference.addListener(mConferenceListener);
         conference.updateConferenceParticipantsAfterCreation();
+        conference.setExtras(conferenceHostConnection.getExtras());
         mConnectionService.addConference(conference);
 
         // Cleanup TelephonyConnection which backed the original connection and remove from telecom.
