@@ -56,6 +56,7 @@ public class PhoneAccountSettingsFragment extends PreferenceFragment
 
     private static final String SHOW_DURATION_KEY = "duration_enable_key";
     private static final String BUTTON_VIBRATE_CONNECTED_KEY = "button_vibrate_after_connected";
+    private static final String BUTTON_PROXIMITY_KEY   = "button_proximity_key";
 
     private static final String LEGACY_ACTION_CONFIGURE_PHONE_ACCOUNT =
             "android.telecom.action.CONNECTION_SERVICE_CONFIGURE";
@@ -84,6 +85,7 @@ public class PhoneAccountSettingsFragment extends PreferenceFragment
 
     private CheckBoxPreference mShowDurationCheckBox;
     private CheckBoxPreference mVibrateAfterConnected;
+    private CheckBoxPreference mButtonProximity;
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -160,16 +162,19 @@ public class PhoneAccountSettingsFragment extends PreferenceFragment
             getPreferenceScreen().removePreference(mAccountList);
         }
 
-        if (TelephonyManager.getDefault().getMultiSimConfiguration() !=
-                 TelephonyManager.MultiSimVariants.DSDS) {
+        if ((TelephonyManager.getDefault().getMultiSimConfiguration() !=
+                 TelephonyManager.MultiSimVariants.DSDS) ||
+                (!getResources().getBoolean(R.bool.config_xdivert_enable))) {
             Preference mXDivertPref = getPreferenceScreen().findPreference(BUTTON_XDIVERT_KEY);
             if (mXDivertPref != null) {
                 Log.d(LOG_TAG, "Remove xdivert preference: ");
-                getPreferenceScreen().removePreference(mXDivertPref);
+                PreferenceCategory prefs = (PreferenceCategory) getPreferenceScreen().findPreference(ACCOUNTS_LIST_CATEGORY_KEY);
+                prefs.removePreference(mXDivertPref);
             }
         }
 
-        if (SipUtil.isVoipSupported(getActivity())) {
+        if (SipUtil.isVoipSupported(getActivity()) &&
+                getResources().getBoolean(R.bool.sip_settings_on)) {
             mSipSharedPreferences = new SipSharedPreferences(getActivity());
 
             mUseSipCalling = (ListPreference)
@@ -213,6 +218,15 @@ public class PhoneAccountSettingsFragment extends PreferenceFragment
         }
 
         mVibrateAfterConnected = (CheckBoxPreference) findPreference(BUTTON_VIBRATE_CONNECTED_KEY);
+        mButtonProximity = (CheckBoxPreference) findPreference(BUTTON_PROXIMITY_KEY);
+        if (mButtonProximity != null) {
+            mButtonProximity.setOnPreferenceChangeListener(this);
+            boolean checked = Settings.System.getInt(getContext().getContentResolver(),
+                    Constants.SETTINGS_PROXIMITY_SENSOR, 1) == 1;
+            mButtonProximity.setChecked(checked);
+            mButtonProximity.setSummary(checked ? R.string.proximity_on_summary
+                    : R.string.proximity_off_summary);
+        }
         if (mVibrateAfterConnected != null) {
             int defaultVibrateEnabled = getResources()
                     .getInteger(R.integer.config_default_vibrate_after_connected);
@@ -257,6 +271,13 @@ public class PhoneAccountSettingsFragment extends PreferenceFragment
             boolean doVibrate = (Boolean) objValue;
             Settings.System.putInt(getContext().getContentResolver(),
                     Constants.SETTINGS_VIBRATE_WHEN_ACCEPTED, doVibrate ? 1 : 0);
+            return true;
+        } else if (pref == mButtonProximity) {
+            boolean checked = (Boolean) objValue;
+            Settings.System.putInt(getContext().getContentResolver(),
+                    Constants.SETTINGS_PROXIMITY_SENSOR, checked ? 1 : 0);
+            mButtonProximity.setSummary(checked ? R.string.proximity_on_summary
+                    : R.string.proximity_off_summary);
             return true;
         }
         return false;

@@ -62,7 +62,8 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity
 
         mSubscriptionInfoHelper = new SubscriptionInfoHelper(this, getIntent());
         mPhone = mSubscriptionInfoHelper.getPhone();
-        if (mPhone.getImsPhone().getServiceState().getState() == ServiceState.STATE_IN_SERVICE
+        if (mPhone.getImsPhone() != null && mPhone.getImsPhone().getServiceState().getState()
+                == ServiceState.STATE_IN_SERVICE
                 && getActiveNetworkType() != ConnectivityManager.TYPE_MOBILE
                 && getResources().getBoolean(R.bool.check_mobile_data_for_cf)) {
             if (DBG) Log.d(LOG_TAG, "please open mobile network for UT settings!");

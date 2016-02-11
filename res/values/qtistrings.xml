@@ -139,4 +139,7 @@
     <string name="menu_dial_string">Call</string>
     <!-- Preferred UPLMN -->
     <string name="uplmn_list_setting_title">Preferred networks</string>
+    <string name="proximity_mode_title">Turn on proximity sensor</string>
+    <string name="proximity_on_summary">When you answer a call, the screen will be turned off to save power.</string>
+    <string name="proximity_off_summary">When you answer a call, the screen will be turned on always.</string>
 </resources>

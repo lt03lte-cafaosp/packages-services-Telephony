@@ -119,8 +119,9 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
 
     private boolean isTimerEnabled() {
         //Timer is enabled only when UT services are enabled
-        return getContext().getResources().getBoolean(
-                R.bool.config_enable_cfu_time) && mPhone.isUtEnabled();
+        return (SystemProperties.getBoolean("persist.radio.ims.cmcc", false)
+                || getContext().getResources().getBoolean(R.bool.config_enable_cfu_time))
+                && mPhone.isUtEnabled();
     }
 
     /*This will be invoked once service is bound to client*/
@@ -208,7 +209,8 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
                 // the interface of Phone.setCallForwardingOption has error:
                 // should be action, reason...
                 if (reason == CommandsInterface.CF_REASON_UNCONDITIONAL
-                        && !isAllDayChecked() && isTimerEnabled) {
+                        && !isAllDayChecked() && isTimerEnabled
+                        && (action != CommandsInterface.CF_ACTION_DISABLE)) {
 
                     if (true) Log.d(LOG_TAG, "setCallForwardingUncondTimerOption,"
                                                 +"starthour = " + editStartHour

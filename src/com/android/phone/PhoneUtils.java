@@ -923,8 +923,8 @@ public class PhoneUtils {
 
             case FAILED:
                 if (context.getResources().getBoolean(
-                        R.bool.
-                        config_regional_ussd_hide_error_from_network_enable)) {
+                        R.bool.config_regional_ussd_hide_error_from_network_enable)
+                        && (state == MmiCode.State.FAILED)) {
                     text = context.getString(R.string.hide_error_from_network_text);
                 } else {
                     text = mmiCode.getMessage();

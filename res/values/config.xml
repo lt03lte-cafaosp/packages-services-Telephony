@@ -59,7 +59,7 @@
 
     <!-- Flag indicating if the phone is a world phone -->
     <!-- DEPRECATED: Use CarrierConfigManager#KEY_WORLD_PHONE_BOOL -->
-    <bool name="world_phone">false</bool>
+    <bool name="world_phone">true</bool>
 
     <!-- If true, enable vibration (haptic feedback) for key presses
          in the EmergencyDialer activity. The pattern is set on a
@@ -221,7 +221,14 @@
     <!-- whether to show uplmn preference for usim -->
     <bool name="config_uplmn_for_usim">false</bool>
     <!-- show toast for ims srvcc -->
-    <bool name="config_show_srvcc_toast">false</bool>
+    <bool name="config_show_srvcc_toast">true</bool>
     <!-- enable network checking for ut interface-->
     <bool name="check_mobile_data_for_cf">false</bool>
+
+    <!-- Flag indicating if SIP settings ennbled -->
+    <bool name="sip_settings_on">true</bool>
+
+    <!-- If false, removes the X-Divert option from Call Settings -->
+    <bool name="config_xdivert_enable">true</bool>
+
 </resources>
