@@ -496,7 +496,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
             logd("is card changed? " + mCardChanged);
 
             //in bootup if card not changed and 2 cards are active no need to config.
-            if (mIsBootUp && !mCardChanged && mNumActiveSubs > 1) {
+            if (isDetect4gCardEnabled() && mIsBootUp && !mCardChanged && mNumActiveSubs > 1) {
                 logd("Bootup Case, cards not changed. EXIT!!!");
                 mIsBootUp = false;
                 return;
