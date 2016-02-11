@@ -481,6 +481,7 @@
        <!-- MSim Mobile Network Settings per subscription -->
        <activity android:name="MSimMobileNetworkSubSettings"
                 android:label="@string/settings_label"
+                android:configChanges="mcc|mnc"
                 android:theme="@style/SettingsLight">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -492,7 +493,7 @@
         <!-- Select Subscription -->
         <activity android:name="SelectSubscription"
             android:label="@string/callind_multi_sim"
-            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:configChanges="orientation|screenSize|keyboardHidden|mcc|mnc"
             android:permission="com.qti.permission.SELECT_SUBSCRIPTION"
             android:theme="@style/SettingsLight">
             <intent-filter>
