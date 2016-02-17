@@ -202,7 +202,7 @@
     <bool name="config_ef_plmn_sel">false</bool>
 
     <!-- Config to enable/disable showing depersonalizationpanel dialog -->
-    <bool name="icc_depersonalizationPanelEnabled">true</bool>
+	<bool name="icc_depersonalizationPanelEnabled">true</bool>
 
     <bool name="config_regional_ussd_hide_error_from_network_enable">false</bool>
 
@@ -230,5 +230,4 @@
 
     <!-- If false, removes the X-Divert option from Call Settings -->
     <bool name="config_xdivert_enable">true</bool>
-
 </resources>

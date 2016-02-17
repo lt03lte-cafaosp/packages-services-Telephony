@@ -51,16 +51,6 @@
     </PreferenceScreen>
 
     <PreferenceScreen
-        android:key="button_carrier_sel_fake_key"
-        android:title="@string/networks"
-        android:summary="@string/sum_carrier_select"
-        android:enabled="false"
-        android:persistent="false">
-        <intent android:targetPackage="com.android.phone"
-            android:targetClass="com.android.phone.NetworkSetting" />
-     </PreferenceScreen>
-
-    <PreferenceScreen
         android:key="carrier_settings_key"
         android:title="@string/carrier_settings_title">
         <intent android:action="android.intent.action.MAIN"
