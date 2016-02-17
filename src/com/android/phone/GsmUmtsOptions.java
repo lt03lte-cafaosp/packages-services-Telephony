@@ -88,8 +88,14 @@ public class GsmUmtsOptions {
             log("Not a GSM phone");
             mButtonAPNExpand.setEnabled(false);
             log("Manual network selection not allowed: Disabling Operator Selection Menu");
-            mPrefScreen.removePreference(mPrefScreen
-                .findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY));
+            if (SubscriptionManager.getResourcesForSubId(mPrefActivity, mPhone.getSubId())
+                .getBoolean(R.bool.config_disable_operator_selection_menu)) {
+                log("disable mButtonOperatorSelectionExpand");
+                mButtonOperatorSelectionExpand.setEnabled(false);
+            } else {
+                mPrefScreen.removePreference(mPrefScreen
+                    .findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY));
+            }
         } else {
             log("Not a CDMA phone");
             Resources res = mPrefActivity.getResources();

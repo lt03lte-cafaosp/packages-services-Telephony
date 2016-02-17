@@ -27,6 +27,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.provider.Settings;
 import android.telephony.CarrierConfigManager;
+import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
@@ -71,8 +72,7 @@ public class CdmaOptions {
         // Some CDMA carriers want the APN settings.
         if ((!carrierConfig.getBoolean(CarrierConfigManager.KEY_SHOW_APN_SETTING_CDMA_BOOL)
                 || carrierConfig.getBoolean(CarrierConfigManager.KEY_WORLD_PHONE_BOOL))
-                && mButtonAPNExpand != null && mPrefActivity.getResources()
-                .getBoolean(R.bool.world_phone)) {
+                && mButtonAPNExpand != null) {
             mPrefScreen.removePreference(mButtonAPNExpand);
             removedAPNExpand = true;
         }
@@ -99,7 +99,12 @@ public class CdmaOptions {
 
         mButtonCdmaSubscription = (CdmaSubscriptionListPreference)mPrefScreen
                 .findPreference(BUTTON_CDMA_SUBSCRIPTION_KEY);
-
+        if (SystemProperties.getBoolean(MobileNetworkSettings.PRIMARY_CARD_PROPERTY_NAME, false)
+                && !SubscriptionManager.getResourcesForSubId(mPrefActivity, mPhone.getSubId())
+                .getBoolean(R.bool.config_disable_operator_selection_menu)) {
+            mPrefScreen.removePreference(mPrefScreen.findPreference(BUTTON_CDMA_SYSTEM_SELECT_KEY));
+            mPrefScreen.removePreference(mPrefScreen.findPreference(BUTTON_CDMA_SUBSCRIPTION_KEY));
+        }
         mButtonCdmaSystemSelect.setEnabled(true);
         if(deviceSupportsNvAndRuim()) {
             log("Both NV and Ruim supported, ENABLE subscription type selection");
