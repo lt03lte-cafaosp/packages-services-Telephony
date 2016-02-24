@@ -752,7 +752,12 @@ public class MobileNetworkSettings extends PreferenceActivity
             }
         }
 
-        if (mIsCTClassA && getPreferredNetworkModeForPhoneId() == Phone.NT_MODE_GSM_ONLY) {
+        log("subId:" + mPhone.getSubId() + " and config_disable_operator_selection_menu is: " +
+                SubscriptionManager.getResourcesForSubId(this, mPhone.getSubId())
+                .getBoolean(R.bool.config_disable_operator_selection_menu));
+        if (mIsCTClassA && getPreferredNetworkModeForPhoneId() == Phone.NT_MODE_GSM_ONLY &&
+                !SubscriptionManager.getResourcesForSubId(this, mPhone.getSubId())
+                .getBoolean(R.bool.config_disable_operator_selection_menu)) {
             prefSet.removePreference(mButtonPreferredNetworkMode);
             prefSet.removePreference(mButtonEnabledNetworks);
         }
