@@ -27,9 +27,9 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
-import org.codeaurora.ims.qtiims.IQtiImsInterfaceListener;
-import org.codeaurora.ims.qtiims.IQtiImsInterface;
-import org.codeaurora.ims.qtiims.QtiImsInterfaceListenerBaseImpl;
+import org.codeaurora.ims.internal.IQtiImsExtListener;
+import org.codeaurora.ims.internal.IQtiImsExt;
+import org.codeaurora.ims.QtiImsExtListenerBaseImpl;
 
 import static com.android.phone.TimeConsumingPreferenceActivity.RESPONSE_ERROR;
 import static com.android.phone.TimeConsumingPreferenceActivity.EXCEPTION_ERROR;
@@ -56,7 +56,7 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
     private TimeConsumingPreferenceListener mTcpListener;
     boolean isTimerEnabled;
 
-    private IQtiImsInterface mImsInterface = null;
+    private IQtiImsExt mImsInterface = null;
     boolean mAllowSetCallFwding = false;
     private static final String IMS_SERVICE_PKG_NAME = "org.codeaurora.ims";
     /*Variables which holds CFUT response data*/
@@ -96,7 +96,7 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
             if (reason == CommandsInterface.CF_REASON_UNCONDITIONAL && isTimerEnabled) {
                 setTimeSettingVisibility(true);
                 //Bind to ImsService
-                Intent intent = new Intent(IQtiImsInterface.class.getName());
+                Intent intent = new Intent(IQtiImsExt.class.getName());
                 intent.setPackage(IMS_SERVICE_PKG_NAME);
                 getContext().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
             } else {
@@ -127,7 +127,7 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
     /*This will be invoked once service is bound to client*/
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
-            mImsInterface = IQtiImsInterface.Stub.asInterface(service);
+            mImsInterface = IQtiImsExt.Stub.asInterface(service);
             try {
                 Log.d(LOG_TAG, "getCallForwardUncondTimer reason ="+reason);
                 mImsInterface.getCallForwardUncondTimer(reason, mServiceClass,
@@ -284,8 +284,8 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
 
     }
 
-    private QtiImsInterfaceListenerBaseImpl imsInterfaceListener =
-            new QtiImsInterfaceListenerBaseImpl() {
+    private QtiImsExtListenerBaseImpl imsInterfaceListener =
+            new QtiImsExtListenerBaseImpl() {
 
         @Override
         public void onSetCallForwardUncondTimer(int status) {
