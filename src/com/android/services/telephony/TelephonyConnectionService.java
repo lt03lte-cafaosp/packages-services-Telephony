@@ -23,6 +23,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.provider.Settings;
 import android.telecom.Connection;
 import android.telecom.ConnectionRequest;
 import android.telecom.ConnectionService;
@@ -249,6 +250,8 @@ public class TelephonyConnectionService extends ConnectionService {
             }
         }
         boolean useEmergencyCallHelper = false;
+        final boolean isAirplaneModeOn = Settings.System.getInt(getContentResolver(),
+                Settings.System.AIRPLANE_MODE_ON, 0) != 0;
 
         // If we're dialing a non-emergency number and the phone is in ECM mode, reject the call if
         // carrier configuration specifies that we cannot make non-emergency calls in ECM mode.
@@ -272,7 +275,7 @@ public class TelephonyConnectionService extends ConnectionService {
 
         if (isEmergencyNumber) {
             mRequest = request;
-            if (!phone.isRadioOn()) {
+            if (!phone.isRadioOn() || isAirplaneModeOn) {
                 mRequest = request;
                 useEmergencyCallHelper = true;
             }

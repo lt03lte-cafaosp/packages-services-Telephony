@@ -31,8 +31,12 @@ package com.android.phone;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncResult;
 import android.os.Bundle;
 import android.os.Handler;
@@ -44,6 +48,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.provider.Settings;
 import android.telephony.ServiceState;
+import android.telephony.SubscriptionManager;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -100,6 +105,7 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
     private static final int RADIO_OFF_ERROR = 400;
     private static final int INITIAL_BUSY_DIALOG = 500;
     private static final int INPUT_PSW_DIALOG = 600;
+    private static final int IMS_UT_REQUEST = 700;
 
     // status message sent back from handlers
     private static final int MSG_OK = 100;
@@ -121,6 +127,7 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
     private int mDialogState = OFF_MODE;
     private boolean mCBDataStale = true;
     private boolean mIsBusyDialogAvailable = false;
+    private boolean mIsShowUTDialog = false;
     private String mPassword = null;
     private String mNewPsw = null;
     private String mError = null;
@@ -137,14 +144,28 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 
-        addPreferencesFromResource(R.xml.call_barring);
-
         if (DBG) log("onCreate");
 
         SubscriptionInfoHelper subscriptionInfoHelper = new
                 SubscriptionInfoHelper(this, getIntent());
         mPhone = subscriptionInfoHelper.getPhone();
 
+        final SubscriptionManager subscriptionManager = SubscriptionManager.from(this);
+        // check the active data sub.
+        int sub = subscriptionInfoHelper.getSubId();
+        int defaultDataSub = subscriptionManager.getDefaultDataSubId();
+        boolean isMobileDataActived = isMobileDataActived();
+        Log.d(LOG_TAG, "isMobileDataActived = " + isMobileDataActived + ", sub = " + sub +
+                ", defaultDataSub = " + defaultDataSub);
+        if (mPhone.getImsPhone() != null && mPhone.getImsPhone().getServiceState().getState()
+                == ServiceState.STATE_IN_SERVICE
+                && (!isMobileDataActived || sub != defaultDataSub)
+                && getResources().getBoolean(R.bool.check_mobile_data_for_cf)) {
+            mIsShowUTDialog = true;
+            if (DBG) Log.d(LOG_TAG, "please open mobile network for UT settings!");
+            showDialog (IMS_UT_REQUEST);
+        }
+        addPreferencesFromResource(R.xml.call_barring);
         PreferenceScreen prefSet = getPreferenceScreen();
 
         mListOutgoing = (ListPreference) prefSet.findPreference(CALL_BARRING_OUTGOING_KEY);
@@ -188,7 +209,7 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
 
         if (DBG) log("onResume");
 
-        if (mCBDataStale) {
+        if (mCBDataStale && !mIsShowUTDialog) {
             // If airplane mode is on, do not bother querying.
             if (Settings.System.getInt(getContentResolver(),
                     Settings.System.AIRPLANE_MODE_ON, 0) == 0) {
@@ -657,6 +678,33 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
             dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
 
             return dialog;
+        } else if (id == IMS_UT_REQUEST) {
+            Dialog dialog = new AlertDialog.Builder(this)
+                    .setTitle(R.string.no_mobile_data)
+                    .setMessage(R.string.cf_setting_mobile_data_alert)
+                    .setIconAttribute(android.R.attr.alertDialogIcon)
+                    .setPositiveButton(android.R.string.ok,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int id) {
+                                    Intent newIntent = new Intent("android.settings.SETTINGS");
+                                    newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    startActivity(newIntent);
+                                    mIsShowUTDialog = false;
+                                    finish();
+                                }
+                            })
+                    .setNegativeButton(android.R.string.cancel,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int id) {
+                                    mIsShowUTDialog = false;
+                                    dialog.dismiss();
+                                    finish();
+                                }
+                            })
+                    .create();
+            return dialog;
         }
         return null;
     }
@@ -693,6 +741,18 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
             default:
         }
         return cbName;
+    }
+
+    private boolean isMobileDataActived() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(
+                Context.CONNECTIVITY_SERVICE);
+        if (cm != null) {
+            NetworkInfo ni = cm.getActiveNetworkInfo();
+            if ((ni != null) && ni.isConnected()) {
+                return ni.getType() == ConnectivityManager.TYPE_MOBILE;
+            }
+        }
+        return false;
     }
 
     private static void log(String msg) {
