@@ -758,7 +758,9 @@ public class MobileNetworkSettings extends PreferenceActivity
             }
             prefSet.addPreference(mButtonPreferredNetworkMode);
             prefSet.addPreference(mButtonEnabledNetworks);
-            prefSet.addPreference(mButton4glte);
+            if (!getResources().getBoolean(R.bool.config_disable_enhance_4G_LTE_option)) {
+                prefSet.addPreference(mButton4glte);
+            }
         }
 
         setScreenState();
