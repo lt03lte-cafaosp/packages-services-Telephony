@@ -899,7 +899,7 @@ public class PhoneGlobals extends ContextWrapper {
                 handleServiceStateChanged(intent);
             } else if (action.equals(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED)) {
                 int phoneId = intent.getIntExtra(PhoneConstants.PHONE_KEY, 0);
-                phoneInEcm = getPhone(phoneId);
+                phoneInEcm = PhoneFactory.getPhone(phoneId);
                 Log.d(LOG_TAG, "Emergency Callback Mode. phoneId:" + phoneId);
                 if (TelephonyCapabilities.supportsEcm(phoneInEcm)) {
                     Log.d(LOG_TAG, "Emergency Callback Mode arrived in PhoneApp.");
