@@ -251,7 +251,10 @@ public class PhoneGlobals extends ContextWrapper {
                 // TODO: This event should be handled by the lock screen, just
                 // like the "SIM missing" and "Sim locked" cases (bug 1804111).
                 case EVENT_SIM_NETWORK_LOCKED:
-                    if (getCarrierConfig().getBoolean(
+                    if (getResources().getBoolean(
+                            R.bool.config_regional_sim_lock_with_limited_service)) {
+                        SimNetworkLockPanel.showDialog();
+                    } else if (getCarrierConfig().getBoolean(
                             CarrierConfigManager.KEY_IGNORE_SIM_NETWORK_LOCKED_EVENTS_BOOL)) {
                         // Some products don't have the concept of a "SIM network lock"
                         Log.i(LOG_TAG, "Ignoring EVENT_SIM_NETWORK_LOCKED event; "

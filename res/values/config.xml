@@ -230,4 +230,7 @@
 
     <!-- If false, removes the X-Divert option from Call Settings -->
     <bool name="config_xdivert_enable">true</bool>
+
+    <!-- Not allowed sim inserted, the limited service is used -->
+    <bool name="config_regional_sim_lock_with_limited_service">false</bool>
 </resources>
