@@ -17,6 +17,7 @@
 package com.android.phone;
 
 import com.android.ims.ImsManager;
+import com.android.internal.telephony.IExtTelephony;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneFactory;
@@ -43,6 +44,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PersistableBundle;
+import android.os.RemoteException;
+import android.os.ServiceManager;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.os.UserManager;
@@ -101,6 +104,7 @@ public class MobileNetworkSettings extends PreferenceActivity
     private static final String BUTTON_CARRIER_SETTINGS_KEY = "carrier_settings_key";
     private static final String BUTTON_CDMA_SYSTEM_SELECT_KEY = "cdma_system_select_key";
     private static final String PRIMARY_CARD_PROPERTY_NAME = "persist.radio.primarycard";
+    private static final String PRIMARY_4G_CARD_PROPERTY_NAME = "persist.radio.detect4gcard";
 
     private int preferredNetworkMode = Phone.PREFERRED_NT_MODE;
 
@@ -138,6 +142,9 @@ public class MobileNetworkSettings extends PreferenceActivity
     private boolean mShow4GForLTE;
     private boolean mIsGlobalCdma;
     private boolean mUnavailable;
+    private IExtTelephony mExtTelephony = IExtTelephony.Stub.
+            asInterface(ServiceManager.getService("extphone"));
+    private static final int NOT_PROVISIONED = 0;
 
     private final PhoneStateListener mPhoneStateListener = new PhoneStateListener() {
         /*
@@ -171,6 +178,35 @@ public class MobileNetworkSettings extends PreferenceActivity
                 mCdmaOptions = null;
                 updateBody();
             }
+        }
+    }
+
+    private boolean isDetect4gCardEnabled() {
+        return SystemProperties.getBoolean(PRIMARY_CARD_PROPERTY_NAME, false) &&
+                SystemProperties.getBoolean(PRIMARY_4G_CARD_PROPERTY_NAME, false);
+    }
+
+    private void setScreenState() {
+        if (mPhone != null) {
+            int phoneId = mPhone.getPhoneId();
+            int simState = TelephonyManager.getDefault().getSimState(phoneId);
+            boolean screenState = simState != TelephonyManager.SIM_STATE_ABSENT;
+            log("set sub screenState phoneId = " + phoneId + ", simState = " + simState);
+            if (screenState) {
+                int provStatus = NOT_PROVISIONED;
+                try{
+                    provStatus = mExtTelephony.
+                            getCurrentUiccCardProvisioningStatus(phoneId);
+                } catch (RemoteException ex) {
+                    loge("RemoteException @setScreenState = " + ex + ", phoneId = " + phoneId);
+                } catch (NullPointerException ex) {
+                    loge("NullPointerException @setScreenState = " + ex + ", phoneId = " + phoneId);
+                }
+                screenState = provStatus != NOT_PROVISIONED;
+                log("set sub screenState provStatus=" + provStatus +
+                        ", screenState=" + screenState);
+            }
+            getPreferenceScreen().setEnabled(screenState);
         }
     }
 
@@ -532,7 +568,13 @@ public class MobileNetworkSettings extends PreferenceActivity
 
         // upon resumption from the sub-activity, make sure we re-enable the
         // preferences.
-        getPreferenceScreen().setEnabled(true);
+        if (isDetect4gCardEnabled()) {
+            //primary card feature is enabled
+            setScreenState();
+        } else {
+            getPreferenceScreen().setEnabled(true);
+        }
+
         preferredNetworkMode = getPreferredNetworkModeForPhoneId();
         // Set UI state in onResume because a user could go home, launch some
         // app to change this setting's backend, and re-launch this settings app
