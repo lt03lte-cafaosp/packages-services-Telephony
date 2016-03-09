@@ -17,6 +17,7 @@
 package com.android.phone;
 
 import com.android.ims.ImsManager;
+import com.android.internal.telephony.IExtTelephony;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneFactory;
@@ -43,6 +44,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PersistableBundle;
+import android.os.RemoteException;
+import android.os.ServiceManager;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.os.UserManager;
@@ -150,6 +153,9 @@ public class MobileNetworkSettings extends PreferenceActivity
     private boolean mShow4GForLTE;
     private boolean mIsGlobalCdma;
     private boolean mUnavailable;
+    private IExtTelephony mExtTelephony = IExtTelephony.Stub.
+            asInterface(ServiceManager.getService("extphone"));
+    private static final int NOT_PROVISIONED = 0;
 
     private final PhoneStateListener mPhoneStateListener = new PhoneStateListener() {
         /*
@@ -192,10 +198,33 @@ public class MobileNetworkSettings extends PreferenceActivity
         }
     }
 
+    private boolean isDetect4gCardEnabled() {
+        return SystemProperties.getBoolean(PRIMARY_CARD_PROPERTY_NAME, false) &&
+            SystemProperties.getBoolean(PRIMARY_4G_CARD_PROPERTY_NAME, false);
+    }
+
     private void setScreenState() {
         if (mPhone != null) {
-            int simState = TelephonyManager.getDefault().getSimState(mPhone.getPhoneId());
-            getPreferenceScreen().setEnabled(simState != TelephonyManager.SIM_STATE_ABSENT);
+            int phoneId = mPhone.getPhoneId();
+            int simState = TelephonyManager.getDefault().getSimState(phoneId);
+            boolean screenState = simState != TelephonyManager.SIM_STATE_ABSENT;
+            log("set sub screenState phoneId=" + phoneId + ", simState=" + simState);
+            if (screenState && isDetect4gCardEnabled()) {
+                //primary card feature is enabled
+                int provStatus = NOT_PROVISIONED;
+                try{
+                    provStatus = mExtTelephony.
+                        getCurrentUiccCardProvisioningStatus(phoneId);
+                } catch (RemoteException ex){
+                    loge("RemoteException @setScreenState=" + ex + ", phoneId=" + phoneId);
+                } catch (NullPointerException ex) {
+                    loge("NullPointerException @setScreenState=" + ex + ", phoneId=" + phoneId);
+                }
+                screenState = provStatus != NOT_PROVISIONED;
+                log("set sub screenState provStatus=" + provStatus +
+                    ", screenState=" + screenState);
+            }
+            getPreferenceScreen().setEnabled(screenState);
         }
     }
 
