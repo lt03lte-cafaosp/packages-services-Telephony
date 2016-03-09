@@ -39,6 +39,7 @@ import android.preference.SwitchPreference;
 import android.provider.Settings.SettingNotFoundException;
 import android.provider.Settings;
 import android.telephony.PhoneStateListener;
+import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.MenuItem;
@@ -48,6 +49,7 @@ import com.android.ims.ImsManager;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneFactory;
+import com.android.internal.telephony.SubscriptionController;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.TelephonyProperties;
 import com.android.phone.R;
@@ -312,7 +314,12 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
 
         // upon resumption from the sub-activity, make sure we re-enable the
         // preferences.
-        getPreferenceScreen().setEnabled(true);
+        if (CardStateMonitor.isDetect4gCardEnabled()) {
+            //primary card feature is enabled
+            setScreenState();
+        }else {
+            getPreferenceScreen().setEnabled(true);
+        }
 
         // Set UI state in onResume because a user could go home, launch some
         // app to change this setting's backend, and re-launch this settings app
@@ -330,6 +337,24 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
             tm.listen(mPhoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
         }
+    }
+
+    private void setScreenState() {
+        int phoneId = mPhone.getPhoneId();
+        int simState = TelephonyManager.getDefault().getSimState(phoneId);
+        log("set sub screenState phoneId=" + phoneId + ", simState=" + simState);
+        boolean screenState = simState != TelephonyManager.SIM_STATE_ABSENT;
+        if(screenState) {
+            SubscriptionController scontrol = SubscriptionController.getInstance();
+            int[] subId = scontrol.getSubId(phoneId);
+            if (subId != null && subId.length > 0) {
+                int simActiveStatus = scontrol.getSubState(subId[0]);
+                log("set sub screenState subId=" + subId[0] +
+                        ", simActiveStatus=" + simActiveStatus + ", screenState=" + screenState);
+                screenState = simActiveStatus != SubscriptionManager.INACTIVE;
+            }
+        }
+        getPreferenceScreen().setEnabled(screenState);
     }
 
     @Override
