@@ -106,6 +106,7 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
     private static final int INITIAL_BUSY_DIALOG = 500;
     private static final int INPUT_PSW_DIALOG = 600;
     private static final int IMS_UT_REQUEST = 700;
+    private static final int IMS_UT_DATA_ROAMING_REQUEST = 800;
 
     // status message sent back from handlers
     private static final int MSG_OK = 100;
@@ -150,20 +151,21 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
                 SubscriptionInfoHelper(this, getIntent());
         mPhone = subscriptionInfoHelper.getPhone();
 
-        final SubscriptionManager subscriptionManager = SubscriptionManager.from(this);
-        // check the active data sub.
-        int sub = subscriptionInfoHelper.getSubId();
-        int defaultDataSub = subscriptionManager.getDefaultDataSubId();
         boolean isMobileDataActived = isMobileDataActived();
-        Log.d(LOG_TAG, "isMobileDataActived = " + isMobileDataActived + ", sub = " + sub +
-                ", defaultDataSub = " + defaultDataSub);
+        Log.d(LOG_TAG, "isMobileDataActived = " + isMobileDataActived);
         if (mPhone.getImsPhone() != null && mPhone.getImsPhone().getServiceState().getState()
                 == ServiceState.STATE_IN_SERVICE
-                && (!isMobileDataActived || sub != defaultDataSub)
                 && getResources().getBoolean(R.bool.check_mobile_data_for_cf)) {
-            mIsShowUTDialog = true;
-            if (DBG) Log.d(LOG_TAG, "please open mobile network for UT settings!");
-            showDialog (IMS_UT_REQUEST);
+             if (!isMobileDataActived){
+                 mIsShowUTDialog = true;
+                 if (DBG) Log.d(LOG_TAG, "please open mobile network for UT settings!");
+                 showDialog(IMS_UT_REQUEST);
+             } else if (mPhone.getImsPhone().getServiceState().getDataRoaming()
+                          && !mPhone.getDataRoamingEnabled()) {
+                 if (DBG) Log.d(LOG_TAG, "please open data roaming for UT settings!");
+                 mIsShowUTDialog = true;
+                 showDialog(IMS_UT_DATA_ROAMING_REQUEST);
+            }
         }
         addPreferencesFromResource(R.xml.call_barring);
         PreferenceScreen prefSet = getPreferenceScreen();
@@ -216,7 +218,7 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
                 queryAllCBOptions();
             } else {
                 if (DBG) log("onResume: airplane mode on");
-                showDialog (RADIO_OFF_ERROR);
+                showDialog(RADIO_OFF_ERROR);
                 finish();
             }
         } else {
@@ -682,6 +684,33 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
             Dialog dialog = new AlertDialog.Builder(this)
                     .setTitle(R.string.no_mobile_data)
                     .setMessage(R.string.cf_setting_mobile_data_alert)
+                    .setIconAttribute(android.R.attr.alertDialogIcon)
+                    .setPositiveButton(android.R.string.ok,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int id) {
+                                    Intent newIntent = new Intent("android.settings.SETTINGS");
+                                    newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    startActivity(newIntent);
+                                    mIsShowUTDialog = false;
+                                    finish();
+                                }
+                            })
+                    .setNegativeButton(android.R.string.cancel,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int id) {
+                                    mIsShowUTDialog = false;
+                                    dialog.dismiss();
+                                    finish();
+                                }
+                            })
+                    .create();
+            return dialog;
+        } else if (id == IMS_UT_DATA_ROAMING_REQUEST) {
+            Dialog dialog = new AlertDialog.Builder(this)
+                    .setTitle(R.string.no_mobile_data_roaming)
+                    .setMessage(R.string.cf_setting_mobile_data_roaming_alert)
                     .setIconAttribute(android.R.attr.alertDialogIcon)
                     .setPositiveButton(android.R.string.ok,
                             new DialogInterface.OnClickListener() {
