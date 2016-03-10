@@ -99,7 +99,7 @@ final class TelephonyConferenceController {
     }
 
     private boolean isFullConference(Conference conference) {
-        return conference.getConnections().size() >= TELEPHONY_CONFERENCE_MAX_SIZE;
+        return conference.getConnections().size() > TELEPHONY_CONFERENCE_MAX_SIZE;
     }
 
     private boolean participatesInFullConference(Connection connection) {
