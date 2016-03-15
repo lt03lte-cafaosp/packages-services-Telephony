@@ -206,6 +206,9 @@
     <string name="mobile_network_settings_not_available">Cellular network settings are not available for this user</string>
     <!-- GSM Call settings screen, setting option name -->
     <string name="labelGSMMore">GSM call settings</string>
+    <string name="labelCFType">Call Forward Setting</string>
+    <string name="labelCFVoice">Voice</string>
+    <string name="labelCFVideo">Video</string>
     <!-- CDM Call settings screen, setting option name -->
     <string name="labelCDMAMore">CDMA call settings</string>
     <!-- Mobile network settings screen, setting option name -->
@@ -607,6 +610,7 @@
     <string name="ussd_dialog_sep" translatable="false">----------</string>
 
     <string name="gsm_umts_options">GSM/UMTS Options</string>
+    <string name="call_forward_option">CallForward Options</string>
     <string name="cdma_options">CDMA Options</string>
     <string name="network_settings_sel_sub">SUBS Settings</string>
     <string name="summary_manage_subscriptions">Manage Network settings of each subscriptions</string>
@@ -1534,6 +1538,8 @@
     <string name="lte_switch_unavailable">4G/3G SIM cards switcher is unavailable</string>
     <string name="lte_recognize_summary">Two 4G/3G SIM cards are detected,you need to set the default 4G/3G SIM card:</string>
     <string name="lte_select_summary">The selected subscription will be recognized as a 4G/3G card and the other one as a 2G card.</string>
+    <string name="lte_recognize_summary_generic">Two sim cards are detected, please select the preferred SIM card:</string>
+    <string name="lte_select_summary_generic">The selected sim card will have 3G/4G services with Data subscription.</string>
     <string name="lte_checkbox_text">Set mobile data to the selected SIM card once default 4G/3G SIM card is changed</string>
     <string name="select_ok">OK</string>
     <string name="lte_select_title">Default 4G/3G SIM card</string>
@@ -1576,4 +1582,5 @@
     <string name="ims_vt_call_quality_high">High</string>
     <string name="ims_vt_call_quality_unknown">Unknown</string>
     <string name="ims_vt_call_quality_set_failed">Failed to set video quality</string>
+    <string name="sim_card_number_title">SIM %1$d</string>
 </resources>

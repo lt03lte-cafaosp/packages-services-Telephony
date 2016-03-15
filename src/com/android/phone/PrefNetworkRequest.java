@@ -144,7 +144,18 @@ public class PrefNetworkRequest extends SyncQueue.SyncRequest {
         mContext = context;
         mCallback = callback;
         commands = new ArrayList<PrefNetworkSetCommand>();
-        if (networkMode != Phone.NT_MODE_GSM_ONLY) {
+        CardStateMonitor cardStateMonitor = PrimarySubSelectionController
+                .getInstance().mCardStateMonitor;
+        int numCardsPresent = 0;
+
+        for (int index = 0; index < PrimarySubSelectionController.PHONE_COUNT; index++) {
+            if (cardStateMonitor.getCardInfo(index).isCardPresent()) {
+                numCardsPresent++;
+            }
+        }
+
+        if (networkMode != Phone.NT_MODE_GSM_ONLY && (numCardsPresent == 1 ||
+                        !PrimarySubSelectionController.isCtCardPresent())) {
             for (int index = 0; index < PrimarySubSelectionController.PHONE_COUNT; index++) {
                 if (index != slot)
                     commands.add(new PrefNetworkSetCommand(index, Phone.NT_MODE_GSM_ONLY));

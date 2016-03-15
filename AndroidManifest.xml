@@ -372,6 +372,15 @@
             </intent-filter>
         </activity>
 
+        <activity android:name="CallForwardType"
+                android:label="@string/call_forward_option"
+                android:configChanges="orientation|screenSize|keyboardHidden"
+                android:theme="@style/SettingsLight">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+
         <activity android:name="CellBroadcastSms"
             android:label="@string/cell_broadcast_sms"
             android:theme="@android:style/Theme.Holo.DialogWhenLarge">
@@ -460,6 +469,7 @@
        <!-- MSim Mobile Network Settings per subscription -->
        <activity android:name="MSimMobileNetworkSubSettings"
                 android:label="@string/settings_label"
+                android:configChanges="mcc|mnc"
                 android:theme="@style/SettingsLight">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -471,7 +481,7 @@
         <!-- Select Subscription -->
         <activity android:name="SelectSubscription"
             android:label="@string/callind_multi_sim"
-            android:configChanges="orientation|keyboardHidden"
+            android:configChanges="orientation|keyboardHidden|mcc|mnc"
             android:permission="com.qti.permission.SELECT_SUBSCRIPTION"
             android:theme="@style/SettingsLight">
             <intent-filter>
@@ -497,9 +507,9 @@
         </activity>
 
         <activity android:name=".PrimarySubSetting"
-                android:label="@string/multi_sim_settings_title"
+                android:label="@string/lte_recognition_title"
                 android:icon="@drawable/ic_settings_sim_display"
-                android:configChanges="orientation|screenSize|keyboardHidden" >
+                android:configChanges="orientation|screenSize|keyboardHidden|mcc|mnc" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
