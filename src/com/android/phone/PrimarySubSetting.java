@@ -224,7 +224,11 @@ public class PrimarySubSetting extends Activity implements View.OnClickListener 
                     .setMessage(
                             getString(R.string.reg_failed_msg,
                                     mPrimarySubSelectionController.getSimName(sub)))
-                    .setNeutralButton(R.string.select_ok, null)
+                    .setNeutralButton(R.string.select_ok, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    })
                     .create();
             alertDialog.show();
         } else {

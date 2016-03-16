@@ -715,6 +715,9 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
             network = IINList.getDefault(mContext).getIINPrefNetwork(iccId, uiccCard);
             if (network == -1) {
                 logd("network mode is -1 , can not set primary card ");
+                if (callback.getTarget() != null) {
+                    callback.sendToTarget();
+                }
                 return;
             }
         }
