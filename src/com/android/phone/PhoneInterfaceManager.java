@@ -1189,7 +1189,9 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
 
     public int[] supplyPinReportResultForSubscriber(int subId, String pin) {
         enforceModifyPermission();
-        final UnlockSim checkSimPin = new UnlockSim(getPhone(subId).getIccCard());
+        Phone phone = getPhone(subId);
+        if (phone == null) return returnErrorForPinPukOperation();
+        final UnlockSim checkSimPin = new UnlockSim(phone.getIccCard());
         checkSimPin.start();
         return checkSimPin.unlockSim(null, pin);
     }
@@ -1201,9 +1203,18 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
 
     public int[] supplyPukReportResultForSubscriber(int subId, String puk, String pin) {
         enforceModifyPermission();
-        final UnlockSim checkSimPuk = new UnlockSim(getPhone(subId).getIccCard());
+        Phone phone = getPhone(subId);
+        if (phone == null) return returnErrorForPinPukOperation();
+        final UnlockSim checkSimPuk = new UnlockSim(phone.getIccCard());
         checkSimPuk.start();
         return checkSimPuk.unlockSim(puk, pin);
+    }
+
+    private int[] returnErrorForPinPukOperation() {
+        int[] resultArray = new int[2];
+        resultArray[0] = PhoneConstants.PIN_GENERAL_FAILURE;
+        resultArray[1] = -1;
+        return resultArray;
     }
 
     /**
@@ -2863,7 +2874,14 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      */
     @Override
     public boolean isImsRegistered() {
-        return mPhone.isImsRegistered();
+        int subId = SubscriptionManager.getDefaultDataSubId();
+        final Phone phone = getPhone(subId);
+        Log.d(LOG_TAG, "IMS : Data sub Id : " + subId);
+
+        if (phone != null) {
+            return phone.isImsRegistered();
+        }
+        return false;
     }
 
     @Override

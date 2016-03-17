@@ -17,6 +17,7 @@
 package com.android.phone;
 
 import com.android.ims.ImsManager;
+import com.android.internal.telephony.IExtTelephony;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneFactory;
@@ -43,6 +44,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PersistableBundle;
+import android.os.RemoteException;
+import android.os.ServiceManager;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.os.UserManager;
@@ -103,14 +106,11 @@ public class MobileNetworkSettings extends PreferenceActivity
     private static final String BUTTON_OPERATOR_SELECTION_EXPAND_KEY = "button_carrier_sel_key";
     private static final String BUTTON_CARRIER_SETTINGS_KEY = "carrier_settings_key";
     private static final String BUTTON_CDMA_SYSTEM_SELECT_KEY = "cdma_system_select_key";
-    private static final String PRIMARY_CARD_PROPERTY_NAME = "persist.radio.primarycard";
     private static final String PROPERTY_CT_CLASS_C = "persist.radio.ct_class_c";
     private static final String PRIMARY_4G_CARD_PROPERTY_NAME = "persist.radio.detect4gcard";
     private static final String CONFIG_CURRENT_PRIMARY_SUB = "config_current_primary_sub";
     private static final String CARRIER_MODE_CT_CLASS_A = "ct_class_a";
-
-    private String mCarrierMode = SystemProperties.get("persist.carrier.mode", "default");
-    private boolean mIsCTClassA = mCarrierMode.equals(CARRIER_MODE_CT_CLASS_A);
+    protected static final String PRIMARY_CARD_PROPERTY_NAME = "persist.radio.primarycard";
 
     private int preferredNetworkMode = Phone.PREFERRED_NT_MODE;
 
@@ -121,6 +121,9 @@ public class MobileNetworkSettings extends PreferenceActivity
 
     private SubscriptionManager mSubscriptionManager;
     private String tabDefaultLabel = "SIM slot ";
+
+    private String mCarrierMode = SystemProperties.get("persist.carrier.mode", "default");
+    private boolean mIsCTClassA = mCarrierMode.equals(CARRIER_MODE_CT_CLASS_A);
 
     //UI objects
     private ListPreference mButtonPreferredNetworkMode;
@@ -150,6 +153,9 @@ public class MobileNetworkSettings extends PreferenceActivity
     private boolean mShow4GForLTE;
     private boolean mIsGlobalCdma;
     private boolean mUnavailable;
+    private IExtTelephony mExtTelephony = IExtTelephony.Stub.
+            asInterface(ServiceManager.getService("extphone"));
+    private static final int NOT_PROVISIONED = 0;
 
     private final PhoneStateListener mPhoneStateListener = new PhoneStateListener() {
         /*
@@ -192,10 +198,33 @@ public class MobileNetworkSettings extends PreferenceActivity
         }
     }
 
+    private boolean isDetect4gCardEnabled() {
+        return SystemProperties.getBoolean(PRIMARY_CARD_PROPERTY_NAME, false) &&
+            SystemProperties.getBoolean(PRIMARY_4G_CARD_PROPERTY_NAME, false);
+    }
+
     private void setScreenState() {
         if (mPhone != null) {
-            int simState = TelephonyManager.getDefault().getSimState(mPhone.getPhoneId());
-            getPreferenceScreen().setEnabled(simState != TelephonyManager.SIM_STATE_ABSENT);
+            int phoneId = mPhone.getPhoneId();
+            int simState = TelephonyManager.getDefault().getSimState(phoneId);
+            boolean screenState = simState != TelephonyManager.SIM_STATE_ABSENT;
+            log("set sub screenState phoneId=" + phoneId + ", simState=" + simState);
+            if (screenState && isDetect4gCardEnabled()) {
+                //primary card feature is enabled
+                int provStatus = NOT_PROVISIONED;
+                try{
+                    provStatus = mExtTelephony.
+                        getCurrentUiccCardProvisioningStatus(phoneId);
+                } catch (RemoteException ex){
+                    loge("RemoteException @setScreenState=" + ex + ", phoneId=" + phoneId);
+                } catch (NullPointerException ex) {
+                    loge("NullPointerException @setScreenState=" + ex + ", phoneId=" + phoneId);
+                }
+                screenState = provStatus != NOT_PROVISIONED;
+                log("set sub screenState provStatus=" + provStatus +
+                    ", screenState=" + screenState);
+            }
+            getPreferenceScreen().setEnabled(screenState);
         }
     }
 
@@ -741,6 +770,7 @@ public class MobileNetworkSettings extends PreferenceActivity
         if (SystemProperties.getBoolean(PRIMARY_CARD_PROPERTY_NAME, false) &&
                 !SystemProperties.getBoolean(PRIMARY_4G_CARD_PROPERTY_NAME, false)) {
             int phoneId = mPhone.getPhoneId();
+            log("phoneId : "+ phoneId + " NW mode is: " + getPreferredNetworkModeForPhoneId());
             if (UiccController.getInstance().getUiccCard(phoneId) == null ||
                     !UiccController.getInstance().getUiccCard(phoneId)
                     .isApplicationOnIcc(AppType.APPTYPE_USIM) ||
@@ -749,6 +779,16 @@ public class MobileNetworkSettings extends PreferenceActivity
                 prefSet.removePreference(mButtonPreferredNetworkMode);
                 prefSet.removePreference(mButtonEnabledNetworks);
             }
+        }
+
+        log("subId:" + mPhone.getSubId() + " and config_disable_operator_selection_menu is: " +
+                SubscriptionManager.getResourcesForSubId(this, mPhone.getSubId())
+                .getBoolean(R.bool.config_disable_operator_selection_menu));
+        if (mIsCTClassA && getPreferredNetworkModeForPhoneId() == Phone.NT_MODE_GSM_ONLY &&
+                !SubscriptionManager.getResourcesForSubId(this, mPhone.getSubId())
+                .getBoolean(R.bool.config_disable_operator_selection_menu)) {
+            prefSet.removePreference(mButtonPreferredNetworkMode);
+            prefSet.removePreference(mButtonEnabledNetworks);
         }
 
         int settingsNetworkMode = getPreferredNetworkModeForSubId();
@@ -783,8 +823,7 @@ public class MobileNetworkSettings extends PreferenceActivity
             // in case it is currently something else. That is possible if user
             // changed the setting while roaming and is now back to home network.
             settingsNetworkMode = preferredNetworkMode;
-        } else if (carrierConfig.getBoolean(CarrierConfigManager.KEY_WORLD_PHONE_BOOL) == true &&
-                getResources().getBoolean(R.bool.world_phone)) {
+        } else if (carrierConfig.getBoolean(CarrierConfigManager.KEY_WORLD_PHONE_BOOL) == true) {
             prefSet.removePreference(mButtonEnabledNetworks);
             // set the listener for the mButtonPreferredNetworkMode list preference so we can issue
             // change Preferred Network Mode.
@@ -847,11 +886,6 @@ public class MobileNetworkSettings extends PreferenceActivity
                             R.array.enabled_networks_tdscdma_choices);
                     mButtonEnabledNetworks.setEntryValues(
                             R.array.enabled_networks_tdscdma_values);
-                } else if (mIsCTClassA) {
-                    mButtonEnabledNetworks.setEntries(
-                            R.array.enabled_networks_gsm_only_choices);
-                    mButtonEnabledNetworks.setEntryValues(
-                            R.array.enabled_networks_gsm_only_values);
                 } else if (!carrierConfig.getBoolean(CarrierConfigManager.KEY_PREFER_2G_BOOL)
                         && !getResources().getBoolean(R.bool.config_enabled_lte)) {
                     mButtonEnabledNetworks.setEntries(
@@ -870,7 +904,7 @@ public class MobileNetworkSettings extends PreferenceActivity
                             R.array.enabled_networks_except_lte_choices);
                     mButtonEnabledNetworks.setEntryValues(
                             R.array.enabled_networks_except_lte_values);
-                } else if (mIsGlobalCdma && getResources().getBoolean(R.bool.world_phone)) {
+                } else if (mIsGlobalCdma) {
                     mButtonEnabledNetworks.setEntries(
                             R.array.enabled_networks_cdma_choices);
                     mButtonEnabledNetworks.setEntryValues(
@@ -973,7 +1007,8 @@ public class MobileNetworkSettings extends PreferenceActivity
             ps.setEnabled(hasActiveSubscriptions);
         }
         ps = findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY);
-        if (ps != null) {
+        if (ps != null && !SubscriptionManager.getResourcesForSubId(this, mPhone.getSubId())
+                .getBoolean(R.bool.config_disable_operator_selection_menu)) {
             ps.setEnabled(hasActiveSubscriptions);
         }
         ps = findPreference(BUTTON_CARRIER_SETTINGS_KEY);
@@ -1381,7 +1416,7 @@ public class MobileNetworkSettings extends PreferenceActivity
             case Phone.NT_MODE_WCDMA_ONLY:
             case Phone.NT_MODE_GSM_UMTS:
             case Phone.NT_MODE_WCDMA_PREF:
-                if (!mIsGlobalCdma || !getResources().getBoolean(R.bool.world_phone)) {
+                if (!mIsGlobalCdma) {
                     mButtonEnabledNetworks.setValue(
                             Integer.toString(Phone.NT_MODE_WCDMA_PREF));
                     mButtonEnabledNetworks.setSummary(R.string.network_3G);
@@ -1392,7 +1427,7 @@ public class MobileNetworkSettings extends PreferenceActivity
                 }
                 break;
             case Phone.NT_MODE_GSM_ONLY:
-                if (!mIsGlobalCdma || !getResources().getBoolean(R.bool.world_phone)) {
+                if (!mIsGlobalCdma) {
                     mButtonEnabledNetworks.setValue(
                             Integer.toString(Phone.NT_MODE_GSM_ONLY));
                     mButtonEnabledNetworks.setSummary(R.string.network_2G);
@@ -1412,7 +1447,7 @@ public class MobileNetworkSettings extends PreferenceActivity
                 }
             case Phone.NT_MODE_LTE_ONLY:
             case Phone.NT_MODE_LTE_WCDMA:
-                if (!mIsGlobalCdma || !getResources().getBoolean(R.bool.world_phone)) {
+                if (!mIsGlobalCdma) {
                     mButtonEnabledNetworks.setValue(
                             Integer.toString(Phone.NT_MODE_LTE_GSM_WCDMA));
                     mButtonEnabledNetworks.setSummary((mShow4GForLTE == true)

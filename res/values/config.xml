@@ -202,7 +202,7 @@
     <bool name="config_ef_plmn_sel">false</bool>
 
     <!-- Config to enable/disable showing depersonalizationpanel dialog -->
-    <bool name="icc_depersonalizationPanelEnabled">true</bool>
+	<bool name="icc_depersonalizationPanelEnabled">true</bool>
 
     <bool name="config_regional_ussd_hide_error_from_network_enable">false</bool>
 
@@ -221,7 +221,7 @@
     <!-- whether to show uplmn preference for usim -->
     <bool name="config_uplmn_for_usim">false</bool>
     <!-- show toast for ims srvcc -->
-    <bool name="config_show_srvcc_toast">true</bool>
+    <bool name="config_show_srvcc_toast">false</bool>
     <!-- enable network checking for ut interface-->
     <bool name="check_mobile_data_for_cf">false</bool>
 
@@ -230,5 +230,4 @@
 
     <!-- If false, removes the X-Divert option from Call Settings -->
     <bool name="config_xdivert_enable">true</bool>
-
 </resources>
