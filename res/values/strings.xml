@@ -1572,4 +1572,7 @@
 
     <string name="no_mobile_data">Mobile data is not available</string>
     <string name="no_mobile_data_roaming">Data roaming is not available</string>
+
+    <string name="sim_lock_with_limited_service_title">Network Lock</string>
+    <string name="sim_lock_with_limited_service_desc">This device can be remotely unlocked if eligible. Please use the "Device Unlock" application to unlock the device. Make sure the device has an internet connectivity to use the "Device Unlock" application</string>
 </resources>
