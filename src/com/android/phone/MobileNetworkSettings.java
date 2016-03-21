@@ -537,18 +537,8 @@ public class MobileNetworkSettings extends PreferenceActivity
         mButton4glte = (SwitchPreference)findPreference(BUTTON_4G_LTE_KEY);
         mButton4glte.setOnPreferenceChangeListener(this);
 
-        mButtonEnable4g = (SwitchPreference)findPreference(BUTTON_ENABLE_4G_KEY);
-
         //get UI object references
         PreferenceScreen prefSet = getPreferenceScreen();
-
-        if (mIsCTClassC) {
-            mButtonEnable4g.setOnPreferenceChangeListener(this);
-            updateButtonEnable4g();
-        } else {
-            prefSet.removePreference(mButtonEnable4g);
-            mButtonEnable4g = null;
-        }
 
         try {
             Context con = createPackageContext("com.android.systemui", 0);
@@ -576,6 +566,15 @@ public class MobileNetworkSettings extends PreferenceActivity
         mActiveSubInfos = new ArrayList<SubscriptionInfo>(max);
 
         initializeSubscriptions();
+
+        mButtonEnable4g = (SwitchPreference)findPreference(BUTTON_ENABLE_4G_KEY);
+        if (mIsCTClassC) {
+            mButtonEnable4g.setOnPreferenceChangeListener(this);
+            updateButtonEnable4g();
+        } else {
+            prefSet.removePreference(mButtonEnable4g);
+            mButtonEnable4g = null;
+        }
 
         IntentFilter intentFilter = new IntentFilter(
                 TelephonyIntents.ACTION_RADIO_TECHNOLOGY_CHANGED);
