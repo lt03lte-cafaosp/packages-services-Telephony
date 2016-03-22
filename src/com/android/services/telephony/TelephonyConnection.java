@@ -125,7 +125,8 @@ abstract class TelephonyConnection extends Connection {
                                     "SettingOriginalConnection " + mOriginalConnection.toString()
                                             + " with " + connection.toString());
                             if (TelephonyGlobals.getApplicationContext().getResources()
-                                    .getBoolean(R.bool.config_show_srvcc_toast)) {
+                                    .getBoolean(R.bool.config_show_srvcc_toast)
+                                            && !mIsEmergencyNumber) {
                                 int srvccMessageRes = VideoProfile.isVideo(
                                         mOriginalConnection.getVideoState()) ?
                                         R.string.srvcc_video_message : R.string.srvcc_message;
