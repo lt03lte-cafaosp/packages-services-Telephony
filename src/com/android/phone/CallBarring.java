@@ -151,16 +151,20 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
                 SubscriptionInfoHelper(this, getIntent());
         mPhone = subscriptionInfoHelper.getPhone();
 
+        final SubscriptionManager subscriptionManager = SubscriptionManager.from(this);
+        // check the active data sub.
+        int sub = subscriptionInfoHelper.getSubId();
+        int defaultDataSub = subscriptionManager.getDefaultDataSubId();
         boolean isMobileDataActived = isMobileDataActived();
-        Log.d(LOG_TAG, "isMobileDataActived = " + isMobileDataActived);
-        if (mPhone.getImsPhone() != null && mPhone.getImsPhone().getServiceState().getState()
-                == ServiceState.STATE_IN_SERVICE
+        Log.d(LOG_TAG, "isMobileDataActived = " + isMobileDataActived + ", sub = " + sub +
+                ", defaultDataSub = " + defaultDataSub);
+        if (mPhone != null && mPhone.isUtEnabled()
                 && getResources().getBoolean(R.bool.check_mobile_data_for_cf)) {
-             if (!isMobileDataActived){
+             if (!isMobileDataActived || sub != defaultDataSub){
                  mIsShowUTDialog = true;
                  if (DBG) Log.d(LOG_TAG, "please open mobile network for UT settings!");
                  showDialog(IMS_UT_REQUEST);
-             } else if (mPhone.getImsPhone().getServiceState().getDataRoaming()
+             } else if (mPhone.getServiceState().getDataRoaming()
                           && !mPhone.getDataRoamingEnabled()) {
                  if (DBG) Log.d(LOG_TAG, "please open data roaming for UT settings!");
                  mIsShowUTDialog = true;

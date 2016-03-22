@@ -21,7 +21,7 @@ import android.util.Log;
 import android.view.MenuItem;
 
 import java.util.ArrayList;
-
+import android.telephony.SubscriptionManager;
 
 public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity
         implements DialogInterface.OnClickListener, DialogInterface.OnCancelListener {
@@ -62,10 +62,14 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity
 
         mSubscriptionInfoHelper = new SubscriptionInfoHelper(this, getIntent());
         mPhone = mSubscriptionInfoHelper.getPhone();
-        if (mPhone.getImsPhone() != null && mPhone.getImsPhone().getServiceState().getState()
-                == ServiceState.STATE_IN_SERVICE
+        final SubscriptionManager subscriptionManager = SubscriptionManager.from(this);
+        // check the active data sub.
+        int sub = mSubscriptionInfoHelper.getSubId();
+        int defaultDataSub = subscriptionManager.getDefaultDataSubId();
+        if (mPhone != null && mPhone.isUtEnabled()
                 && getResources().getBoolean(R.bool.check_mobile_data_for_cf)) {
-            if (getActiveNetworkType() != ConnectivityManager.TYPE_MOBILE){
+            if (getActiveNetworkType() != ConnectivityManager.TYPE_MOBILE
+                    || sub != defaultDataSub){
                    if (DBG) Log.d(LOG_TAG, "please open mobile network for UT settings!");
                    String title = (String)this.getResources().getText(R.string.no_mobile_data);
                    String message = (String)this.getResources()
@@ -73,7 +77,7 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity
                    showAlertDialog(title, message);
                    return;
             }
-            if (mPhone.getImsPhone().getServiceState().getDataRoaming()
+            if (mPhone.getServiceState().getDataRoaming()
                          && !mPhone.getDataRoamingEnabled()) {
                    if (DBG) Log.d(LOG_TAG, "please open data roaming for UT settings!");
                    String title = (String)this.getResources()
