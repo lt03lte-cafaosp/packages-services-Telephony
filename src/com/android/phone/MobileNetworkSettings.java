@@ -111,6 +111,8 @@ public class MobileNetworkSettings extends PreferenceActivity
     private static final String CONFIG_CURRENT_PRIMARY_SUB = "config_current_primary_sub";
     private static final String CARRIER_MODE_CT_CLASS_A = "ct_class_a";
     protected static final String PRIMARY_CARD_PROPERTY_NAME = "persist.radio.primarycard";
+    private static final boolean PRIMCARYCARD_L_W_ENABLED =
+            SystemProperties.getBoolean("persist.radio.lw_enabled", false);
 
     private int preferredNetworkMode = Phone.PREFERRED_NT_MODE;
 
@@ -827,8 +829,14 @@ public class MobileNetworkSettings extends PreferenceActivity
             prefSet.removePreference(mButtonEnabledNetworks);
             // set the listener for the mButtonPreferredNetworkMode list preference so we can issue
             // change Preferred Network Mode.
-            mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
+            if (PRIMCARYCARD_L_W_ENABLED) {
+                mButtonPreferredNetworkMode.setEntries(
+                        R.array.preferred_network_mode_choices);
+                mButtonPreferredNetworkMode.setEntryValues(
+                        R.array.preferred_network_mode_values);
+            }
 
+            mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
             mCdmaOptions = new CdmaOptions(this, prefSet, mPhone);
             mGsmUmtsOptions = new GsmUmtsOptions(this, prefSet, phoneSubId);
         } else {
@@ -1026,11 +1034,17 @@ public class MobileNetworkSettings extends PreferenceActivity
             int currentPrimarySlot = Settings.Global.getInt(context.getContentResolver(),
                      CONFIG_CURRENT_PRIMARY_SUB, SubscriptionManager.INVALID_SIM_SLOT_INDEX);
 
-            if ((SubscriptionManager.isValidSlotId(currentPrimarySlot)
-                    && (phoneId != currentPrimarySlot)) &&
-                    (getPreferredNetworkModeForPhoneId() == Phone.NT_MODE_GSM_ONLY)) {
-                mButtonPreferredNetworkMode.setEnabled(false);
-                mButtonEnabledNetworks.setEnabled(false);
+            if (SubscriptionManager.isValidSlotId(currentPrimarySlot)
+                    && (phoneId != currentPrimarySlot)) {
+                if (PRIMCARYCARD_L_W_ENABLED) {
+                    mButtonPreferredNetworkMode.setEntries(
+                            R.array.preferred_network_mode_gsm_wcdma_choices);
+                    mButtonPreferredNetworkMode.setEntryValues(
+                            R.array.preferred_network_mode_gsm_wcdma_values);
+                } else if (getPreferredNetworkModeForPhoneId() == Phone.NT_MODE_GSM_ONLY) {
+                    mButtonPreferredNetworkMode.setEnabled(false);
+                    mButtonEnabledNetworks.setEnabled(false);
+                }
             }
         }
     }

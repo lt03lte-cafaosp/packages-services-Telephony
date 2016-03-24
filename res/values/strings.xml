@@ -442,6 +442,12 @@
      <!-- Mobile network settings, summary for preferred network mode TDSCDMTA [CHAR LIMIT=100] -->
      <string name="preferred_network_mode_tdscdma_summary">Preferred network mode: TDSCDMA</string>
 
+     <string-array name="preferred_network_mode_gsm_wcdma_choices">
+        <item>GSM only</item>
+        <item>WCDMA only</item>
+        <item>GSM/WCDMA preferred</item>
+     </string-array>
+
     <string-array name="preferred_network_mode_choices">
         <item>TD-SCDMA/LTE/CDMA/EVDO/GSM/WCDMA </item>
         <item>TD-SCDMA/GSM/WCDMA/CDMA/EVDO </item>
@@ -545,6 +551,13 @@
         <item>"1"</item>
         <item>"0"</item>
     </string-array>
+
+    <string-array name="preferred_network_mode_gsm_wcdma_values"  translatable="false">
+        <item>"1"</item>
+        <item>"2"</item>
+        <item>"0"</item>
+    </string-array>
+
     <!-- Cellular network 4G title [CHAR LIMIT=30] -->
     <string name="enhanced_4g_lte_mode_title">Enhanced 4G LTE Mode</string>
     <!-- Cellular network 4G summary [CHAR LIMIT=80] -->
