@@ -49,6 +49,7 @@ import java.util.List;
  */
 final class TelecomAccountRegistry {
     private static final boolean DBG = false; /* STOP SHIP if true */
+    public static final String EMERGENCY_ACCOUNT_HANDLE_ID = "E";
 
     // This icon is the one that is used when the Slot ID that we have for a particular SIM
     // is not supported, i.e. SubscriptionManager.INVALID_SLOT_ID or the 5th SIM in a phone.
@@ -247,7 +248,7 @@ final class TelecomAccountRegistry {
         return makePstnPhoneAccountHandleWithPrefix(phone, "", false);
     }
 
-    private static PhoneAccountHandle makePstnPhoneAccountHandleWithPrefix(
+    static PhoneAccountHandle makePstnPhoneAccountHandleWithPrefix(
             Phone phone, String prefix, boolean isEmergency) {
         ComponentName pstnConnectionServiceName =
                 new ComponentName(phone.getContext(), TelephonyConnectionService.class);
@@ -264,7 +265,7 @@ final class TelecomAccountRegistry {
      * @param handle The {@link PhoneAccountHandle}.
      * @return {@code True} if an entry exists.
      */
-    private boolean hasAccountEntryForPhoneAccount(PhoneAccountHandle handle) {
+    boolean hasAccountEntryForPhoneAccount(PhoneAccountHandle handle) {
         for (AccountEntry entry : mAccounts) {
             if (entry.getPhoneAccountHandle().equals(handle)) {
                 return true;
