@@ -233,4 +233,7 @@
 
     <!-- Not allowed sim inserted, the limited service is used -->
     <bool name="config_regional_sim_lock_with_limited_service">false</bool>
+
+    <!-- Config to enable/disable the enhance 4G LTE option-->
+    <bool name="config_disable_enhance_4G_LTE_option">false</bool>
 </resources>
