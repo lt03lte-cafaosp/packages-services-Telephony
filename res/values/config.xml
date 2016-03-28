@@ -221,7 +221,7 @@
     <!-- whether to show uplmn preference for usim -->
     <bool name="config_uplmn_for_usim">false</bool>
     <!-- show toast for ims srvcc -->
-    <bool name="config_show_srvcc_toast">true</bool>
+    <bool name="config_show_srvcc_toast">false</bool>
     <!-- enable network checking for ut interface-->
     <bool name="check_mobile_data_for_cf">false</bool>
 

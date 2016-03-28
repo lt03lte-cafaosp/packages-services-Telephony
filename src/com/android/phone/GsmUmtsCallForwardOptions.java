@@ -64,19 +64,25 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity
         mPhone = mSubscriptionInfoHelper.getPhone();
         if (mPhone.getImsPhone() != null && mPhone.getImsPhone().getServiceState().getState()
                 == ServiceState.STATE_IN_SERVICE
-                && getActiveNetworkType() != ConnectivityManager.TYPE_MOBILE
                 && getResources().getBoolean(R.bool.check_mobile_data_for_cf)) {
-            if (DBG) Log.d(LOG_TAG, "please open mobile network for UT settings!");
-            Dialog dialog = new AlertDialog.Builder(this)
-                .setTitle(R.string.no_mobile_data)
-                .setMessage(R.string.cf_setting_mobile_data_alert)
-                .setIconAttribute(android.R.attr.alertDialogIcon)
-                .setPositiveButton(android.R.string.ok, this)
-                .setNegativeButton(android.R.string.cancel, this)
-                .setOnCancelListener(this)
-                .create();
-            dialog.show();
-            return;
+            if (getActiveNetworkType() != ConnectivityManager.TYPE_MOBILE){
+                   if (DBG) Log.d(LOG_TAG, "please open mobile network for UT settings!");
+                   String title = (String)this.getResources().getText(R.string.no_mobile_data);
+                   String message = (String)this.getResources()
+                           .getText(R.string.cf_setting_mobile_data_alert);
+                   showAlertDialog(title, message);
+                   return;
+            }
+            if (mPhone.getImsPhone().getServiceState().getDataRoaming()
+                         && !mPhone.getDataRoamingEnabled()) {
+                   if (DBG) Log.d(LOG_TAG, "please open data roaming for UT settings!");
+                   String title = (String)this.getResources()
+                           .getText(R.string.no_mobile_data_roaming);
+                   String message = (String)this.getResources()
+                           .getText(R.string.cf_setting_mobile_data_roaming_alert);
+                   showAlertDialog(title, message);
+                   return;
+            }
         }
 
         addPreferencesFromResource(R.xml.callforward_options);
@@ -251,5 +257,17 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showAlertDialog(String title, String message) {
+        Dialog dialog = new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(message)
+                .setIconAttribute(android.R.attr.alertDialogIcon)
+                .setPositiveButton(android.R.string.ok, this)
+                .setNegativeButton(android.R.string.cancel, this)
+                .setOnCancelListener(this)
+                .create();
+        dialog.show();
     }
 }

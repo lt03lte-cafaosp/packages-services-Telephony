@@ -2874,7 +2874,14 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      */
     @Override
     public boolean isImsRegistered() {
-        return mPhone.isImsRegistered();
+        int subId = SubscriptionManager.getDefaultDataSubId();
+        final Phone phone = getPhone(subId);
+        Log.d(LOG_TAG, "IMS : Data sub Id : " + subId);
+
+        if (phone != null) {
+            return phone.isImsRegistered();
+        }
+        return false;
     }
 
     @Override
