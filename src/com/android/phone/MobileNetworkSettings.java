@@ -106,10 +106,10 @@ public class MobileNetworkSettings extends PreferenceActivity
     private static final String BUTTON_OPERATOR_SELECTION_EXPAND_KEY = "button_carrier_sel_key";
     private static final String BUTTON_CARRIER_SETTINGS_KEY = "carrier_settings_key";
     private static final String BUTTON_CDMA_SYSTEM_SELECT_KEY = "cdma_system_select_key";
-    private static final String PROPERTY_CT_CLASS_C = "persist.radio.ct_class_c";
     private static final String PRIMARY_4G_CARD_PROPERTY_NAME = "persist.radio.detect4gcard";
     private static final String CONFIG_CURRENT_PRIMARY_SUB = "config_current_primary_sub";
     private static final String CARRIER_MODE_CT_CLASS_A = "ct_class_a";
+    private static final String CARRIER_MODE_CT_CLASS_C = "ct_class_c";
     protected static final String PRIMARY_CARD_PROPERTY_NAME = "persist.radio.primarycard";
 
     private int preferredNetworkMode = Phone.PREFERRED_NT_MODE;
@@ -124,6 +124,7 @@ public class MobileNetworkSettings extends PreferenceActivity
 
     private String mCarrierMode = SystemProperties.get("persist.carrier.mode", "default");
     private boolean mIsCTClassA = mCarrierMode.equals(CARRIER_MODE_CT_CLASS_A);
+    private boolean mIsCTClassC = mCarrierMode.equals(CARRIER_MODE_CT_CLASS_C);
 
     //UI objects
     private ListPreference mButtonPreferredNetworkMode;
@@ -541,7 +542,7 @@ public class MobileNetworkSettings extends PreferenceActivity
         //get UI object references
         PreferenceScreen prefSet = getPreferenceScreen();
 
-        if (SystemProperties.getBoolean(PROPERTY_CT_CLASS_C, false)) {
+        if (mIsCTClassC) {
             mButtonEnable4g.setOnPreferenceChangeListener(this);
             updateButtonEnable4g();
         } else {
@@ -757,7 +758,9 @@ public class MobileNetworkSettings extends PreferenceActivity
             }
             prefSet.addPreference(mButtonPreferredNetworkMode);
             prefSet.addPreference(mButtonEnabledNetworks);
-            prefSet.addPreference(mButton4glte);
+            if (!getResources().getBoolean(R.bool.config_disable_enhance_4G_LTE_option)) {
+                prefSet.addPreference(mButton4glte);
+            }
         }
 
         setScreenState();
