@@ -207,6 +207,7 @@ final class CdmaConnection extends TelephonyConnection {
                     !mOriginalConnection.isIncoming() && !mConnectionTimeReset) {
                 mConnectionTimeReset = true;
                 resetCdmaConnectionTime();
+                mOriginalConnection.resetConnectionTime();
             }
         }
     }
