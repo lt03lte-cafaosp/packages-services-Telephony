@@ -68,8 +68,17 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity
         int defaultDataSub = subscriptionManager.getDefaultDataSubId();
         if (mPhone != null && mPhone.isUtEnabled()
                 && getResources().getBoolean(R.bool.check_mobile_data_for_cf)) {
-            if (getActiveNetworkType() != ConnectivityManager.TYPE_MOBILE
-                    || sub != defaultDataSub){
+            int activeNetworkType = getActiveNetworkType();
+            boolean isDataRoaming = mPhone.getServiceState().getDataRoaming();
+            boolean isDataRoamingEnabled = mPhone.getDataRoamingEnabled();
+            boolean promptForDataRoaming = isDataRoaming && !isDataRoamingEnabled;
+            Log.d(LOG_TAG, "activeNetworkType = " + getActiveNetworkType() + ", sub = " + sub +
+                    ", defaultDataSub = " + defaultDataSub + ", isDataRoaming = " +
+                    isDataRoaming + ", isDataRoamingEnabled= " + isDataRoamingEnabled);
+            if ((activeNetworkType != ConnectivityManager.TYPE_MOBILE
+                    || sub != defaultDataSub)
+                    && !(activeNetworkType == ConnectivityManager.TYPE_NONE
+                    && promptForDataRoaming)) {
                    if (DBG) Log.d(LOG_TAG, "please open mobile network for UT settings!");
                    String title = (String)this.getResources().getText(R.string.no_mobile_data);
                    String message = (String)this.getResources()
@@ -77,8 +86,7 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity
                    showAlertDialog(title, message);
                    return;
             }
-            if (mPhone.getServiceState().getDataRoaming()
-                         && !mPhone.getDataRoamingEnabled()) {
+            if (promptForDataRoaming) {
                    if (DBG) Log.d(LOG_TAG, "please open data roaming for UT settings!");
                    String title = (String)this.getResources()
                            .getText(R.string.no_mobile_data_roaming);
