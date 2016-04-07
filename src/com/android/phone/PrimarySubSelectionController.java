@@ -336,6 +336,10 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
         }
     }
 
+    public int getNumActiveSubs() {
+        return mNumActiveSubs;
+    }
+
     public boolean isCardActivated(int index) {
         UiccCard uiccCard = CardStateMonitor.getUiccCard(index);
         if (uiccCard != null && uiccCard.getCardState() != CardState.CARDSTATE_ABSENT) {
