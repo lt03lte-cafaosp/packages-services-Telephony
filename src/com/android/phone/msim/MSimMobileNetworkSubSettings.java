@@ -52,6 +52,7 @@ import com.android.ims.ImsManager;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneFactory;
+import com.android.internal.telephony.SubscriptionController;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppType;
@@ -530,8 +531,22 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     }
 
     private void setScreenState() {
-        int simState = TelephonyManager.getDefault().getSimState(mPhone.getPhoneId());
-        getPreferenceScreen().setEnabled(simState != TelephonyManager.SIM_STATE_ABSENT);
+        int phoneId = mPhone.getPhoneId();
+        int simState = TelephonyManager.getDefault().getSimState(phoneId);
+        boolean screenState = simState != TelephonyManager.SIM_STATE_ABSENT;
+        log("set sub screenState phoneId=" + phoneId + ", simState=" + simState);
+        if (screenState && CardStateMonitor.isDetect4gCardEnabled()) {
+            //primary card feature is enabled
+            SubscriptionController scontrol = SubscriptionController.getInstance();
+            int[] subId = scontrol.getSubId(phoneId);
+            if (subId != null && subId.length > 0) {
+                int simActiveStatus = scontrol.getSubState(subId[0]);
+                log("set sub screenState subId=" + subId[0] +
+                        ", simActiveStatus=" + simActiveStatus + ", screenState=" + screenState);
+                screenState = simActiveStatus != SubscriptionManager.INACTIVE;
+            }
+        }
+        getPreferenceScreen().setEnabled(screenState);
     }
 
     /**
