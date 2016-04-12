@@ -30,6 +30,7 @@
 package com.android.phone;
 
 import android.app.AlertDialog;
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.AsyncResult;
@@ -182,60 +183,47 @@ public class XDivertCheckBoxPreference extends CheckBoxPreference {
         // Sub2 line number == CFNRc number of Sub1.
         boolean check1 = PhoneNumberUtils.compare(mCFLine1Number[SUB1], mLine1Number[SUB2]);
         boolean check2 = PhoneNumberUtils.compare(mCFLine1Number[SUB2], mLine1Number[SUB1]);
+        boolean status = false;
         Log.d(LOG_TAG," CFNR sub1 = " + check1 + " CFNR sub2 = " + check2 + " mSub1CallWaiting = "
                 + mSub1CallWaiting + " mSub2CallWaiting = " + mSub2CallWaiting);
-        displayAlertMessage(check1, check2, mSub1CallWaiting, mSub2CallWaiting);
         if ((mCFLine1Number[SUB1] != null) && (mCFLine1Number[SUB2] != null)) {
             if ((check1) && (check1 == check2)) {
                 if (mSub1CallWaiting && (mSub1CallWaiting == mSub2CallWaiting)) {
-                    return true;
+                    status = true;
                 }
-                return false;
             }
-            return false;
         }
-        return false;
+        displayAlertMessage(status);
+        return status;
     }
 
-    public void displayAlertMessage(boolean sub1Cfnrc, boolean sub2Cfnrc,
-            boolean sub1CW, boolean sub2CW) {
+    public void displayAlertMessage(boolean status) {
         int subStatus[] = {R.string.xdivert_not_active, R.string.xdivert_not_active};
         int resSubId[] = {R.string.set_sub_1, R.string.set_sub_2};
-        String dispMsg = "";
-
-        for (int i=0; i < mNumPhones; i++) {
-            // Status will be shown as active when:
-            // -> Sub1 CFNR is set to Sub2 Line number.
-            // -> And Call Waiting for Sub1 is true.
-            // Similarly for Sub2.
-            if((sub1Cfnrc == true) && (sub1Cfnrc == sub1CW) && (i == SUB1)) {
-                subStatus[i] = R.string.xdivert_active;
-            }
-            if ((sub2Cfnrc == true) && (sub2Cfnrc == sub2CW) && (i == SUB2)) {
-                subStatus[i] = R.string.xdivert_active;
-            }
-
-            dispMsg = dispMsg + (this.getContext().getString(resSubId[i])) + " " +
-                                  (this.getContext().getString(subStatus[i])) + "\n";
+        String dispMsg = this.getContext().getString(R.string.xdivert_status_active);
+        if (!status) {
+            dispMsg = this.getContext().getString(R.string.xdivert_status_not_active);
         }
 
         Log.d(LOG_TAG, "displayAlertMessage:  dispMsg = " + dispMsg);
-        new AlertDialog.Builder(this.getContext())
-            .setTitle(R.string.xdivert_status)
-            .setMessage(dispMsg)
-            .setIcon(android.R.drawable.ic_dialog_alert)
-            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        Log.d(LOG_TAG, "displayAlertMessage:  onClick");
-                    }
-                })
-            .show()
-            .setOnDismissListener(new DialogInterface.OnDismissListener() {
-                    public void onDismiss(DialogInterface dialog) {
-                        Log.d(LOG_TAG, "displayAlertMessage:  onDismiss");
-                    }
-                });
-
+        //check if activity is not in finishing state to diplay alert box
+        if (!(((Activity)(this.getContext())).isFinishing())){
+           new AlertDialog.Builder(this.getContext())
+           .setTitle(R.string.xdivert_status)
+           .setMessage(dispMsg)
+           .setIcon(android.R.drawable.ic_dialog_alert)
+           .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                      public void onClick(DialogInterface dialog, int whichButton) {
+                           Log.d(LOG_TAG, "displayAlertMessage:  onClick");
+                         }
+                      })
+           .show()
+           .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                      public void onDismiss(DialogInterface dialog) {
+                           Log.d(LOG_TAG, "displayAlertMessage:  onDismiss");
+                        }
+                     });
+           }
     }
 
     private void processStopDialog(final int state, final boolean read) {
@@ -339,14 +327,18 @@ public class XDivertCheckBoxPreference extends CheckBoxPreference {
                     if ((CommandsInterface.SERVICE_CLASS_VOICE &
                             cfInfoArray[i].serviceClass) != 0 && arg == SUB1) {
                         CallForwardInfo info = cfInfoArray[i];
-                        mCFLine1Number[SUB1] = info.number;
+                        if (info.status == 1) {
+                            mCFLine1Number[SUB1] = info.number;
+                        }
 
                         //Query Call Waiting for SUB1
                         queryCallWaiting(SUB1);
                     } else if ((CommandsInterface.SERVICE_CLASS_VOICE &
                              cfInfoArray[i].serviceClass) != 0 && arg == SUB2) {
                         CallForwardInfo info = cfInfoArray[i];
-                        mCFLine1Number[SUB2] = info.number;
+                        if (info.status == 1) {
+                            mCFLine1Number[SUB2] = info.number;
+                        }
 
                         //Query Call Waiting for SUB2
                         queryCallWaiting(SUB2);

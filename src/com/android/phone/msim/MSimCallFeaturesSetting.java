@@ -29,6 +29,8 @@ import android.content.Intent;
 import android.media.AudioManager;
 import android.net.sip.SipManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.os.RemoteException;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
@@ -91,6 +93,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private static final String BUTTON_XDIVERT_KEY     = "button_xdivert";
     private static final String SHOW_DURATION_KEY      = "duration_enable_key";
     private static final String BUTTON_VIBRATE_CONNECTED_KEY = "button_vibrate_after_connected";
+    private static final int EVENT_PROCESS_XDIVERT_CHECK_BOX = 1;
 
     private static final String BUTTON_SIP_CALL_OPTIONS =
             "sip_call_options_key";
@@ -110,6 +113,9 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     public static final String HAC_KEY = "HACSetting";
     public static final String HAC_VAL_ON = "ON";
     public static final String HAC_VAL_OFF = "OFF";
+
+    public static final int LINE_NUMBERS = 1;
+    String[] mLine1Numbers;
 
     private Phone mPhone;
     private boolean mForeground;
@@ -260,6 +266,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
 
         if (!getResources().getBoolean(R.bool.config_show_xdivert)) {
             prefSet.removePreference(mButtonXDivert);
+            mButtonXDivert = null;
         }
 
         if (mButtonProximity != null) {
@@ -337,6 +344,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         mNumPhones = MSimTelephonyManager.getDefault().getPhoneCount();
         if (mButtonXDivert != null) {
             mButtonXDivert.setOnPreferenceChangeListener(this);
+            mLine1Numbers = new String[mNumPhones];
         }
     }
 
@@ -389,14 +397,39 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
             //the phone numbers.
             Intent intent = new Intent();
             intent.setClass(this, XDivertPhoneNumbers.class);
-            startActivity(intent);
+            startActivityForResult(intent, LINE_NUMBERS);
         } else {
             //SIM records have msisdn.Hence directly process
             //XDivert feature
-            processXDivertCheckBox(line1Numbers);
+            mLine1Numbers = line1Numbers;
+            mHandler.sendMessage(mHandler.obtainMessage(EVENT_PROCESS_XDIVERT_CHECK_BOX));
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+         Log.d(LOG_TAG, "requestCode: "+ requestCode + " resultCode: " + resultCode);
+        if (requestCode == LINE_NUMBERS) {
+            if (resultCode == RESULT_OK) {
+                mLine1Numbers  = data.getStringArrayExtra(XDivertUtility.LINE1_NUMBERS);
+                Log.d(LOG_TAG, "numbers: "+ mLine1Numbers);
+                mHandler.sendMessage(mHandler.obtainMessage(EVENT_PROCESS_XDIVERT_CHECK_BOX));
+            } else {
+                finish();
+            }
+        }
+    }
+
+    Handler mHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case EVENT_PROCESS_XDIVERT_CHECK_BOX:
+                 Log.d(LOG_TAG, "EVENT_PROCESS_XDIVERT_CHECK_BOX: "+ mLine1Numbers);
+                processXDivertCheckBox(mLine1Numbers);
+                break;
+            }
+        }
+    };
     private void displayAlertDialog(int resId) {
         new AlertDialog.Builder(this).setMessage(resId)
             .setTitle(R.string.xdivert_title)
@@ -404,12 +437,14 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         Log.d(LOG_TAG, "X-Divert onClick");
+                        finish();
                     }
                 })
             .show()
             .setOnDismissListener(new DialogInterface.OnDismissListener() {
                     public void onDismiss(DialogInterface dialog) {
                         Log.d(LOG_TAG, "X-Divert onDismiss");
+                        finish();
                     }
             });
     }

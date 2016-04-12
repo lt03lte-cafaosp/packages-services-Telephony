@@ -58,15 +58,33 @@ public class XDivertPhoneNumbers extends Activity {
     private Button mButton;
     int mNumPhones;
     XDivertUtility mXDivertUtility;
+    Intent resultIntent;
 
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 
         Intent intent = getIntent();
+        resultIntent = new Intent();
+        setResult(RESULT_CANCELED, resultIntent);
         mNumPhones = MSimTelephonyManager.getDefault().getPhoneCount();
         mXDivertUtility = XDivertUtility.getInstance();
         setContentView(R.layout.xdivert_phone_numbers);
+        // If the sim has been changed & user immediately enters XDivert screen after configuring
+        // the new sim (but before SIM_RECORDS_LOADED event), check the imsi's again &
+        // update the shared pref & numbers accordingly.
+        boolean isImsiReady = mXDivertUtility.checkImsiReady();
+
+        Log.d(LOG_TAG,"onCreate isImsiReady = " + isImsiReady);
+        if (!isImsiReady) {
+            displayAlertDialog(R.string.xdivert_imsi_not_read);
+        } else {
+            setupView();
+        }
+    }
+
+    public void processPhoneNumbers() {
+       Intent intent = getIntent();
         // If the sim has been changed & user immediately enters XDivert screen after configuring
         // the new sim (but before SIM_RECORDS_LOADED event), check the imsi's again &
         // update the shared pref & numbers accordingly.
@@ -116,7 +134,6 @@ public class XDivertPhoneNumbers extends Activity {
             if (mLine1Numbers[i] != null) {
                 mLine1Numbers[i].setText(subLine1Number[i]);
                 mLine1Numbers[i].setOnFocusChangeListener(mOnFocusChangeHandler);
-                mLine1Numbers[i].setOnClickListener(mClicked);
             }
         }
 
@@ -135,14 +152,14 @@ public class XDivertPhoneNumbers extends Activity {
     }
 
     private void processXDivert() {
-        Intent intent  = new Intent();
-        intent.setClass(this, XDivertSetting.class);
-        Log.d(LOG_TAG,"OnSave: line numbers = " + java.util.Arrays.toString(getLine1Numbers()));
-        intent.putExtra(XDivertUtility.LINE1_NUMBERS, getLine1Numbers());
-        startActivity(intent);
+        Log.d(LOG_TAG," processXDivert () ");
+        resultIntent.putExtra(XDivertUtility.LINE1_NUMBERS, getLine1Numbers());
+        setResult(RESULT_OK, resultIntent);
+        finish();
     }
 
     private boolean isValidNumbers() {
+        Log.d(LOG_TAG," isValidNumbers  ");
         for (int i = 0; i < mNumPhones; i++) {
             String num = mLine1Numbers[i].getText().toString();
             if (android.text.TextUtils.isEmpty(num)) return false;
@@ -152,17 +169,17 @@ public class XDivertPhoneNumbers extends Activity {
 
     private View.OnClickListener mClicked = new View.OnClickListener() {
         public void onClick(View v) {
-            if (v == mLine1Numbers[0]) {
-                mLine1Numbers[1].requestFocus();
-            } else if (v == mLine1Numbers[1]) {
-                mButton.requestFocus();
-            } else if (v == mButton) {
+            Log.d(LOG_TAG," onClick  ");
+            if (v == mButton) {
+                Log.d(LOG_TAG," onClick 3 ");
                 if (!isValidNumbers()) {
+                    Log.d(LOG_TAG," !isValidNumbers  ");
                     Toast toast = Toast.makeText(getApplicationContext(),
                             R.string.xdivert_enternumber_error,
                             Toast.LENGTH_LONG);
                     toast.show();
                 } else {
+                    Log.d(LOG_TAG," processXDivert  ");
                     processXDivert();
                 }
             }
