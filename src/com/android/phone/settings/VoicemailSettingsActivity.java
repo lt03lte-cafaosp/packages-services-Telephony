@@ -247,6 +247,12 @@ public class VoicemailSettingsActivity extends PreferenceActivity
 
         mVoicemailSettings = (PreferenceScreen) prefSet.findPreference(
                 BUTTON_VOICEMAIL_SETTING_KEY);
+        if (mVoicemailSettings != null) {
+            Dialog dialog = mVoicemailSettings.getDialog();
+            if (dialog != null) {
+                dialog.getActionBar().setDisplayHomeAsUpEnabled(false);
+            }
+        }
         if ((mVoicemailSettings != null) && getResources().getBoolean(
                 R.bool.config_regional_voicemail_address_editable)){
             mVoicemailSettings.removePreference(mSubMenuVoicemailSettings);
