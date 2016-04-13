@@ -230,4 +230,7 @@
 
     <!-- If false, removes the X-Divert option from Call Settings -->
     <bool name="config_xdivert_enable">true</bool>
+
+    <!-- Config to enable/disable the enhance 4G LTE option-->
+    <bool name="config_disable_enhance_4G_LTE_option">false</bool>
 </resources>
