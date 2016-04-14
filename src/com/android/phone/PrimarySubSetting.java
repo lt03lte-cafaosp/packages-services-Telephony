@@ -178,6 +178,10 @@ public class PrimarySubSetting extends Activity implements View.OnClickListener 
                             == Phone.NT_MODE_GSM_ONLY) ||
                             targetSub != mPrimarySubSelectionController.getPrimarySlot()) {
                         showFailedDialog(targetSub);
+                        mPrimarySubSelectionController.setUserPrefPrimarySubIdInDB(-1);
+                        int primarySlot = mPrimarySubSelectionController.getPrimarySlot();
+                        mPrimarySubSelectionController.setUserPrefPrimarySubIdInDB(
+                                SubscriptionManager.getSubId(primarySlot)[0]);
                         updateState();
                         if (mProgressDialog != null && mProgressDialog.isShowing())
                             mProgressDialog.dismiss();
