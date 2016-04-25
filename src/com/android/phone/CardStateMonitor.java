@@ -139,6 +139,12 @@ public class CardStateMonitor extends Handler {
                     !intent.getBooleanExtra(Intent.EXTRA_SHUTDOWN_USERSPACE_ONLY, false)) {
                 logd("ACTION_SHUTDOWN Received");
                 mIsShutDownInProgress = true;
+            } else if (TelephonyIntents.ACTION_SUBSCRIPTION_SET_UICC_RESULT.
+                    equals(intent.getAction())) {
+                int phoneId = intent.getIntExtra(PhoneConstants.PHONE_KEY,
+                        SubscriptionManager.DEFAULT_PHONE_INDEX);
+                logd("ACTION_SUBSCRIPTION_SET_UICC_RESULT Received phoneId = " + phoneId);
+                updateCardState(phoneId);
             }
         }
     };
@@ -151,6 +157,7 @@ public class CardStateMonitor extends Handler {
         UiccController.getInstance().registerForIccChanged(this, EVENT_ICC_CHANGED, null);
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_SHUTDOWN);
+        filter.addAction(TelephonyIntents.ACTION_SUBSCRIPTION_SET_UICC_RESULT);
         mContext.registerReceiver(receiver, filter);
     }
 
