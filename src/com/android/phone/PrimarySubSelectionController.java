@@ -539,8 +539,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
                     + ", mIccLoaded[" + primarySlot
                     + "] =" + mIccLoaded[primarySlot]
                     + "Icc Id = " + iccId);
-            if ((mIccLoaded[primarySlot] || !TextUtils.isEmpty(iccId))
-                    && currentDds != primarySlot) {
+            if ((mIccLoaded[primarySlot] || !TextUtils.isEmpty(iccId))) {
                 int subId = SubscriptionManager.getSubId(primarySlot)[0];
                 SubscriptionManager.from(mContext).setDefaultDataSubId(subId);
                 setUserPrefDataSubIdInDB(subId);
