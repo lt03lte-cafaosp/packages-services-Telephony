@@ -525,8 +525,7 @@ public class PrimarySubSelectionController extends Handler implements OnClickLis
             logd("onConfigLteDone primary Slot " + primarySlot + ", currentDds = " + currentDds
                     + ", mIccLoaded[" + primarySlot
                     + "] =" + mIccLoaded[primarySlot]);
-            if (mIccLoaded[primarySlot]
-                    && currentDds != primarySlot) {
+            if (mIccLoaded[primarySlot]) {
                 long subId = SubscriptionManager.getSubId(primarySlot)[0];
                 SubscriptionManager.setDefaultDataSubId(subId);
                 setUserPrefDataSubIdInDB(subId);
