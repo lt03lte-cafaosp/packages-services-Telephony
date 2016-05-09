@@ -158,7 +158,7 @@ public class WifiCallingSettings extends PreferenceActivity
                 screen.removePreference(mWifiCallingHelp);
             }
             if (mWifiCallingConnectPre != null) {
-                screen.removePreference(screen);
+                screen.removePreference(mWifiCallingConnectPre);
             }
             return;
         } else {
