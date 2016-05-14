@@ -17,7 +17,7 @@
 package com.android.services.telephony;
 
 import com.android.internal.telephony.PhoneConstants;
-
+import com.android.phone.R;
 import android.net.Uri;
 import android.telecom.Connection;
 import android.telecom.ConferenceParticipant;
@@ -184,11 +184,21 @@ public class ConferenceParticipantConnection extends Connection {
 
         // If the hostname portion of the SIP URI is the invalid host string, presentation is
         // restricted.
-        if (hostName.equals(ANONYMOUS_INVALID_HOST)) {
+        if (hostName.equals(ANONYMOUS_INVALID_HOST) && !showAnonymousParticipant()) {
             return PhoneConstants.PRESENTATION_RESTRICTED;
         }
 
         return PhoneConstants.PRESENTATION_ALLOWED;
+    }
+
+    /**
+     * Configuration to determine if anonymous participants names are to be shown
+     *
+     * @return true/false.
+     */
+    private boolean showAnonymousParticipant() {
+        return TelephonyGlobals.getApplicationContext().getResources().getBoolean(
+                R.bool.config_enable_show_anonymous_participant);
     }
 
     /**
