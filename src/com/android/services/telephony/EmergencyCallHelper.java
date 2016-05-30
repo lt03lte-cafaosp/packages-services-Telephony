@@ -185,7 +185,7 @@ public class EmergencyCallHelper {
         return ((phoneState == PhoneConstants.State.OFFHOOK
                 && callState != Call.State.DIALING)
                 || (serviceState == ServiceState.STATE_IN_SERVICE)
-                || (serviceState == ServiceState.STATE_EMERGENCY_ONLY)) ||
+                || mPhone.getServiceState().isEmergencyOnly()) ||
 
                 // Allow STATE_OUT_OF_SERVICE if we are at the max number of retries.
                 (mNumRetriesSoFar == MAX_NUM_RETRIES &&
