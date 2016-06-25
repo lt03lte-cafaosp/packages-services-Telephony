@@ -50,6 +50,7 @@ import com.android.internal.telephony.gsm.SuppServiceNotification;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.SubscriptionController;
 import com.android.internal.telephony.imsphone.ImsPhoneConnection;
+import com.android.phone.PhoneUtils;
 import com.android.phone.R;
 import com.android.internal.telephony.PhoneConstants;
 
@@ -888,8 +889,7 @@ abstract class TelephonyConnection extends Connection {
         mOriginalConnection.addListener(mOriginalConnectionListener);
 
         if (mOriginalConnection != null && mOriginalConnection.getAddress() != null) {
-            mIsEmergencyNumber = PhoneNumberUtils.isEmergencyNumber(mOriginalConnection.
-                    getAddress());
+            mIsEmergencyNumber = PhoneUtils.isEmergencyNumber(mOriginalConnection.getAddress());
         }
 
         // Set video state and capabilities
@@ -1123,9 +1123,7 @@ abstract class TelephonyConnection extends Connection {
         final String number = mOriginalConnection.getAddress();
         final Phone phone = mOriginalConnection.getCall().getPhone();
         int cause = mOriginalConnection.getDisconnectCause();
-        final boolean isEmergencyNumber =
-                    PhoneNumberUtils.isLocalEmergencyNumber(TelephonyGlobals.
-                    getApplicationContext(), number);
+        final boolean isEmergencyNumber = PhoneUtils.isLocalEmergencyNumber(number);
         Call.State newState = mOriginalConnection.getState();
 
         Log.v(this, "Update state from %s to %s for %s", mOriginalConnectionState, newState, this);
