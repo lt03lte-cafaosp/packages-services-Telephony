@@ -101,7 +101,8 @@ public class CdmaOptions {
                 .findPreference(BUTTON_CDMA_SUBSCRIPTION_KEY);
         if (SystemProperties.getBoolean(MobileNetworkSettings.PRIMARY_CARD_PROPERTY_NAME, false)
                 && !SubscriptionManager.getResourcesForSubId(mPrefActivity, mPhone.getSubId())
-                .getBoolean(R.bool.config_disable_operator_selection_menu)) {
+                .getBoolean(R.bool.config_disable_operator_selection_menu) ||
+                mPrefActivity.getResources().getBoolean(R.bool.config_disable_cdma_option)) {
             mPrefScreen.removePreference(mPrefScreen.findPreference(BUTTON_CDMA_SYSTEM_SELECT_KEY));
             mPrefScreen.removePreference(mPrefScreen.findPreference(BUTTON_CDMA_SUBSCRIPTION_KEY));
         }
@@ -111,8 +112,10 @@ public class CdmaOptions {
             mButtonCdmaSubscription.setEnabled(true);
         } else {
             log("Both NV and Ruim NOT supported, REMOVE subscription type selection");
-            mPrefScreen.removePreference(mPrefScreen
-                                .findPreference(BUTTON_CDMA_SUBSCRIPTION_KEY));
+            Preference preference = mPrefScreen.findPreference(BUTTON_CDMA_SUBSCRIPTION_KEY);
+            if (preference != null) {
+                mPrefScreen.removePreference(preference);
+            }
         }
 
         final boolean voiceCapable = mPrefActivity.getResources().getBoolean(

@@ -233,4 +233,7 @@
 
     <!-- Config to enable/disable the enhance 4G LTE option-->
     <bool name="config_disable_enhance_4G_LTE_option">false</bool>
+
+    <!-- Config to enable/disable the cdma option-->
+    <bool name="config_disable_cdma_option">false</bool>
 </resources>
