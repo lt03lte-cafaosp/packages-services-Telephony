@@ -512,8 +512,10 @@ public class EditPhoneNumberPreference extends EditTextPreference
                     mValidStartTimeHour, mValidStartTimeMinute);
             String fomatedEndTimeString = formateTime(mEndDate,
                     mValidEndTimeHour, mValidEndTimeMinute);
-            mTimePeriodString = " from " + fomatedStartTimeString
-                    + " to " + fomatedEndTimeString;
+            String from = getContext().getString(R.string.time_start);
+            String to = getContext().getString(R.string.time_end);
+            mTimePeriodString = " " + from+ " " + fomatedStartTimeString
+                    + " " + to + " " + fomatedEndTimeString;
             if (mValidEndTimeHour*60 + mValidEndTimeMinute
                     < mValidStartTimeHour*60 + mValidStartTimeMinute){
                 mTimePeriodString = mTimePeriodString + " next day";
