@@ -21,8 +21,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.RemoteException;
-import android.os.ServiceManager;
 import android.provider.Settings;
 import android.telecom.Connection;
 import android.telecom.ConnectionRequest;
@@ -39,7 +37,6 @@ import android.text.TextUtils;
 
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallStateException;
-import com.android.internal.telephony.IExtTelephony;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneFactory;
@@ -228,7 +225,7 @@ public class TelephonyConnectionService extends ConnectionService {
             }
         }
 
-        boolean isEmergencyNumber = PhoneNumberUtils.isLocalEmergencyNumber(this, number);
+        boolean isEmergencyNumber = PhoneUtils.isLocalEmergencyNumber(number);
 
         // Get the right phone object from the account data passed in.
         final Phone phone = getPhoneForAccount(request.getAccountHandle(), isEmergencyNumber);
@@ -324,10 +321,10 @@ public class TelephonyConnectionService extends ConnectionService {
             if (mEmergencyCallHelper == null) {
                 mEmergencyCallHelper = new EmergencyCallHelper(this);
             }
-            mEmergencyCallHelper.startTurnOnRadioSequence(phone,
+            mEmergencyCallHelper.startTurnOnRadioSequence(number,
                     new EmergencyCallHelper.Callback() {
                         @Override
-                        public void onComplete(boolean isRadioReady) {
+                        public void onComplete(Phone phone, boolean isRadioReady) {
                             if (connection.getState() == Connection.STATE_DISCONNECTED) {
                                 // If the connection has already been disconnected, do nothing.
                             } else if (isRadioReady) {
@@ -585,17 +582,7 @@ public class TelephonyConnectionService extends ConnectionService {
 
     private Phone getPhoneForAccount(PhoneAccountHandle accountHandle, boolean isEmergency) {
         if (isEmergency) {
-            IExtTelephony mExtTelephony =
-                    IExtTelephony.Stub.asInterface(ServiceManager.getService("extphone"));
-            int phoneId = 0; // default phoneId
-            try {
-                phoneId = mExtTelephony.getPhoneIdForECall();
-            } catch (RemoteException ex) {
-                Log.e(this, ex, "Exception : " + ex);
-            } catch (NullPointerException ex) {
-                Log.e(this, ex, "Exception : " + ex);
-            }
-            return PhoneFactory.getPhone(phoneId);
+            return PhoneFactory.getPhone(PhoneUtils.getPhoneIdForECall());
         }
 
         int subId = PhoneUtils.getSubIdForPhoneAccountHandle(accountHandle);
