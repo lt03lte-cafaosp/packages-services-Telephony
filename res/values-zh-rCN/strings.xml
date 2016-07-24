@@ -194,6 +194,57 @@
     <string name="preferred_network_mode_gsm_only_choice">"仅 GSM"</string>
     <string name="preferred_network_mode_gsm_wcama_preferred_choice">"首选 GSM/WCDMA"</string>
 
+    <string-array name="preferred_network_mode_choices">
+        <item>TD-SCDMA/LTE/CDMA/EVDO/GSM/WCDMA </item>
+        <item>TD-SCDMA/GSM/WCDMA/CDMA/EVDO </item>
+        <item>TD-SCDMA/GSM/WCDMA/LTE</item>
+        <item>TD-SCDMA/WCDMA/LTE</item>
+        <item>TD-SCDMA/GSM/WCDMA</item>
+        <item>TD-SCDMA/GSM/LTE</item>
+        <item>TD-SCDMA/GSM</item>
+        <item>TD-SCDMA/LTE</item>
+        <item>TD-SCDMA/WCDMA</item>
+        <item>"仅 TD-SCDMA"</item>
+        <item>LTE / WCDMA</item>
+        <item>LTE</item>
+        <item>Global</item>
+        <item>GSM/WCDMA/LTE</item>
+        <item>CDMA + LTE/EvDo</item>
+        <item>CDMA/EvDo/GSM/WCDMA</item>
+        <item>"仅 EvDo"</item>
+        <item>"CDMA，无 EvDo 功能"</item>
+        <item>"CDMA/EvDo 自动选择"</item>
+        <item>"GSM/WCDMA 自动选择"</item>
+        <item>"仅 WCDMA"</item>
+        <item>"仅 GSM"</item>
+        <item>"首选 GSM/WCDMA"</item>
+    </string-array>
+    <string-array name="preferred_network_mode_values"  translatable="false">
+        <item>"22"</item>
+        <item>"21"</item>
+        <item>"20"</item>
+        <item>"19"</item>
+        <item>"18"</item>
+        <item>"17"</item>
+        <item>"16"</item>
+        <item>"15"</item>
+        <item>"14"</item>
+        <item>"13"</item>
+        <item>"12"</item>
+        <item>"11"</item>
+        <item>"10"</item>
+        <item>"9"</item>
+        <item>"8"</item>
+        <item>"7"</item>
+        <item>"6"</item>
+        <item>"5"</item>
+        <item>"4"</item>
+        <item>"3"</item>
+        <item>"2"</item>
+        <item>"1"</item>
+        <item>"0"</item>
+    </string-array>
+
     <string name="data_enabled" msgid="5972538663568715366">"启用移动数据网络"</string>
     <string name="data_enable_summary" msgid="2382798156640007971">"允许使用数据流量"</string>
     <string name="roaming" msgid="8871412572928323707">"移动数据网络漫游"</string>

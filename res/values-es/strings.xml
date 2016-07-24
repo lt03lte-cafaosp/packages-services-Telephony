@@ -196,6 +196,21 @@
     <item msgid="1524224863879435516">"Solo GSM"</item>
     <item msgid="3817924849415716259">"Preferencia de GSM/WCDMA"</item>
   </string-array>
+    <string-array name="preferred_network_mode_values"  translatable="false">
+        <item>"12"</item>
+        <item>"11"</item>
+        <item>"10"</item>
+        <item>"9"</item>
+        <item>"8"</item>
+        <item>"7"</item>
+        <item>"6"</item>
+        <item>"5"</item>
+        <item>"4"</item>
+        <item>"3"</item>
+        <item>"2"</item>
+        <item>"1"</item>
+        <item>"0"</item>
+    </string-array>
     <string name="enhanced_4g_lte_mode_title" msgid="522191650223239171">"Modo 4G LTE mejorado"</string>
     <string name="enhanced_4g_lte_mode_summary" msgid="2332175070522125850">"Usar servicios LTE para mejorar la voz y otras comunicaciones (recomendado)"</string>
     <string name="data_enabled" msgid="5972538663568715366">"Habilitar datos"</string>
