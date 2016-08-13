@@ -123,7 +123,9 @@ public class ConferenceParticipantConnection extends Connection {
      */
     @Override
     public void onDisconnect() {
-        mParentConnection.onDisconnectConferenceParticipant(mUserEntity);
+        if (mParentConnection != null) {
+            mParentConnection.onDisconnectConferenceParticipant(mUserEntity);
+        }
     }
 
     /**
@@ -259,7 +261,7 @@ public class ConferenceParticipantConnection extends Connection {
         sb.append(" endPoint:");
         sb.append(Log.pii(mEndpoint));
         sb.append(" parentConnection:");
-        sb.append(Log.pii(mParentConnection.getAddress()));
+        sb.append(Log.pii((mParentConnection != null) ? mParentConnection.getAddress() : null));
         sb.append(" state:");
         sb.append(Connection.stateToString(getState()));
         sb.append("]");
