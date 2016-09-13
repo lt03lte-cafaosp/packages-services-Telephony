@@ -64,6 +64,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.codeaurora.ims.QtiCallConstants;
+
 /**
  * Base class for CDMA and GSM connections.
  */
@@ -1084,6 +1086,14 @@ abstract class TelephonyConnection extends Connection {
                     }
                     connectionExtras.putAll(mOriginalConnectionExtras);
                     setExtras(connectionExtras);
+
+                    // If extras contain Conference support information,
+                    // then ensure capabilities are updated and propagated to Telecom.
+                    if (connectionExtras.containsKey(
+                            QtiCallConstants.CONF_SUPPORT_IND_EXTRA_KEY)) {
+                        updateConnectionCapabilities();
+                    }
+
                 } else {
                     Log.d(this, "Extras update not required");
                 }
@@ -1408,10 +1418,22 @@ abstract class TelephonyConnection extends Connection {
     }
 
     private boolean isAddParticipantCapable() {
-        return getPhone() != null &&
+        boolean isCapable = getPhone() != null &&
                (getPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_IMS) &&
                !mIsEmergencyNumber && (mOriginalConnectionState == Call.State.ACTIVE
                || mOriginalConnectionState == Call.State.HOLDING);
+
+        /**
+         * For individual IMS calls, if the extra for remote conference support is
+         *     - indicated, then consider the same for add participant capability
+         *     - not indicated, then the add participant capability is same as before.
+         */
+        if (isCapable && (mOriginalConnection != null) && !mIsMultiParty) {
+            isCapable = mOriginalConnectionExtras.getBoolean(
+                    QtiCallConstants.CONF_SUPPORT_IND_EXTRA_KEY, true);
+            Log.i(this, "isAddParticipantCapable: lower layer indication=" + isCapable);
+        }
+        return isCapable;
     }
 
     private int applyCapability(int capabilities, int capability) {
