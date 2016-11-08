@@ -241,6 +241,9 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
             } else {
                 mListOutgoing.setEnabled(true);
             }
+            if (mPhone.isUtEnabled()) {
+                mDialogCancelAll.setEnabled(false);
+            }
         }
     }
 
@@ -382,6 +385,9 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
             mListOutgoing.setEnabled(false);
         } else {
             mListOutgoing.setEnabled(true);
+        }
+        if (mPhone.isUtEnabled()) {
+            mDialogCancelAll.setEnabled(false);
         }
     }
 
