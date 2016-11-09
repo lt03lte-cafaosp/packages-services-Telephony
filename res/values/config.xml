@@ -191,4 +191,10 @@
 
    <!-- Flag indicating if SIP settings enabled -->
     <bool name="sip_settings_on">true</bool>
+
+    <!-- Config to set Speed Dial to make an Emergency Call
+         This needs to be re designed as the same config is
+         used by Dialer also to make a speed dial from Dialer-->
+    <integer name="speed_dial_emergency_number_assigned_key">9</integer>
+    <string name="emergency_number">112</string>
 </resources>
