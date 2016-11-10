@@ -114,6 +114,10 @@ public class MobileNetworkSettings extends PreferenceActivity
     private static final boolean PRIMCARYCARD_L_W_ENABLED =
             SystemProperties.getBoolean("persist.radio.lw_enabled", false);
 
+    // value for subsidy lock resticted state
+    private static final int SUBSIDYLOCK_RESTRICTED = 103;
+    private static final String SUBSIDY_STATUS = "subsidy_status";
+
     private int preferredNetworkMode = Phone.PREFERRED_NT_MODE;
 
     //Information about logical "up" Activity
@@ -747,6 +751,21 @@ public class MobileNetworkSettings extends PreferenceActivity
 
     }
 
+    private boolean isSubsidyRestricted() {
+        boolean subsidyLocked = Settings.Secure.getInt(
+                getContentResolver(),
+                SUBSIDY_STATUS, -1) == SUBSIDYLOCK_RESTRICTED;// not in NONE state
+        return subsidyLocked;
+    }
+
+    private boolean isPrimaryCard() {
+        int phoneId = mPhone.getPhoneId();
+        int currentPrimarySlot = Settings.Global.getInt(
+                getApplicationContext().getContentResolver(),
+                CONFIG_CURRENT_PRIMARY_SUB, SubscriptionManager.INVALID_SIM_SLOT_INDEX);
+        return phoneId == currentPrimarySlot;
+    }
+
     private boolean hasActiveSubscriptions() {
         boolean isActive = false;
         int subId = mPhone.getSubId();
@@ -1020,9 +1039,10 @@ public class MobileNetworkSettings extends PreferenceActivity
                 ImsManager.isNonTtyOrTtyOnVolteEnabled(getApplicationContext()) &&
                 carrierConfig.getBoolean(CarrierConfigManager.KEY_EDITABLE_ENHANCED_4G_LTE_BOOL);
         mButtonDataRoam.setEnabled(hasActiveSubscriptions);
-        mButtonPreferredNetworkMode.setEnabled(hasActiveSubscriptions || (getResources().
-                getBoolean(R.bool.config_no_sim_display_network_modes)));
-        mButtonEnabledNetworks.setEnabled(hasActiveSubscriptions);
+        boolean enablePNM = isSubsidyRestricted() ? isPrimaryCard() : true;
+        mButtonPreferredNetworkMode.setEnabled((hasActiveSubscriptions || (getResources().
+                getBoolean(R.bool.config_no_sim_display_network_modes))) && enablePNM);
+        mButtonEnabledNetworks.setEnabled(hasActiveSubscriptions && enablePNM);
         mButton4glte.setEnabled(hasActiveSubscriptions && canChange4glte);
         mLteDataServicePref.setEnabled(hasActiveSubscriptions);
         Preference ps;
@@ -1038,7 +1058,7 @@ public class MobileNetworkSettings extends PreferenceActivity
         ps = findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY);
         if (ps != null && !SubscriptionManager.getResourcesForSubId(this, mPhone.getSubId())
                 .getBoolean(R.bool.config_disable_operator_selection_menu)) {
-            ps.setEnabled(hasActiveSubscriptions);
+            ps.setEnabled(hasActiveSubscriptions && !isSubsidyRestricted());
         }
         ps = findPreference(BUTTON_CARRIER_SETTINGS_KEY);
         if (ps != null) {
@@ -1070,6 +1090,16 @@ public class MobileNetworkSettings extends PreferenceActivity
                     mButtonPreferredNetworkMode.setEnabled(false);
                     mButtonEnabledNetworks.setEnabled(false);
                 }
+            } else if (SubscriptionManager.isValidSlotId(currentPrimarySlot)
+                && (phoneId == currentPrimarySlot) && isSubsidyRestricted()) {
+                    mButtonPreferredNetworkMode.setEntries(
+                            R.array.enabled_networks_choices_subsidy_locked);
+                    mButtonPreferredNetworkMode.setEntryValues(
+                            R.array.enabled_networks_values_subsidy_locked);
+                    mButtonEnabledNetworks.setEntries(
+                            R.array.enabled_networks_choices_subsidy_locked);
+                    mButtonEnabledNetworks.setEntryValues(
+                            R.array.enabled_networks_values_subsidy_locked);
             }
         }
     }
@@ -1658,7 +1688,7 @@ public class MobileNetworkSettings extends PreferenceActivity
             apnExpand.setEnabled(isWorldMode() || enable);
         }
         if (operatorSelectionExpand != null) {
-            if (enable) {
+            if (enable && !isSubsidyRestricted()) {
                 operatorSelectionExpand.setEnabled(true);
             } else {
                 prefSet.removePreference(operatorSelectionExpand);

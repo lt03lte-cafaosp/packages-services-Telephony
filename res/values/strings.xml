@@ -1585,4 +1585,15 @@
 
     <string name="no_mobile_data">Mobile data is not available</string>
     <string name="no_mobile_data_roaming">Data roaming is not available</string>
+
+    <!-- preferred network choices for subsidy locked state-->
+    <string-array name="enabled_networks_choices_subsidy_locked" translatable="false">
+        <item>@string/preferred_network_mode_gsm_wcdma_lte_choice</item>
+        <item>@string/preferred_network_mode_lte_choice</item>
+    </string-array>
+    <string-array name="enabled_networks_values_subsidy_locked" translatable="false">
+        <item>"11"</item>
+        <item>"9"</item>
+    </string-array>
+
 </resources>
