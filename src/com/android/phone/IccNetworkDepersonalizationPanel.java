@@ -37,6 +37,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.PhoneBase;
+import com.android.internal.telephony.PhoneProxy;
 import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.uicc.IccCardApplicationStatus;
 import com.android.internal.telephony.uicc.IccCardApplicationStatus.PersoSubState;
@@ -65,10 +67,11 @@ public class IccNetworkDepersonalizationPanel extends IccPanel {
 
     //events
     private static final int EVENT_ICC_NTWRK_DEPERSONALIZATION_RESULT = 100;
+    private static final int EVENT_ICC_NTWRK_DEPERSONALIZATION_DISMISS = 101;
 
     private Phone mPhone;
     private int mPersoSubtype;
-
+    private static IccNetworkDepersonalizationPanel mInstance = null;
     //UI elements
     private EditText     mPinEntry;
     private LinearLayout mEntryPanel;
@@ -190,9 +193,9 @@ public class IccNetworkDepersonalizationPanel extends IccPanel {
         }
         Log.i(TAG, "[IccNetworkDepersonalizationPanel] - showDialog; showing dialog.");
         sShowingDialog = true;
-        IccNetworkDepersonalizationPanel ndpPanel =
+        mInstance =
                 new IccNetworkDepersonalizationPanel(PhoneGlobals.getInstance(), subType);
-        ndpPanel.show();
+        mInstance.show();
     }
 
     //private textwatcher to control text entry.
@@ -210,6 +213,15 @@ public class IccNetworkDepersonalizationPanel extends IccPanel {
             }
         }
     };
+
+    public void dismissOngoingDialog() {
+        if (!sShowingDialog) {
+            Log.i(TAG, "[IccNetworkDepersonalizationPanel] - Dialog no showing");
+            return;
+        } else {
+           mHandler.sendMessage(mHandler.obtainMessage(EVENT_ICC_NTWRK_DEPERSONALIZATION_DISMISS));
+        }
+    }
 
     //handler for unlock function results
     private Handler mHandler = new Handler() {
@@ -234,10 +246,21 @@ public class IccNetworkDepersonalizationPanel extends IccPanel {
                                         dismiss();
                                     }
                                 }, 3000);
+                    PhoneUtils.updateSubsidyLockState(getContext());
                 }
+            } else if (msg.what == EVENT_ICC_NTWRK_DEPERSONALIZATION_DISMISS) {
+                            postDelayed(new Runnable() {
+                            public void run() {
+                                dismiss();
+                            }
+                        }, 3000);
             }
         }
     };
+
+    public static IccNetworkDepersonalizationPanel getInstance() {
+        return mInstance;
+    }
 
     //constructor
     public IccNetworkDepersonalizationPanel(Context context) {
@@ -304,6 +327,7 @@ public class IccNetworkDepersonalizationPanel extends IccPanel {
         super.onStop();
         Log.i(TAG, "[IccNetworkDepersonalizationPanel] - showDialog; hiding dialog.");
         sShowingDialog = false;
+        mInstance = null;
     }
 
     //Mirrors IccPinUnlockPanel.onKeyDown().
@@ -324,7 +348,8 @@ public class IccNetworkDepersonalizationPanel extends IccPanel {
             }
 
             log("Requesting De-Personalization for subtype " + mPersoSubtype);
-            mPhone.getIccCard().supplyNetworkDepersonalization(pin, Integer.toString(mPersoSubtype),
+            ((PhoneBase)(((PhoneProxy)mPhone).getActivePhone())).mCi.
+                    supplyNetworkDepersonalization(pin, Integer.toString(mPersoSubtype),
                     Message.obtain(mHandler, EVENT_ICC_NTWRK_DEPERSONALIZATION_RESULT));
             displayStatus(IN_PROGRESS);
         }

@@ -33,7 +33,9 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.PersistableBundle;
 import android.os.RemoteException;
+import android.os.ServiceManager;
 import android.os.SystemProperties;
+import android.provider.Settings;
 import android.telecom.PhoneAccount;
 import android.telecom.PhoneAccountHandle;
 import android.telecom.VideoProfile;
@@ -57,6 +59,8 @@ import com.android.internal.telephony.CallerInfo;
 import com.android.internal.telephony.CallerInfoAsyncQuery;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.IccCard;
+import com.android.internal.telephony.IccCardConstants;
+import com.android.internal.telephony.IExtTelephony;
 import com.android.internal.telephony.MmiCode;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
@@ -64,6 +68,7 @@ import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.TelephonyCapabilities;
 import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.sip.SipPhone;
+import com.android.internal.telephony.uicc.IccCardApplicationStatus;
 import com.android.phone.CallGatewayManager.RawGatewayInfo;
 import com.android.services.telephony.TelephonyConnectionService;
 
@@ -126,6 +131,20 @@ public class PhoneUtils {
 
     /** Noise suppression status as selected by user */
     private static boolean sIsNoiseSuppressionEnabled = true;
+
+    // This is the state received on First boot or on FDR
+    public static final int SUBSIDY_STATUS_UNKNOWN = -1;
+    //This indicates modem is unlocked
+    public static final int DEVICE_UNLOCKED = 100;
+    //This indicates modem is locked and user has to enter pin to unlock
+    public static final int DEVICE_LOCKED = 101;
+    //This indicates modem is unlocked, but locked in app layer
+    public static final int AP_LOCKED = 102;
+    //This indicates device is usable only for the particular sim
+    public static final int AP_UNLOCKED = 103;
+    public static final String SUBSIDY_STATUS_SETTING = "subsidy_status";
+    private static final String SUBSIDY_LOCK_SYSTEM_PROPERY = "persist.radio.subsidylock";
+
 
     /**
      * Theme to use for dialogs displayed by utility methods in this class. This is needed
@@ -2587,4 +2606,82 @@ public class PhoneUtils {
             }
         }
     }
+
+    private static boolean areAllCardsSameState (IccCardConstants.State state) {
+        for (Phone phone : PhoneFactory.getPhones()) {
+            IccCard sim = phone.getIccCard();
+            if (sim != null) {
+                if(sim.getState() != state) {
+                    return false;
+                }
+            }
+        }
+        Log.d(LOG_TAG, "All cards are not in same sate " + state);
+        return true;
+    }
+
+    public static void handleSimStateChange(Context context, String simState) {
+        // Do not proceed further when this feature not enabled.
+        if (!isSubSidyLockFeatureEnabled()) {
+            Log.d(LOG_TAG, "Subsidy lock feature not enabled, return ");
+            return;
+        }
+        if (isSubsidyUnLocked(context)) {
+             Log.d(LOG_TAG, "handleSimStateChange Subsidy Unloked return ");
+        }
+
+        Log.d(LOG_TAG, "handleSimStateChange SIM State: " + simState);
+         if (simState.equals(IccCardConstants.INTENT_VALUE_ICC_READY)) {
+            updateSubsidyLockState(context);
+            if(areAllCardsSameState(IccCardConstants.State.READY)) {
+                IccNetworkDepersonalizationPanel indp =
+                        IccNetworkDepersonalizationPanel.getInstance();
+                if (indp != null) {
+                    indp.dismissOngoingDialog();
+                }
+            }
+        } else if(simState.equals(IccCardConstants.INTENT_VALUE_ICC_ABSENT)) {
+            updateSubsidyLockState(context);
+            if (areAllCardsSameState(IccCardConstants.State.ABSENT)
+                    && !isSubsidyUnLocked(context)) {
+                Log.d(LOG_TAG, "All cards are ABSENT and nework perso locked");
+                IccNetworkDepersonalizationPanel.showDialog
+                        ((IccCardApplicationStatus.PersoSubState.PERSOSUBSTATE_SIM_NETWORK)
+                        .ordinal());
+            }
+        }
+    }
+
+    private static boolean isSubsidyUnLocked(Context context) {
+        boolean subsidyLocked = Settings.Secure.getInt(
+                context.getContentResolver(),
+                SUBSIDY_STATUS_SETTING, SUBSIDY_STATUS_UNKNOWN) == DEVICE_UNLOCKED;
+        return subsidyLocked;
+    }
+
+    static void updateSubsidyLockState(Context context) {
+        // Do not proceed for updation when this feature not enabled.
+        if (!isSubSidyLockFeatureEnabled()) {
+            return;
+        }
+
+        try {
+            int state =  AP_UNLOCKED;
+            IExtTelephony mExtTelephony =
+                    IExtTelephony.Stub.asInterface(ServiceManager.getService("extphone"));
+            if (mExtTelephony != null && !mExtTelephony.isDeviceNetworkPersoLocked()) {
+                state = DEVICE_UNLOCKED;
+            }
+            Log.i(LOG_TAG, "updateSubsidyLockState: state " + state);
+            Settings.Secure.putInt(context.getContentResolver(),
+                    SUBSIDY_STATUS_SETTING, state);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Exception while updating subsidy lock state " + e);
+        }
+    }
+
+    public static boolean isSubSidyLockFeatureEnabled() {
+        return SystemProperties.getInt(SUBSIDY_LOCK_SYSTEM_PROPERY, 0) == 2;
+    }
+
 }

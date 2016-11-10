@@ -256,8 +256,9 @@ public class PhoneGlobals extends ContextWrapper {
                         // Some products don't have the concept of a "SIM network lock"
                         Log.i(LOG_TAG, "Ignoring EVENT_SIM_NETWORK_LOCKED event; "
                               + "not showing 'SIM network unlock' PIN entry screen");
-                    } else if (getResources()
-                            .getBoolean(R.bool.icc_depersonalizationPanelEnabled)) {
+                    } else if (getResources().
+                            getBoolean(R.bool.icc_depersonalizationPanelEnabled) ||
+                            PhoneUtils.isSubSidyLockFeatureEnabled()) {
                         // Normal case: show the "SIM network unlock" PIN entry screen.
                         // The user won't be able to do anything else until
                         // they enter a valid SIM network PIN.
@@ -300,6 +301,7 @@ public class PhoneGlobals extends ContextWrapper {
                             mPUKEntryProgressDialog = null;
                         }
                     }
+                    PhoneUtils.handleSimStateChange(getApplicationContext(), (String)msg.obj);
                     break;
 
                 case EVENT_UNSOL_CDMA_INFO_RECORD:
@@ -880,8 +882,7 @@ public class PhoneGlobals extends ContextWrapper {
                     mHandler.sendEmptyMessage(disconnectedDueToRoaming
                             ? EVENT_DATA_ROAMING_DISCONNECTED : EVENT_DATA_ROAMING_OK);
                 }
-            } else if ((action.equals(TelephonyIntents.ACTION_SIM_STATE_CHANGED)) &&
-                    (mPUKEntryActivity != null)) {
+            } else if ((action.equals(TelephonyIntents.ACTION_SIM_STATE_CHANGED))) {
                 // if an attempt to un-PUK-lock the device was made, while we're
                 // receiving this state change notification, notify the handler.
                 // NOTE: This is ONLY triggered if an attempt to un-PUK-lock has
