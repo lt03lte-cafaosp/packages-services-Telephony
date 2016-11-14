@@ -41,7 +41,10 @@ import android.telecom.PhoneAccountHandle;
 import android.telecom.VideoProfile;
 import android.telephony.CarrierConfigManager;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.PhoneStateListener;
+import android.telephony.ServiceState;
 import android.telephony.SubscriptionManager;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
@@ -144,7 +147,9 @@ public class PhoneUtils {
     public static final int AP_UNLOCKED = 103;
     public static final String SUBSIDY_STATUS_SETTING = "subsidy_status";
     private static final String SUBSIDY_LOCK_SYSTEM_PROPERY = "persist.radio.subsidylock";
-
+    private static PhoneStateListener mPhoneStateListener;
+    private static boolean isDeviceInService = false;
+    private static TelephonyManager mTelephonyManager;
 
     /**
      * Theme to use for dialogs displayed by utility methods in this class. This is needed
@@ -2620,7 +2625,8 @@ public class PhoneUtils {
         return true;
     }
 
-    public static void handleSimStateChange(Context context, String simState) {
+    public static void handleSimStateChange(Context context, Intent intent) {
+        String simState = intent.getStringExtra(IccCardConstants.INTENT_KEY_ICC_STATE);
         // Do not proceed further when this feature not enabled.
         if (!isSubSidyLockFeatureEnabled()) {
             Log.d(LOG_TAG, "Subsidy lock feature not enabled, return ");
@@ -2628,10 +2634,24 @@ public class PhoneUtils {
         }
         if (isSubsidyUnLocked(context)) {
              Log.d(LOG_TAG, "handleSimStateChange Subsidy Unloked return ");
+            IccNetworkDepersonalizationPanel indp =
+                    IccNetworkDepersonalizationPanel.getInstance();
+            if (indp != null) {
+                indp.dismissOngoingDialog();
+            }
+            return;
         }
 
-        Log.d(LOG_TAG, "handleSimStateChange SIM State: " + simState);
-         if (simState.equals(IccCardConstants.INTENT_VALUE_ICC_READY)) {
+        Log.d(LOG_TAG, "handleSimStateChange SIM State: " + simState +
+                " isDeviceInService: " + isDeviceInService);
+        if (!isDeviceInService) {
+            Log.e(LOG_TAG, "handleSimStateChange Disply network pero lock");
+            IccNetworkDepersonalizationPanel.showDialog
+                    ((IccCardApplicationStatus.PersoSubState.PERSOSUBSTATE_SIM_NETWORK)
+                        .ordinal());
+        }
+
+        if (simState.equals(IccCardConstants.INTENT_VALUE_ICC_READY)) {
             updateSubsidyLockState(context);
             if(areAllCardsSameState(IccCardConstants.State.READY)) {
                 IccNetworkDepersonalizationPanel indp =
@@ -2649,6 +2669,73 @@ public class PhoneUtils {
                         ((IccCardApplicationStatus.PersoSubState.PERSOSUBSTATE_SIM_NETWORK)
                         .ordinal());
             }
+        } else if (simState.equals(IccCardConstants.INTENT_VALUE_ICC_LOADED) &&
+                !isDeviceInService) {
+            try {
+                int phoneId = intent.getIntExtra(PhoneConstants.PHONE_KEY,
+                        SubscriptionManager.INVALID_PHONE_INDEX);
+                int subId = intent.getIntExtra(PhoneConstants.SUBSCRIPTION_KEY,
+                        SubscriptionManager.INVALID_SUBSCRIPTION_ID);
+                Log.d(LOG_TAG, "handleSimStateChange phoneId: " + phoneId + " subId: " + subId);
+                IExtTelephony mExtTelephony =
+                        IExtTelephony.Stub.asInterface(ServiceManager.getService("extphone"));
+                int slotId  = -1;
+
+                if (mExtTelephony != null) {
+                    slotId = mExtTelephony.getPrimaryCarrierSlotId();
+                }
+                Log.d(LOG_TAG, "handleSimStateChange getPrimaryCarrierSlotId: " + slotId);
+                if (slotId >= 0 && phoneId >= 0 && slotId == phoneId) {
+                    mTelephonyManager =
+                            (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+
+                    if (mTelephonyManager != null && mPhoneStateListener != null) {
+                        Log.d(LOG_TAG, "handleServiceState Unlisten to servicestate events");
+                        mTelephonyManager.listen(mPhoneStateListener,
+                                PhoneStateListener.LISTEN_NONE);
+                    }
+
+                    mPhoneStateListener = new PhoneStateListener(subId) {
+                        @Override
+                        public void onServiceStateChanged(ServiceState serviceState) {
+                            handleServiceState(serviceState);
+                        }
+                    };
+                    Log.d(LOG_TAG, "handleSimStateChange Listening to servicestate events");
+                    if (mTelephonyManager != null) {
+                        mTelephonyManager.listen(mPhoneStateListener,
+                                PhoneStateListener.LISTEN_SERVICE_STATE);
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Exception while handlist SIM state laoded " + e);
+            }
+        }
+    }
+
+    private static void handleServiceState(ServiceState serviceState) {
+        final int state = serviceState.getState();
+        Log.d(LOG_TAG, "handleServiceState state: " + state +
+                " isDeviceInService: " + isDeviceInService);
+        Log.d(LOG_TAG, "handleServiceState mTelephonyManager: " + mTelephonyManager +
+                " mPhoneStateListener: " + mPhoneStateListener);
+        if (!isDeviceInService && state == ServiceState.STATE_IN_SERVICE) {
+            isDeviceInService = true;
+            IccNetworkDepersonalizationPanel indp =
+                    IccNetworkDepersonalizationPanel.getInstance();
+            if (indp != null) {
+                indp.dismissOngoingDialog();
+            }
+
+            if (mTelephonyManager != null && mPhoneStateListener != null) {
+                Log.d(LOG_TAG, "handleServiceState Unlisten to servicestate events");
+                mTelephonyManager.listen(mPhoneStateListener, PhoneStateListener.LISTEN_NONE);
+            }
+        } else {
+            Log.d(LOG_TAG, "handleServiceState Disply network pero lock");
+            IccNetworkDepersonalizationPanel.showDialog
+                    ((IccCardApplicationStatus.PersoSubState.PERSOSUBSTATE_SIM_NETWORK)
+                        .ordinal());
         }
     }
 
