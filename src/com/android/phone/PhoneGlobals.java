@@ -288,7 +288,10 @@ public class PhoneGlobals extends ContextWrapper {
                     // Marks the event where the SIM goes into ready state.
                     // Right now, this is only used for the PUK-unlocking
                     // process.
-                    if (msg.obj.equals(IccCardConstants.INTENT_VALUE_ICC_READY)) {
+                    Intent intent = (Intent)msg.obj;
+                    String simState = intent.getStringExtra(IccCardConstants.INTENT_KEY_ICC_STATE);
+                    if (simState != null &&
+                            simState.equals(IccCardConstants.INTENT_VALUE_ICC_READY)) {
                         // when the right event is triggered and there
                         // are UI objects in the foreground, we close
                         // them to display the lock panel.
@@ -301,7 +304,7 @@ public class PhoneGlobals extends ContextWrapper {
                             mPUKEntryProgressDialog = null;
                         }
                     }
-                    PhoneUtils.handleSimStateChange(getApplicationContext(), (String)msg.obj);
+                    PhoneUtils.handleSimStateChange(getApplicationContext(), intent);
                     break;
 
                 case EVENT_UNSOL_CDMA_INFO_RECORD:
@@ -887,8 +890,7 @@ public class PhoneGlobals extends ContextWrapper {
                 // receiving this state change notification, notify the handler.
                 // NOTE: This is ONLY triggered if an attempt to un-PUK-lock has
                 // been attempted.
-                mHandler.sendMessage(mHandler.obtainMessage(EVENT_SIM_STATE_CHANGED,
-                        intent.getStringExtra(IccCardConstants.INTENT_KEY_ICC_STATE)));
+                mHandler.sendMessage(mHandler.obtainMessage(EVENT_SIM_STATE_CHANGED, intent));
             } else if (action.equals(TelephonyIntents.ACTION_RADIO_TECHNOLOGY_CHANGED)) {
                 String newPhone = intent.getStringExtra(PhoneConstants.PHONE_NAME_KEY);
                 int phoneId = intent.getIntExtra(PhoneConstants.PHONE_KEY,
