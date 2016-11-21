@@ -114,6 +114,9 @@ public class MobileNetworkSettings extends PreferenceActivity
     private static final boolean PRIMCARYCARD_L_W_ENABLED =
             SystemProperties.getBoolean("persist.radio.lw_enabled", false);
 
+    private static final String CONFIG_MANUAL_SUB_SELECT_REQUIRED =
+            "config_manual_sub_select_required";
+
     // value for subsidy lock resticted state
     private static final int SUBSIDYLOCK_RESTRICTED = 103;
     private static final String SUBSIDY_STATUS = "subsidy_status";
@@ -758,14 +761,6 @@ public class MobileNetworkSettings extends PreferenceActivity
         return subsidyLocked;
     }
 
-    private boolean isPrimaryCard() {
-        int phoneId = mPhone.getPhoneId();
-        int currentPrimarySlot = Settings.Global.getInt(
-                getApplicationContext().getContentResolver(),
-                CONFIG_CURRENT_PRIMARY_SUB, SubscriptionManager.INVALID_SIM_SLOT_INDEX);
-        return phoneId == currentPrimarySlot;
-    }
-
     private boolean hasActiveSubscriptions() {
         boolean isActive = false;
         int subId = mPhone.getSubId();
@@ -1039,10 +1034,9 @@ public class MobileNetworkSettings extends PreferenceActivity
                 ImsManager.isNonTtyOrTtyOnVolteEnabled(getApplicationContext()) &&
                 carrierConfig.getBoolean(CarrierConfigManager.KEY_EDITABLE_ENHANCED_4G_LTE_BOOL);
         mButtonDataRoam.setEnabled(hasActiveSubscriptions);
-        boolean enablePNM = isSubsidyRestricted() ? isPrimaryCard() : true;
         mButtonPreferredNetworkMode.setEnabled((hasActiveSubscriptions || (getResources().
-                getBoolean(R.bool.config_no_sim_display_network_modes))) && enablePNM);
-        mButtonEnabledNetworks.setEnabled(hasActiveSubscriptions && enablePNM);
+                getBoolean(R.bool.config_no_sim_display_network_modes))));
+        mButtonEnabledNetworks.setEnabled(hasActiveSubscriptions);
         mButton4glte.setEnabled(hasActiveSubscriptions && canChange4glte);
         mLteDataServicePref.setEnabled(hasActiveSubscriptions);
         Preference ps;
@@ -1058,7 +1052,7 @@ public class MobileNetworkSettings extends PreferenceActivity
         ps = findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY);
         if (ps != null && !SubscriptionManager.getResourcesForSubId(this, mPhone.getSubId())
                 .getBoolean(R.bool.config_disable_operator_selection_menu)) {
-            ps.setEnabled(hasActiveSubscriptions && !isSubsidyRestricted());
+            ps.setEnabled(hasActiveSubscriptions);
         }
         ps = findPreference(BUTTON_CARRIER_SETTINGS_KEY);
         if (ps != null) {
@@ -1090,8 +1084,14 @@ public class MobileNetworkSettings extends PreferenceActivity
                     mButtonPreferredNetworkMode.setEnabled(false);
                     mButtonEnabledNetworks.setEnabled(false);
                 }
-            } else if (SubscriptionManager.isValidSlotId(currentPrimarySlot)
-                && (phoneId == currentPrimarySlot) && isSubsidyRestricted()) {
+            }
+            if (isSubsidyRestricted()) {
+                if (SubscriptionManager.isValidSlotId(currentPrimarySlot)
+                            && (phoneId == currentPrimarySlot)) {
+                    mButtonPreferredNetworkMode.setEnabled((hasActiveSubscriptions
+                            || (getResources()
+                            .getBoolean(R.bool.config_no_sim_display_network_modes))));
+                    mButtonEnabledNetworks.setEnabled(hasActiveSubscriptions);
                     mButtonPreferredNetworkMode.setEntries(
                             R.array.enabled_networks_choices_subsidy_locked);
                     mButtonPreferredNetworkMode.setEntryValues(
@@ -1100,6 +1100,10 @@ public class MobileNetworkSettings extends PreferenceActivity
                             R.array.enabled_networks_choices_subsidy_locked);
                     mButtonEnabledNetworks.setEntryValues(
                             R.array.enabled_networks_values_subsidy_locked);
+                } else {
+                    mButtonPreferredNetworkMode.setEnabled(false);
+                    mButtonEnabledNetworks.setEnabled(false);
+                }
             }
         }
     }
@@ -1688,7 +1692,7 @@ public class MobileNetworkSettings extends PreferenceActivity
             apnExpand.setEnabled(isWorldMode() || enable);
         }
         if (operatorSelectionExpand != null) {
-            if (enable && !isSubsidyRestricted()) {
+            if (enable) {
                 operatorSelectionExpand.setEnabled(true);
             } else {
                 prefSet.removePreference(operatorSelectionExpand);
