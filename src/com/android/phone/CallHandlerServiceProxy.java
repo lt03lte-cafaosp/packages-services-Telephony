@@ -461,7 +461,7 @@ public class CallHandlerServiceProxy extends Handler
                         Log.d(TAG, "binding to service " + serviceIntent);
                     }
                     if (!mContext.bindService(serviceIntent, mConnection,
-                            Context.BIND_AUTO_CREATE)) {
+                            Context.BIND_AUTO_CREATE | Context.BIND_ABOVE_CLIENT)) {
                         // This happens when the in-call package is in the middle of being installed
                         Log.w(TAG, "Could not bind to default call handler service: " +
                                 serviceIntent.getComponent());
