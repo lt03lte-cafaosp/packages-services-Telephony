@@ -150,6 +150,8 @@ public class PhoneUtils {
     private static PhoneStateListener mPhoneStateListener;
     private static boolean isDeviceInService = false;
     private static TelephonyManager mTelephonyManager;
+    public static final int SUBSIDY_STATE_UNLOCKED = 0;
+    public static final int SUBSIDY_STATE_LOCKED = 1;
 
     /**
      * Theme to use for dialogs displayed by utility methods in this class. This is needed
@@ -2626,14 +2628,19 @@ public class PhoneUtils {
     }
 
     public static void handleSimStateChange(Context context, Intent intent) {
-        String simState = intent.getStringExtra(IccCardConstants.INTENT_KEY_ICC_STATE);
         // Do not proceed further when this feature not enabled.
         if (!isSubSidyLockFeatureEnabled()) {
             Log.d(LOG_TAG, "Subsidy lock feature not enabled, return ");
             return;
         }
+
+        String simState = intent.getStringExtra(IccCardConstants.INTENT_KEY_ICC_STATE);
+        final int slot = intent.getIntExtra(PhoneConstants.SLOT_KEY, 0);
+
+        updateSubsidyLockState(context);
+
         if (isSubsidyUnLocked(context)) {
-             Log.d(LOG_TAG, "handleSimStateChange Subsidy Unloked return ");
+            Log.d(LOG_TAG, "handleSimStateChange Subsidy Unloked return ");
             IccNetworkDepersonalizationPanel indp =
                     IccNetworkDepersonalizationPanel.getInstance();
             if (indp != null) {
@@ -2643,7 +2650,7 @@ public class PhoneUtils {
         }
 
         Log.d(LOG_TAG, "handleSimStateChange SIM State: " + simState +
-                " isDeviceInService: " + isDeviceInService);
+                " isDeviceInService: " + isDeviceInService + " slotId " + slot);
         if (!isDeviceInService) {
             Log.e(LOG_TAG, "handleSimStateChange Disply network pero lock");
             IccNetworkDepersonalizationPanel.showDialog
@@ -2652,7 +2659,6 @@ public class PhoneUtils {
         }
 
         if (simState.equals(IccCardConstants.INTENT_VALUE_ICC_READY)) {
-            updateSubsidyLockState(context);
             if(areAllCardsSameState(IccCardConstants.State.READY)) {
                 IccNetworkDepersonalizationPanel indp =
                         IccNetworkDepersonalizationPanel.getInstance();
@@ -2661,7 +2667,6 @@ public class PhoneUtils {
                 }
             }
         } else if(simState.equals(IccCardConstants.INTENT_VALUE_ICC_ABSENT)) {
-            updateSubsidyLockState(context);
             if (areAllCardsSameState(IccCardConstants.State.ABSENT)
                     && !isSubsidyUnLocked(context)) {
                 Log.d(LOG_TAG, "All cards are ABSENT and nework perso locked");
@@ -2717,8 +2722,6 @@ public class PhoneUtils {
         final int state = serviceState.getState();
         Log.d(LOG_TAG, "handleServiceState state: " + state +
                 " isDeviceInService: " + isDeviceInService);
-        Log.d(LOG_TAG, "handleServiceState mTelephonyManager: " + mTelephonyManager +
-                " mPhoneStateListener: " + mPhoneStateListener);
         if (!isDeviceInService && state == ServiceState.STATE_IN_SERVICE) {
             isDeviceInService = true;
             IccNetworkDepersonalizationPanel indp =
@@ -2753,17 +2756,25 @@ public class PhoneUtils {
         }
 
         try {
-            int state =  AP_UNLOCKED;
-            IExtTelephony mExtTelephony =
+            int state =  Settings.Secure.getInt(context.getContentResolver(),
+                    SUBSIDY_STATUS_SETTING, AP_UNLOCKED);
+            IExtTelephony extTelephony =
                     IExtTelephony.Stub.asInterface(ServiceManager.getService("extphone"));
-            if (mExtTelephony != null && !mExtTelephony.isDeviceNetworkPersoLocked()) {
+
+            int peroState = extTelephony.getDevicePersoLockedState();
+            if (peroState == SUBSIDY_STATE_UNLOCKED) {
                 state = DEVICE_UNLOCKED;
+            } else if (peroState == SUBSIDY_STATE_LOCKED) {
+                state = AP_UNLOCKED;
             }
-            Log.i(LOG_TAG, "updateSubsidyLockState: state " + state);
+            Log.i(LOG_TAG, "updateSubsidyLockState: perso state " +
+                    peroState + " subsidy state " + state);
             Settings.Secure.putInt(context.getContentResolver(),
                     SUBSIDY_STATUS_SETTING, state);
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "Exception while updating subsidy lock state " + e);
+        } catch (RemoteException ex) {
+            Log.e(LOG_TAG, "RemoteException updateSubsidyLockState " + ex);
+        } catch (NullPointerException ex) {
+            Log.e(LOG_TAG, "NullPointerException updateSubsidyLockState " + ex);
         }
     }
 
