@@ -73,7 +73,7 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
         tcpListener = listener;
         if (!skipReading) {
             if (DBG) Log.d(LOG_TAG, "getCallForwardingOption for reason " + reason);
-            if (PhoneGlobals.isIMSRegisterd()){
+            if (PhoneGlobals.isIMSRegisterd(subscription)){
                 if (DBG) Log.d(LOG_TAG, "UT interface, getCallForwardingOption for reason " + reason);
                 //if (reason == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER
                     //|| reason == CommandsInterface.CF_REASON_UNCONDITIONAL){
@@ -172,7 +172,7 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
 
                 // the interface of Phone.setCallForwardingOption has error:
                 // should be action, reason...
-                if (PhoneGlobals.isIMSRegisterd()){
+                if (PhoneGlobals.isIMSRegisterd(phone.getSubscription())){
                     Log.d(LOG_TAG, "onDialogClosed, set CallForwarding on UT");
                     PhoneBase pb =
                         (PhoneBase) PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);

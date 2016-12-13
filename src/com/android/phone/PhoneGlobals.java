@@ -1026,6 +1026,17 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
         return IMSRegisterd;
     }
 
+    public static boolean isIMSRegisterd(int subscription) {
+        int imsSubscription = PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM).
+                getSubscription();
+        Log.d(LOG_TAG, "isIMSRegisterd subscription = " + subscription +
+                " imsSubscription = " + imsSubscription);
+        if (subscription != imsSubscription) {
+            return false;
+        }
+        return isIMSRegisterd();
+    }
+
     public boolean isCsvtActive(){
         boolean result = false;
         if (mCsvtService != null){
