@@ -71,16 +71,25 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity
         Log.d(LOG_TAG, "onCreate");
         super.onCreate(icicle);
 
-        boolean isTestForUTInterface = SystemProperties.getBoolean(
+        boolean isCfutEnabled = SystemProperties.getBoolean(
                 "persist.radio.cfu.timer", false);
+
+        boolean isMobileDataForCF = SystemProperties.getBoolean("persist.radio.ims.cmcc", false);
+
+        // getting selected subscription
+        mSubscription = getIntent().getIntExtra(SUBSCRIPTION_KEY,
+                PhoneGlobals.getInstance().getDefaultSubscription());
+        Log.d(LOG_TAG, "Call Forwarding options, subscription =" + mSubscription);
+
         if (DBG){
-            Log.d(LOG_TAG, "isImsRegisterd = " + PhoneGlobals.isIMSRegisterd());
+            Log.d(LOG_TAG, "isImsRegisterd = " + PhoneGlobals.isIMSRegisterd(mSubscription));
             Log.d(LOG_TAG, "networktype = " + getActiveNetworkType());
-            Log.d(LOG_TAG, "isTestForUTInterface = " + isTestForUTInterface);
+            Log.d(LOG_TAG, "isCfutEnabled = " + isCfutEnabled);
+            Log.d(LOG_TAG, "isMobileDataForCF = " + isMobileDataForCF);
         }
 
         if (getActiveNetworkType() != ConnectivityManager.TYPE_MOBILE
-                && PhoneGlobals.isIMSRegisterd() && !isTestForUTInterface) {
+                && PhoneGlobals.isIMSRegisterd(mSubscription) && isMobileDataForCF) {
             if (DBG) Log.d(LOG_TAG, "pls open mobile network for UT settings!");
             Dialog dialog = new AlertDialog.Builder(this)
                         .setTitle("No Mobile Data Aviable")
@@ -99,11 +108,6 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity
 
         addPreferencesFromResource(R.xml.callforward_options);
 
-        // getting selected subscription
-        mSubscription = getIntent().getIntExtra(SUBSCRIPTION_KEY,
-                PhoneGlobals.getInstance().getDefaultSubscription());
-        Log.d(LOG_TAG, "Call Forwarding options, subscription =" + mSubscription);
-
         PreferenceScreen prefSet = getPreferenceScreen();
         mButtonCFU   = (CallForwardEditPreference) prefSet.findPreference(BUTTON_CFU_KEY);
         mButtonCFB   = (CallForwardEditPreference) prefSet.findPreference(BUTTON_CFB_KEY);
@@ -118,21 +122,26 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity
             }
         }
 
-        if (!PhoneGlobals.isIMSRegisterd()) {
+        if (!isCfutEnabled || !PhoneGlobals.isIMSRegisterd(mSubscription)) {
             prefSet.removePreference(mButtonCFUT);
+            mButtonCFUT = null;
         }
 
         mButtonCFU.setParentActivity(this, mButtonCFU.reason);
         mButtonCFB.setParentActivity(this, mButtonCFB.reason);
         mButtonCFNRy.setParentActivity(this, mButtonCFNRy.reason);
         mButtonCFNRc.setParentActivity(this, mButtonCFNRc.reason);
-        mButtonCFUT.setParentActivity(this, mButtonCFUT.reason);
+        if (mButtonCFUT != null) {
+            mButtonCFUT.setParentActivity(this, mButtonCFUT.reason);
+        }
 
         mPreferences.add(mButtonCFU);
         mPreferences.add(mButtonCFB);
         mPreferences.add(mButtonCFNRy);
         mPreferences.add(mButtonCFNRc);
-        mPreferences.add(mButtonCFUT);
+        if (mButtonCFUT != null) {
+            mPreferences.add(mButtonCFUT);
+        }
 
         // we wait to do the initialization until onResume so that the
         // TimeConsumingPreferenceActivity dialog can display as it
