@@ -207,41 +207,24 @@ public class SipCallOptionHandler extends Activity implements
             Log.e(TAG, "currentSubscription =  " + mIntent.getIntExtra(SUBSCRIPTION_KEY, -1));
             Log.e(TAG, "isIMSRegisterd = " + PhoneGlobals.isIMSRegisterd());
         }
-        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()){
-            if (PhoneGlobals.isIMSRegisterd()){
-                int SubscriptionOnLTE = getSubscriptionOnLTE();
-                if (SubscriptionOnLTE == NoSimOnLTE ){
-                    Log.e(TAG, "ims registered and not on LTE, wrong!!!!!");
-                    finish();
-                    return;
+
+        Phone imsPhone = PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
+
+        if (PhoneGlobals.isIMSRegisterd()){
+            if (isIMSVTCall){
+                mImsCallType = Phone.CALL_TYPE_VT;
+                if (imsPhone != null) {
+                    mIntent.putExtra(SUBSCRIPTION_KEY, imsPhone.getSubscription());
                 }
-                if (isIMSVTCall){
-                    mIntent.putExtra(SUBSCRIPTION_KEY, SubscriptionOnLTE);
-                    mImsCallType = Phone.CALL_TYPE_VT;
-                } else {
-                    int currentSubscription = mIntent.getIntExtra(SUBSCRIPTION_KEY, -1);
-                    if (currentSubscription == SubscriptionOnLTE){
-                        mImsCallType = Phone.CALL_TYPE_VOICE;
-                    }
-                }
-            } else if (isIMSVTCall) {
-                //current network does not suppor IMS VT Call
-                showDialog(DIALOG_NO_IMSVT);
-                return;
+            } else {
+                mImsCallType = Phone.CALL_TYPE_VOICE;
             }
-        } else {
-            if (PhoneGlobals.isIMSRegisterd()){
-                if (isIMSVTCall){
-                    mImsCallType = Phone.CALL_TYPE_VT;
-                } else {
-                    mImsCallType = Phone.CALL_TYPE_VOICE;
-                }
-            } else if (isIMSVTCall) {
-                //current network does not suppor IMS VT Call
-                showDialog(DIALOG_NO_IMSVT);
-                return;
-            }
+        } else if (isIMSVTCall) {
+            //current network does not suppor IMS VT Call
+            showDialog(DIALOG_NO_IMSVT);
+            return;
         }
+
         if (IMS_DBG) {
             Log.v(TAG, " IMS call type: " + mImsCallType);
         }
@@ -250,9 +233,9 @@ public class SipCallOptionHandler extends Activity implements
          * In MultiSim scenario, if it's not an IMS subscription,
          * then set call type as CS call.
          */
-        Phone phone = PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
-        if ((phone != null) && (phone.getSubscription() !=
-                mIntent.getIntExtra(MSimConstants.SUBSCRIPTION_KEY, MSimConstants.DEFAULT_SUBSCRIPTION))) {
+        if ((imsPhone != null) && (imsPhone.getSubscription() !=
+                mIntent.getIntExtra(MSimConstants.SUBSCRIPTION_KEY,
+                MSimConstants.DEFAULT_SUBSCRIPTION))) {
             mImsCallType = Phone.CALL_TYPE_UNKNOWN;
         }
         if (DBG) Log.v(TAG, "IMS call type: " + mImsCallType);
@@ -668,25 +651,4 @@ public class SipCallOptionHandler extends Activity implements
         }
         return null;
     }
-
-    public int getSubscriptionOnLTE(){
-        int NetWorkType = TelephonyManager.NETWORK_TYPE_LTE;
-        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()){
-            NetWorkType = MSimTelephonyManager.getDefault().getNetworkType(MSimConstants.SUB1);
-            if (NetWorkType == TelephonyManager.NETWORK_TYPE_LTE){
-                return MSimConstants.SUB1;
-            }
-            NetWorkType = MSimTelephonyManager.getDefault().getNetworkType(MSimConstants.SUB2);
-            if (NetWorkType == TelephonyManager.NETWORK_TYPE_LTE){
-                return MSimConstants.SUB2;
-            }
-        } else {
-            NetWorkType = TelephonyManager.getDefault().getNetworkType();
-            if (NetWorkType == TelephonyManager.NETWORK_TYPE_LTE){
-                return MSimConstants.SUB1;
-            }
-        }
-        return NoSimOnLTE;
-    }
-
 }
