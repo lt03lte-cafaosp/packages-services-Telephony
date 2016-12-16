@@ -825,6 +825,7 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
         }
 
         loadPhoneServiceBinder();
+        notificationMgr.updateHDIcon(false);
    }
 
     public void createImsService() {
@@ -966,6 +967,11 @@ public class PhoneGlobals extends ContextWrapper implements WiredHeadsetListener
             } else if (service == Phone.CALL_TYPE_VT) {
                 sImsVideoSrvStatus = status;
             }
+            notificationMgr.updateHDIcon(
+                (sImsVoiceSrvStatus == PhoneUtils.IMS_SRV_STATUS_ENABLED ||
+                sImsVoiceSrvStatus == PhoneUtils.IMS_SRV_STATUS_PARTIALLY_DISABLED) ||
+                (sImsVideoSrvStatus == PhoneUtils.IMS_SRV_STATUS_ENABLED ||
+                sImsVideoSrvStatus == PhoneUtils.IMS_SRV_STATUS_PARTIALLY_DISABLED));
         }
 
         public void imsRegStateChanged(int imsRegState) {
