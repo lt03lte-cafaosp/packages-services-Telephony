@@ -170,8 +170,8 @@ public class PhoneUtils {
      * IMS for emergency calls only 4. Not Supported - IMS software not present
      */
     public static final int IMS_SRV_STATUS_DISABLED = 0;
-    public static final int IMS_SRV_STATUS_ENABLED = 1;
-    public static final int IMS_SRV_STATUS_PARTIALLY_DISABLED = 2;
+    public static final int IMS_SRV_STATUS_PARTIALLY_DISABLED = 1;
+    public static final int IMS_SRV_STATUS_ENABLED = 2;
     public static final int IMS_SRV_STATUS_NOT_SUPPORTED = 3;
 
     /**
@@ -3286,10 +3286,12 @@ public class PhoneUtils {
      */
     public static boolean isCallOnImsEnabled(int callType) {
         boolean isEnabled = false;
-        boolean isVoiceSupported = PhoneGlobals.getImsServiceStatus(Phone.CALL_TYPE_VOICE) !=
-                IMS_SRV_STATUS_NOT_SUPPORTED;
-        boolean isVideoSupported = PhoneGlobals.getImsServiceStatus(Phone.CALL_TYPE_VT) !=
-                IMS_SRV_STATUS_NOT_SUPPORTED;
+        boolean isVoiceSupported = (PhoneGlobals.getImsServiceStatus(Phone.CALL_TYPE_VOICE) ==
+                IMS_SRV_STATUS_ENABLED) || (PhoneGlobals.getImsServiceStatus(
+                Phone.CALL_TYPE_VOICE) == IMS_SRV_STATUS_PARTIALLY_DISABLED);
+        boolean isVideoSupported = (PhoneGlobals.getImsServiceStatus(Phone.CALL_TYPE_VT) ==
+                IMS_SRV_STATUS_ENABLED) || (PhoneGlobals.getImsServiceStatus(
+                Phone.CALL_TYPE_VT) == IMS_SRV_STATUS_PARTIALLY_DISABLED);
         switch (callType) {
             case Phone.CALL_TYPE_UNKNOWN:
                 isEnabled = isVoiceSupported | isVideoSupported;
