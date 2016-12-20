@@ -114,6 +114,7 @@ public class NotificationMgr {
     private Toast mToast;
     private boolean mShowingSpeakerphoneIcon;
     private boolean mShowingMuteIcon;
+    private boolean mShowingHDIcon;
 
     public StatusBarHelper statusBarHelper;
 
@@ -979,10 +980,10 @@ public class NotificationMgr {
         }
     }
 
-    void updateImsRegistration(boolean registered) {
-        SystemProperties.set(
-                "persist.radio.ims.registered", (registered ? "1":"0"));
-        if (registered) {
+    void updateHDIcon(boolean showHDIcon) {
+        log("updateHDIcon() showHDIcon = " + showHDIcon + ", is showing HD icon = "
+                + mShowingHDIcon);
+        if (showHDIcon && !mShowingHDIcon) {
             Intent intent = new Intent(Intent.ACTION_MAIN);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             intent.setClassName("com.android.phone",
@@ -998,10 +999,18 @@ public class NotificationMgr {
             mNotificationManager.notify(
                     IMS_REGISTERED_NOTIFICATION,
                     notification);
-        } else {
+            mShowingHDIcon = true;
+        } else if (!showHDIcon) {
             mNotificationManager.cancel(IMS_REGISTERED_NOTIFICATION);
+            mShowingHDIcon = false;
         }
     }
+
+    void updateImsRegistration(boolean registered) {
+        SystemProperties.set(
+                "persist.radio.ims.registered", (registered ? "1":"0"));
+    }
+
     /**
      * Shows the "data disconnected due to roaming" notification, which
      * appears when you lose data connectivity because you're roaming and
