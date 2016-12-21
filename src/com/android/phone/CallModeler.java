@@ -624,8 +624,11 @@ public class CallModeler extends Handler {
         }
 
         if (connection.getCall().getConfUriList() != null) {
-            String[] confList = connection.getCall().getConfUriList();
-            call.getCallDetails().setConfUriList(confList);
+            if (connection.getCall().getConfStateInfo().version
+                    > call.getCallDetails().getConfVersion()) {
+                String[] confList = connection.getCall().getConfUriList();
+                call.getCallDetails().setConfUriList(confList);
+            }
         }
 
         call.getCallDetails().setMpty(PhoneUtils.isConferenceCall(connection.getCall()));
@@ -636,6 +639,10 @@ public class CallModeler extends Handler {
         int version = -1;
         if (connection.getCall().getConfStateInfo() != null &&
                 connection.getCall().getConfStateInfo().usersMap != null ) {
+            if (connection.getCall().getConfStateInfo().version
+                    <= call.getCallDetails().getConfVersion()) {
+                return false;
+            }
             Log.i(TAG, "Conference participant list");
             version = connection.getCall().getConfStateInfo().version;
             Log.i(TAG, "confVersion updated to " + version);
