@@ -49,6 +49,7 @@ import android.widget.Toast;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.CommandsInterface;
+import com.android.internal.telephony.CommandException;
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 
 public class CallBarring extends PreferenceActivity implements DialogInterface.OnClickListener,
@@ -98,6 +99,7 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
     private static final int RADIO_OFF_ERROR = 400;
     private static final int INITIAL_BUSY_DIALOG = 500;
     private static final int INPUT_PSW_DIALOG = 600;
+    private static final int FDN_CHECK_FAILURE = 700;
 
     // status message sent back from handlers
     private static final int MSG_OK = 100;
@@ -246,9 +248,15 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
                 case EVENT_CB_QUERY_ALL:
                     status = handleGetCBMessage(ar, msg.arg1);
                     if (status != MSG_OK) {
-                        removeDialog(INITIAL_BUSY_DIALOG);
                         Log.d("CallBarring","EXCEPTION_ERROR!");
-                        return;
+                        if (ar.exception != null) {
+                            CommandException ce = (CommandException)ar.exception;
+                            if (ce.getCommandError()
+                                    == CommandException.Error.FDN_CHECK_FAILURE) {
+                                showDialog(FDN_CHECK_FAILURE);
+                                return;
+                            }
+                        }
                     }
 
                     switch (msg.arg1) {
@@ -602,11 +610,11 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
             return dialog;
 
         // Handle error dialog codes
-        } else if ((id == RESPONSE_ERROR) || (id == EXCEPTION_ERROR) || (id == RADIO_OFF_ERROR)) {
+        } else if ((id == RESPONSE_ERROR) || (id == EXCEPTION_ERROR)
+            || (id == RADIO_OFF_ERROR) || (id == FDN_CHECK_FAILURE)) {
             int msgId;
             int titleId = R.string.error_updating_title;
             AlertDialog.Builder b = new AlertDialog.Builder(this);
-
             switch (id) {
                 case RESPONSE_ERROR:
                     msgId = R.string.response_error;
@@ -619,6 +627,10 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
                     // Set Button 3
                     b.setNeutralButton(R.string.close_dialog, this);
                     break;
+                case FDN_CHECK_FAILURE:
+                     msgId = R.string.fdn_check_failure;
+                     b.setNeutralButton(R.string.close_dialog,this);
+                     break;
                 case EXCEPTION_ERROR:
                 default:
                     msgId = R.string.exception_error;
