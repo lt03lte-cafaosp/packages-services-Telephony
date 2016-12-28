@@ -73,13 +73,13 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
         tcpListener = listener;
         if (!skipReading) {
             if (DBG) Log.d(LOG_TAG, "getCallForwardingOption for reason " + reason);
-            if (PhoneGlobals.isIMSRegisterd(subscription)){
+            Phone imsPhone = PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
+            if (imsPhone != null && (PhoneGlobals.isIMSRegisterd(subscription) ||
+                imsPhone.isUtEnabled())) {
                 if (DBG) Log.d(LOG_TAG, "UT interface, getCallForwardingOption for reason " + reason);
                 //if (reason == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER
                     //|| reason == CommandsInterface.CF_REASON_UNCONDITIONAL){
-                PhoneBase pb =
-                    (PhoneBase) PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
-                pb.getCallForwardingOption(reason,
+                imsPhone.getCallForwardingOption(reason,
                     mHandler.obtainMessage(MyHandler.MESSAGE_GET_CF,
                             CommandsInterface.CF_ACTION_DISABLE,
                             MyHandler.MESSAGE_GET_CF, null));
@@ -172,10 +172,11 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
 
                 // the interface of Phone.setCallForwardingOption has error:
                 // should be action, reason...
-                if (PhoneGlobals.isIMSRegisterd(phone.getSubscription())){
+                Phone imsPhone =
+                        PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
+                if (imsPhone != null && (PhoneGlobals.isIMSRegisterd(phone.getSubscription()) ||
+                        imsPhone.isUtEnabled())) {
                     Log.d(LOG_TAG, "onDialogClosed, set CallForwarding on UT");
-                    PhoneBase pb =
-                        (PhoneBase) PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
                     if (reason == CommandsInterface.CF_REASON_UNCONDITIONAL_TIMER){
                         if (DBG) {
                             Log.d(LOG_TAG, "onDialogClosed, setCallForwardingTimerOption"
@@ -184,7 +185,7 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
                                 + ", EndHour=" + editEndHour
                                 + ", EndMinute=" + editEndMinute);
                         }
-                        pb.setCallForwardingTimerOption(editStartHour,
+                        ((PhoneBase)imsPhone).setCallForwardingTimerOption(editStartHour,
                             editStartMinute,
                             editEndHour,
                             editEndMinute,
@@ -196,7 +197,7 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
                                     action,
                                     MyHandler.MESSAGE_SET_CF));
                     } else {
-                        pb.setCallForwardingOption(action,
+                        imsPhone.setCallForwardingOption(action,
                                 reason,
                                 number,
                                 time,

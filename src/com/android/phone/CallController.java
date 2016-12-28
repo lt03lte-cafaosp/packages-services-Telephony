@@ -322,7 +322,7 @@ public class CallController extends Handler {
         // Check the current ServiceState to make sure it's OK
         // to even try making a call.
         CallStatusCode okToCallStatus = checkIfOkToInitiateOutgoingCall(
-                mCM.getServiceState());
+                mCM.getServiceState(), intent);
 
         // TODO: Streamline the logic here.  Currently, the code is
         // unchanged from its original form in InCallScreen.java.  But we
@@ -358,7 +358,7 @@ public class CallController extends Handler {
 
             // update okToCallStatus based on new phone
             okToCallStatus = checkIfOkToInitiateOutgoingCall(
-                    phone.getServiceState().getState());
+                    phone.getServiceState().getState(), intent);
 
         } catch (PhoneUtils.VoiceMailNumberMissingException ex) {
             // If the call status is NOT in an acceptable state, it
@@ -611,7 +611,7 @@ public class CallController extends Handler {
      *    signal, return one of the other CallStatusCode codes indicating what
      *    the problem is.
      */
-    private CallStatusCode checkIfOkToInitiateOutgoingCall(int state) {
+    private CallStatusCode checkIfOkToInitiateOutgoingCall(int state, Intent intent) {
         if (VDBG) log("checkIfOkToInitiateOutgoingCall: ServiceState = " + state);
 
         switch (state) {
@@ -635,6 +635,18 @@ public class CallController extends Handler {
                 return CallStatusCode.EMERGENCY_ONLY;
 
             case ServiceState.STATE_OUT_OF_SERVICE:
+                try {
+                    String number = PhoneUtils.getInitialNumber(intent);
+                    Phone phone = PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
+                    if (phone != null && phone.isUtEnabled() && number.endsWith("#")) {
+                        Log.d(TAG, "checkIfOkToInitiateOutgoingCall number: " + number +
+                                " isUT enabled: " + phone.isUtEnabled());
+                        return CallStatusCode.SUCCESS;
+                    }
+                } catch (PhoneUtils.VoiceMailNumberMissingException ex) {
+                    Log.e(TAG, "checkIfOkToInitiateOutgoingCall voicemail number " +
+                            "missing exception");
+                }
                 // No network connection.
                 return CallStatusCode.OUT_OF_SERVICE;
 
