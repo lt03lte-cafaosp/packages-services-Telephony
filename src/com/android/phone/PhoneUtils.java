@@ -139,6 +139,12 @@ public class PhoneUtils {
     /** Define for not a special CNAP string */
     private static final int CNAP_SPECIAL_CASE_NO = -1;
 
+    /** Define serviceClass type for CallForward */
+    public static final int SERVICE_CLASS_VOICE = 1;
+    public static final int SERVICE_CLASS_VIDEO = 2;
+    /** Extra key to identify the service class voice or video */
+    public static final String SERVICE_CLASS = "service_class";
+
     /** Noise suppression status as selected by user */
     private static boolean sIsNoiseSuppressionEnabled = true;
 
