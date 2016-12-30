@@ -557,9 +557,16 @@ public class SipCallOptionHandler extends Activity implements
                          * user requested to make an IMS call
                          */
                         Phone phone = PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
-                        if (phone != null &&
-                                phone.getServiceState().getState()
-                                    == ServiceState.STATE_IN_SERVICE) {
+                        String number = null;
+                        try {
+                            number = PhoneUtils.getInitialNumber(mIntent);
+                        } catch (PhoneUtils.VoiceMailNumberMissingException ex) {
+                            Log.e(TAG, "Voice Mail Number missing exception");
+                        }
+
+                        if (phone != null && (phone.getServiceState().getState()
+                                == ServiceState.STATE_IN_SERVICE || (phone.isUtEnabled() &&
+                                number != null && number.endsWith("#")))) {
                             // Ims VT Call cannot be placed
                             if (PhoneUtils.isImsVtCallNotAllowed(mImsCallType)) {
                                 // show UI error
