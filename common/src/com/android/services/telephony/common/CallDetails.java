@@ -82,6 +82,21 @@ public class CallDetails implements Parcelable {
                                                 * Phone.CALL_TYPE_SMS;SMS Type
                                                 */
 
+    public static final int CALL_TYPE_VT_PAUSE = 6; /*
+                                                     * Indicates that video is paused;
+                                                     * This is an internal call type.
+                                                     * The type is used by TeleService and
+                                                     * InCallUI only. See CALL_TYPE_VT_RESUME
+                                                     */
+
+    public static final int CALL_TYPE_VT_RESUME = 7; /*
+                                                      * This is an internal call
+                                                      * type. VT_RESUME call
+                                                      * type is used to send
+                                                      * unpause request to
+                                                      * TeleService.
+                                                      */
+
     public static final int CALL_TYPE_UNKNOWN = 10; /*
                                                      * Phone.CALL_TYPE_UNKNOWN;
                                                      * Unknown Call type, may be
@@ -99,6 +114,7 @@ public class CallDetails implements Parcelable {
                                                        * not yet selected a
                                                        * domain for a call
                                                        */
+
     public static final int CALL_DOMAIN_CS = 1; /*
                                                  * Phone.CALL_DOMAIN_CS; Circuit
                                                  * switched domain
@@ -136,6 +152,16 @@ public class CallDetails implements Parcelable {
                                                                * disabled
                                                                */
 
+    public static final int VIDEO_PAUSE_STATE_PAUSED = 1; /*
+                                                           * Indicates that
+                                                           * video is paused;
+                                                           */
+
+    public static final int VIDEO_PAUSE_STATE_RESUMED = 2; /*
+                                                            * Indicates that
+                                                            * video is resumed;
+                                                            */
+
     public static final String EXTRAS_IS_CONFERENCE_URI = "isConferenceUri";
     public static final String EXTRAS_PARENT_CALL_ID = "parentCallId";
 
@@ -150,6 +176,7 @@ public class CallDetails implements Parcelable {
     private String[] mConfParList;
     private Map<String, String[]> mConfDetails;
     private boolean mIsMpty;
+    private int mVideoPauseState = VIDEO_PAUSE_STATE_RESUMED;
     private static String LOG_TAG = "CallDetails";
     private int mConfVersion = -1;
 
@@ -303,7 +330,20 @@ public class CallDetails implements Parcelable {
     public int getConfVersion(){
         Log.d(LOG_TAG, "getConfVersion mConfversion = " + mConfVersion);
         return mConfVersion;
-	}
+    }
+
+    public void setVideoPauseState(int videoPauseState) {
+        // Validate and set the new video pause state.
+        switch (videoPauseState) {
+            case VIDEO_PAUSE_STATE_RESUMED:
+            case VIDEO_PAUSE_STATE_PAUSED:
+                mVideoPauseState = videoPauseState;
+        }
+    }
+
+    public int getVideoPauseState() {
+        return mVideoPauseState;
+    }
 
     public void writeToParcel(Parcel dest, int flag) {
         dest.writeInt(mCallType);
@@ -312,6 +352,7 @@ public class CallDetails implements Parcelable {
         dest.writeString(mErrorInfo);
         dest.writeStringArray(mConfParList);
         dest.writeByte((byte) (mIsMpty ? 1 : 0));
+        dest.writeInt(mVideoPauseState);
         int confDetailLen = mConfDetails == null ? 0 : mConfDetails.size();
         dest.writeInt(confDetailLen);
         if (confDetailLen > 0) {
@@ -329,6 +370,7 @@ public class CallDetails implements Parcelable {
         mErrorInfo = in.readString();
         mConfParList = in.readStringArray();
         mIsMpty = in.readByte() != 0;
+        mVideoPauseState = in.readInt();
         int confDetailLen = in.readInt();
         mConfDetails = new HashMap<String, String[]>();
         for (int i = 0; i < confDetailLen; i++) {
@@ -398,6 +440,7 @@ public class CallDetails implements Parcelable {
                 + " erroinfo" + mErrorInfo
                 + " mConfParList" + uri
                 + " multiparty" + mIsMpty
+                + " videoPauseState" + mVideoPauseState
                 + " " + extrasResult + "mConfDetails:" + mConfDetails);
     }
 }
