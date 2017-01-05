@@ -100,6 +100,9 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     private static final String KEY_PREF_NETWORK_MODE = "pre_network_mode_sub";
     private static final String PREF_FILE = "pre-network-mode";
 
+    private static final String PRIMARY_4G_CARD_PROPERTY_NAME = "persist.radio.detect4gcard";
+    private static final String CONFIG_CURRENT_PRIMARY_SUB = "config_current_primary_sub";
+
     private static final String KEY_PREFERRED_LTE = "toggle_preferred_lte";
 
     static final int preferredNetworkMode = Phone.PREFERRED_NT_MODE;
@@ -461,6 +464,20 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         }
     }
 
+    private void updateButtonPreferredPrimary() {
+        // Disable nwMode option in UI if current SIM is non-primary card with GSM only.
+        if (SystemProperties.getBoolean(PRIMARY_4G_CARD_PROPERTY_NAME, false)) {
+            int currentPrimarySlot = Settings.Global.getInt(
+                     mPhone.getContext().getContentResolver(), CONFIG_CURRENT_PRIMARY_SUB, -1);
+            if (((currentPrimarySlot >= 0
+                    && currentPrimarySlot < MSimTelephonyManager.getDefault().getPhoneCount())
+                    && (mSubscription != currentPrimarySlot)) &&
+                    (getPreferredNetworkMode() == Phone.NT_MODE_GSM_ONLY)) {
+                mButtonPreferredNetworkMode.setEnabled(false);
+            }
+        }
+    }
+
     private void updateButtonPreferredLte() {
         if (mButtonPreferredLte == null) {
             return;
@@ -504,6 +521,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         mButtonDataEnabled.setChecked(multiSimGetMobileData(mSubscription));
         mButtonDataRoam.setChecked(multiSimGetDataRoaming(mSubscription));
         updateButtonPreferredLte();
+        updateButtonPreferredPrimary();
 
         if (getPreferenceScreen().findPreference(BUTTON_PREFERED_NETWORK_MODE) != null)  {
             mPhone.getPreferredNetworkType(mHandler.obtainMessage(
@@ -661,6 +679,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                         getAcqValue());
             }
             updateButtonPreferredLte();
+            updateButtonPreferredPrimary();
         }
 
         private void handleGetPreferredNetworkTypeResponse(Message msg) {
@@ -713,6 +732,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                     resetNetworkModeToDefault();
                 }
                 updateButtonPreferredLte();
+                updateButtonPreferredPrimary();
             }
         }
 
@@ -724,6 +744,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                         mButtonPreferredNetworkMode.getValue()).intValue();
                 setPreferredNetworkMode(networkMode);
                 updateButtonPreferredLte();
+                updateButtonPreferredPrimary();
             } else {
                 mPhone.getPreferredNetworkType(obtainMessage(MESSAGE_GET_PREFERRED_NETWORK_TYPE));
             }
