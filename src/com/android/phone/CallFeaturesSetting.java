@@ -315,7 +315,8 @@ public class CallFeaturesSetting extends PreferenceActivity
                 prefSet.addPreference(mSdnButton);
            }
        }
-        if (ImsManager.isVtEnabledByPlatform(mPhone.getContext()) && ENABLE_VT_FLAG) {
+        if (ImsManager.isVtEnabledByPlatform(mPhone.getContext()) && ENABLE_VT_FLAG
+                && (mPhone.getImsPhone() != null)) {
             boolean currentValue =
                     ImsManager.isEnhanced4gLteModeSettingEnabledByUser(mPhone.getContext())
                     ? PhoneGlobals.getInstance().phoneMgr.isVideoCallingEnabled(
