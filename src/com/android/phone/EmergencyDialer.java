@@ -167,6 +167,10 @@ public class EmergencyDialer extends Activity implements View.OnClickListener,
         if (SpecialCharSequenceMgr.handleCharsForLockedDevice(this, input.toString(), this)) {
             // A special sequence was entered, clear the digits
             mDigits.getText().clear();
+        } else if (SpecialCharSequenceMgr
+                    .handleCharsForSubsidyLockedDevice(this, input.toString())) {
+            mDigits.getText().clear();
+            finish();
         }
 
         updateDialAndDeleteButtonStateEnabledAttr();

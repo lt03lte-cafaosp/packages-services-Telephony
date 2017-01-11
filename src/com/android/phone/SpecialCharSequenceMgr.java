@@ -61,6 +61,20 @@ public class SpecialCharSequenceMgr {
     private static final String MMI_IMEI_DISPLAY = "*#06#";
     private static final String MMI_REGULATORY_INFO_DISPLAY = "*#07#";
 
+    // value for subsidy lock resticted state
+    private static final int MODEM_LOCKED = 101;
+    private static final int APP_LOCKED = 102;
+    private static final String SUBSIDY_STATUS = "subsidy_status";
+    private static final String MMI_SHOW_SUBSIDY_UNLOCK_SCREEN = "*#5625";
+    private static final String ACTION_SHOW_UNLOCK_SCREEN
+            = "org.codeaurora.intent.action.ACTION_LOCKSCREEN";
+    public static final String EXTRA_INTENT_KEY_ENTER_CODE_SCREEN
+            = "INTENT_KEY_ENTER_CODE_SCREEN";
+    public static final String EXTRA_INTENT_KEY_SHOW_PIN
+            = "INTENT_KEY_SHOW_PIN";
+    public static final String PERMISSION_SHOW_UNLOCK_SCREEN
+            = "com.codeaurora.permission.SUBSIDYLOCK";
+
     /** This class is never instantiated. */
     private SpecialCharSequenceMgr() {
     }
@@ -142,6 +156,18 @@ public class SpecialCharSequenceMgr {
         return false;
     }
 
+    static boolean handleCharsForSubsidyLockedDevice(Context context, String input) {
+        if (input.equalsIgnoreCase(MMI_SHOW_SUBSIDY_UNLOCK_SCREEN)
+                && isSubsidyRestricted(context)) {
+            Intent intent = new Intent(ACTION_SHOW_UNLOCK_SCREEN);
+            intent.putExtra(EXTRA_INTENT_KEY_ENTER_CODE_SCREEN, true);
+            intent.putExtra(EXTRA_INTENT_KEY_SHOW_PIN, true);
+            context.sendBroadcast(intent, PERMISSION_SHOW_UNLOCK_SCREEN);
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Handles secret codes to launch arbitrary activities in the form of *#*#<code>#*#*.
      * If a secret code is encountered an Intent is started with the android_secret_code://<code>
@@ -215,6 +241,13 @@ public class SpecialCharSequenceMgr {
             return isMMIHandled;
         }
         return false;
+    }
+
+    private static boolean isSubsidyRestricted(Context context) {
+        int subsidyStatus = Settings.Secure.getInt(
+                context.getContentResolver(),
+                SUBSIDY_STATUS, -1);
+        return (subsidyStatus == MODEM_LOCKED) || (subsidyStatus == APP_LOCKED);
     }
 
     static private boolean handleIMEIDisplay(Context context,
