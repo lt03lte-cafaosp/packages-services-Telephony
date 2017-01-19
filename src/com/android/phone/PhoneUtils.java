@@ -146,7 +146,7 @@ public class PhoneUtils {
     //This indicates device is usable only for the particular sim
     public static final int AP_UNLOCKED = 103;
     public static final String SUBSIDY_STATUS_SETTING = "subsidy_status";
-    private static final String SUBSIDY_LOCK_SYSTEM_PROPERY = "persist.radio.subsidylock";
+    private static final String SUBSIDY_LOCK_SYSTEM_PROPERY = "ro.radio.subsidylock";
     private static PhoneStateListener mPhoneStateListener;
     private static boolean isDeviceInService = false;
     private static TelephonyManager mTelephonyManager;

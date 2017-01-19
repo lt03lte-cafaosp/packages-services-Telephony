@@ -114,7 +114,7 @@ public class EmergencyDialer extends Activity implements View.OnClickListener,
     private static final int DEVICE_LOCKED = 101;
     private static final int AP_LOCKED = 102;
     private static final String SUBSIDY_STATUS = "subsidy_status";
-    private static final String SUBSIDY_LOCK_SYSTEM_PROPERY = "persist.radio.subsidylock";
+    private static final String SUBSIDY_LOCK_SYSTEM_PROPERY = "ro.radio.subsidylock";
 
     EditText mDigits;
     private View mDialButton;
