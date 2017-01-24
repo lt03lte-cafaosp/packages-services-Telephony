@@ -339,6 +339,10 @@ public class CallBarring extends PreferenceActivity implements DialogInterface.O
         mListIncoming.setSummary(mListIncoming.getEntry());
         mSetOutgoing = CB_INVALID;
         mSetIncoming = CB_INVALID;
+        Phone imsPhone = PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
+        if (imsPhone.isUtEnabled() && (imsPhone.getSubscription() == mSubscription)) {
+            mDialogCancelAll.setEnabled(false);
+        }
     }
 
     public boolean onPreferenceChange(Preference preference, Object newValue) {

@@ -61,6 +61,7 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity
     private boolean mFirstResume;
     private Bundle mIcicle;
     private int mSubscription = 0;
+    private int mServiceClass;
 
     static final int DIALOG_NO_INTERNET_ERROR = 0;
     static final int DIALOG_SIZE = 1;
@@ -150,6 +151,21 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity
         mFirstResume = true;
         mIcicle = icicle;
 
+        /*Retrieve Call Forward ServiceClass*/
+        Intent intent = getIntent();
+        if (DBG) Log.d(LOG_TAG, "Intent is"+intent);
+        int serviceClass;
+        serviceClass = intent.getIntExtra(PhoneUtils.SERVICE_CLASS,
+                PhoneUtils.SERVICE_CLASS_VOICE);
+        if (DBG) Log.d(LOG_TAG, "serviceClass: " +serviceClass);
+
+        if (serviceClass == PhoneUtils.SERVICE_CLASS_VOICE) {
+             mServiceClass = CommandsInterface.SERVICE_CLASS_VOICE;
+        } else if(serviceClass == PhoneUtils.SERVICE_CLASS_VIDEO) {
+             mServiceClass = CommandsInterface.SERVICE_CLASS_DATA_SYNC +
+                     CommandsInterface.SERVICE_CLASS_PACKET;
+        }
+
         ActionBar actionBar = getActionBar();
         if (actionBar != null) {
             // android.R.id.home will be triggered in onOptionsItemSelected()
@@ -187,7 +203,7 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity
         if (mFirstResume) {
             if (mIcicle == null) {
                 if (DBG) Log.d(LOG_TAG, "start to init ");
-                mPreferences.get(mInitIndex).init(this, false, mSubscription);
+                mPreferences.get(mInitIndex).init(this, false, mSubscription, mServiceClass);
             } else {
                 mInitIndex = mPreferences.size();
 
@@ -198,7 +214,7 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity
                     cf.number = bundle.getString(KEY_NUMBER);
                     cf.status = bundle.getInt(KEY_STATUS);
                     pref.handleCallForwardResult(cf);
-                    pref.init(this, true, mSubscription);
+                    pref.init(this, true, mSubscription, mServiceClass);
                 }
             }
             mFirstResume = false;
@@ -225,7 +241,7 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity
     public void onFinished(Preference preference, boolean reading) {
         if (mInitIndex < mPreferences.size()-1 && !isFinishing()) {
             mInitIndex++;
-            mPreferences.get(mInitIndex).init(this, false, mSubscription);
+            mPreferences.get(mInitIndex).init(this, false, mSubscription, mServiceClass);
         }
 
         super.onFinished(preference, reading);

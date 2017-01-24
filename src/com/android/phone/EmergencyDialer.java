@@ -29,6 +29,7 @@ import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemProperties;
 import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
 import android.text.Editable;
@@ -98,6 +99,9 @@ public class EmergencyDialer extends Activity implements View.OnClickListener,
     private static final int BAD_EMERGENCY_NUMBER_DIALOG = 0;
 
     // private static final int USER_ACTIVITY_TIMEOUT_WHEN_NO_PROX_SENSOR = 15000; // millis
+
+    private static final String PROPERTY_RADIO_ATEL_CARRIER = "persist.radio.atel.carrier";
+    private static final String CARRIER_ONE_DEFAULT_MCC_MNC = "405854";
 
     EditText mDigits;
     private View mDialButton;
@@ -289,6 +293,7 @@ public class EmergencyDialer extends Activity implements View.OnClickListener,
             final View key = findViewById(id);
             key.setOnClickListener(this);
             key.setOnHoverListener(this);
+            key.setOnLongClickListener(this);
         }
 
         View view = findViewById(R.id.zero);
@@ -474,6 +479,16 @@ public class EmergencyDialer extends Activity implements View.OnClickListener,
                 keyPressed(KeyEvent.KEYCODE_PLUS);
                 return true;
             }
+            default: {
+                if (isCarrieroneSupported()) {
+                    int emergencyCallKey = getResources().getInteger(
+                            R.integer.speed_dial_emergency_number_assigned_key);
+                    if (getNumberfromId(id) == emergencyCallKey) {
+                        placeSpeedEmergencyCall();
+                        return true;
+                    }
+                }
+            }
         }
         return false;
     }
@@ -636,5 +651,39 @@ public class EmergencyDialer extends Activity implements View.OnClickListener,
 
         mDialButton.setEnabled(notEmpty);
         mDelete.setEnabled(notEmpty);
+    }
+
+    private boolean isCarrieroneSupported() {
+        String property = SystemProperties.get(PROPERTY_RADIO_ATEL_CARRIER);
+        return CARRIER_ONE_DEFAULT_MCC_MNC.equals(property);
+    }
+
+    private int getNumberfromId(int id) {
+        int number = -1;
+        switch(id) {
+            case R.id.zero: number = 0; break;
+            case R.id.one: number = 1; break;
+            case R.id.two: number = 2; break;
+            case R.id.three: number = 3; break;
+            case R.id.four: number = 4; break;
+            case R.id.five: number = 5; break;
+            case R.id.six: number = 6; break;
+            case R.id.seven: number = 7; break;
+            case R.id.eight: number = 8; break;
+            case R.id.nine: number = 9; break;
+        }
+        return number;
+   }
+
+    /**
+    * place the speed Emergency call
+    */
+    private void placeSpeedEmergencyCall() {
+        String emergencyNumber = getResources().getString(
+                R.string.emergency_number);
+        Intent intent = new Intent(Intent.ACTION_CALL_EMERGENCY);
+        intent.setData(Uri.fromParts(Constants.SCHEME_TEL, emergencyNumber, null));
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 }

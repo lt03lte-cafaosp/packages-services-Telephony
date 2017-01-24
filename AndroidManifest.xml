@@ -27,6 +27,8 @@
 
     <original-package android:name="com.android.phone" />
 
+    <protected-broadcast android:name="android.telecom.action.TTY_PREFERRED_MODE_CHANGED" />
+    <protected-broadcast android:name="android.telecom.action.CURRENT_TTY_MODE_CHANGED" />
     <protected-broadcast android:name="android.intent.action.SERVICE_STATE" />
     <protected-broadcast android:name="android.intent.action.RADIO_TECHNOLOGY" />
     <protected-broadcast android:name="android.intent.action.EMERGENCY_CALLBACK_MODE_CHANGED" />
@@ -410,6 +412,15 @@
 
         <activity android:name="GsmUmtsAdditionalCallOptions"
                 android:label="@string/labelGSMMore"
+                android:configChanges="orientation|screenSize|keyboardHidden"
+                android:theme="@style/SettingsLight">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name="CallForwardType"
+                android:label="@string/call_forward_option"
                 android:configChanges="orientation|screenSize|keyboardHidden"
                 android:theme="@style/SettingsLight">
             <intent-filter>
