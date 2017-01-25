@@ -45,11 +45,11 @@ import android.util.Log;
 import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.IccCard;
+import com.android.internal.telephony.IccCardConstants;
 import com.android.internal.telephony.IccCardConstants.State;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.TelephonyIntents;
-import com.android.internal.telephony.uicc.UiccCard;
 import com.android.internal.telephony.uicc.UiccController;
 import com.codeaurora.telephony.msim.MSimPhoneFactory;
 import com.codeaurora.telephony.msim.MSimUiccController;
@@ -62,7 +62,7 @@ public class XDivertUtility {
     private static final int SIM_RECORDS_LOADED = 1;
     private static final int EVENT_SUBSCRIPTION_DEACTIVATED = 2;
     private static final int MESSAGE_SET_CFNR = 3;
-    private static final int EVENT_ICC_ABSENT = 4;
+    private static final int EVENT_ICC_CHANGED = 4;
 
     private static final String SIM_IMSI = "sim_imsi_key";
     private static final String SIM_NUMBER = "sim_number_key";
@@ -76,7 +76,7 @@ public class XDivertUtility {
     private Context mContext;
     private Phone mPhone;
     private MSimPhoneGlobals mApp;
-    private UiccCard mUiccCard;
+    private UiccController mUiccController;
     protected static XDivertUtility sMe;
     private BroadcastReceiver mReceiver;
 
@@ -132,18 +132,21 @@ public class XDivertUtility {
             mPhone = app.getPhone(i);
             mPhone.registerForSimRecordsLoaded(mHandler, SIM_RECORDS_LOADED, i);
 
-            // register for EVENT_ICC_ABSENT
-            mUiccCard = getUiccCard(i);
-            mUiccCard.registerForAbsent(mHandler, EVENT_ICC_ABSENT, i);
-
             mHasImsiChanged[i] = true;
             mStoredOldImsi[i] = getSimImsi(i);
             mOldLineNumber[i] = getNumber(i);
         }
         // Register for intent broadcasts.
-        IntentFilter intentFilter =
-                new IntentFilter(TelephonyIntents.ACTION_RADIO_TECHNOLOGY_CHANGED);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(TelephonyIntents.ACTION_RADIO_TECHNOLOGY_CHANGED);
+        intentFilter.addAction(TelephonyIntents.ACTION_SIM_STATE_CHANGED);
         mContext.registerReceiver(mReceiver, intentFilter);
+
+        // Register for EVENT_ICC_CHANGED
+        mUiccController = MSimUiccController.getInstance();
+        if (mUiccController != null) {
+            mUiccController.registerForIccChanged(mHandler, EVENT_ICC_CHANGED, null);
+        }
     }
 
     static XDivertUtility getInstance() {
@@ -164,6 +167,15 @@ public class XDivertUtility {
                 Phone phone = mApp.getPhone(subscription);
                 phone.unregisterForSimRecordsLoaded(mHandler);
                 phone.registerForSimRecordsLoaded(mHandler, SIM_RECORDS_LOADED, subscription);
+            } else if (action.equals(TelephonyIntents.ACTION_SIM_STATE_CHANGED)) {
+                String stateExtra = intent.getStringExtra(IccCardConstants.INTENT_KEY_ICC_STATE);
+                Log.d(LOG_TAG, "ACTION_SIM_STATE_CHANGED intent received on sub = " + subscription
+                        + " SIM STATE IS " + stateExtra);
+                if (IccCardConstants.INTENT_VALUE_ICC_ABSENT.equals(stateExtra)) {
+                    //A sim card has been removed. The XDivert icon has to be
+                    //cleared from the notification bar
+                    onSubscriptionDeactivated();
+                }
             }
         }
     }
@@ -319,13 +331,12 @@ public class XDivertUtility {
                     phoneId = (Integer)ar.userObj;
                     handleSimRecordsLoaded(phoneId);
                     break;
-                case EVENT_ICC_ABSENT:
-                    ar = (AsyncResult)msg.obj;
-                    if (ar.exception != null) {
-                        break;
-                    }
-                    phoneId = (Integer)ar.userObj;
-                    Log.d(LOG_TAG, "EVENT_ICC_ABSENT occurred for phoneId " + phoneId);
+                case EVENT_ICC_CHANGED:
+                    Log.d(LOG_TAG, "EVENT_ICC_CHANGED");
+                    //A sim card's state has changed. It may have been removed. If yes,
+                    //The XDivert icon will have to be cleared from the notification bar
+                    onSubscriptionDeactivated();
+                    break;
                 case EVENT_SUBSCRIPTION_DEACTIVATED:
                     Log.d(LOG_TAG, "EVENT_SUBSCRIPTION_DEACTIVATED");
                     onSubscriptionDeactivated();
@@ -457,16 +468,5 @@ public class XDivertUtility {
         // Update the lineNumber which will be passed to XDivertPhoneNumbers
         // to populate the number from next time.
         mLineNumber[subscription] = number;
-    }
-
-    // returns the UiccCard associated with the cardIndex
-    private UiccCard getUiccCard(int cardIndex) {
-        UiccCard uiccCard = null;
-        if (!MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
-            uiccCard = UiccController.getInstance().getUiccCard();
-        } else {
-            uiccCard = MSimUiccController.getInstance().getUiccCard(cardIndex);
-        }
-        return uiccCard;
     }
 }
