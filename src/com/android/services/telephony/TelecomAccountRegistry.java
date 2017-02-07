@@ -27,7 +27,9 @@ import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.PersistableBundle;
 import android.os.ServiceManager;
+import android.os.SystemProperties;
 import android.os.RemoteException;
+import android.provider.Settings;
 import android.telecom.PhoneAccount;
 import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
@@ -49,6 +51,7 @@ import com.android.phone.PhoneUtils;
 import com.android.phone.R;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -62,6 +65,14 @@ final class TelecomAccountRegistry {
     // This icon is the one that is used when the Slot ID that we have for a particular SIM
     // is not supported, i.e. SubscriptionManager.INVALID_SLOT_ID or the 5th SIM in a phone.
     private final static int DEFAULT_SIM_ICON =  R.drawable.ic_multi_sim;
+
+    private static final String APM_SIM_NOT_PWDN_PROPERTY = "persist.radio.apm_sim_not_pwdn";
+
+    private enum Count {
+        ZERO,
+        ONE,
+        TWO
+    }
 
     final class AccountEntry implements PstnPhoneCapabilitiesNotifier.Listener {
         private final Phone mPhone;
@@ -446,6 +457,8 @@ final class TelecomAccountRegistry {
         int primaryStackId = 0;
         IExtTelephony mExtTelephony =
             IExtTelephony.Stub.asInterface(ServiceManager.getService("extphone"));
+        int activeCount = 0;
+        int activeSubscriptionId = SubscriptionManager.INVALID_SUBSCRIPTION_ID;
 
         for (Phone phone : phones) {
             int provisionStatus = PROVISIONED;
@@ -478,7 +491,10 @@ final class TelecomAccountRegistry {
                                 " slotId: " + slotId + " provisionStatus: " + provisionStatus);
             }
 
-            if ((subscriptionId >= 0) && (provisionStatus == PROVISIONED)){
+            if ((subscriptionId >= 0) && (provisionStatus == PROVISIONED) &&
+                            (mSubscriptionManager.isActiveSubId(subscriptionId))){
+                activeCount++;
+                activeSubscriptionId = subscriptionId;
                 mAccounts.add(new AccountEntry(phone, false /* emergency */, false /* isDummy */));
             }
         }
@@ -526,7 +542,68 @@ final class TelecomAccountRegistry {
                     mTelecomManager.setUserSelectedOutgoingPhoneAccount(upgradedPhoneAccount);
                 }
             }
+        } else if ((defaultPhoneAccount == null)
+                && (mTelephonyManager.getPhoneCount() > Count.ONE.ordinal())
+                && (activeCount == Count.ONE.ordinal()) && (!isNonSimAccountFound())
+                && (isRadioInValidState(phones))) {
+            PhoneAccountHandle phoneAccountHandle =
+                    subscriptionIdToPhoneAccountHandle(activeSubscriptionId);
+            if (phoneAccountHandle != null) {
+                mTelecomManager.setUserSelectedOutgoingPhoneAccount(phoneAccountHandle);
+            }
         }
+    }
+
+    private boolean isNonSimAccountFound() {
+        final Iterator<PhoneAccountHandle> phoneAccounts =
+                mTelecomManager.getCallCapablePhoneAccounts().listIterator();
+        while (phoneAccounts.hasNext()) {
+            final PhoneAccountHandle phoneAccountHandle = phoneAccounts.next();
+            final PhoneAccount phoneAccount = mTelecomManager.getPhoneAccount(phoneAccountHandle);
+            if (mTelephonyManager.getSubIdForPhoneAccount(phoneAccount) ==
+                    SubscriptionManager.INVALID_SUBSCRIPTION_ID) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isRadioInValidState(Phone[] phones) {
+        boolean isApmSimNotPwrDown = (SystemProperties.getInt(APM_SIM_NOT_PWDN_PROPERTY, 0) == 1);
+        int isAPMOn = Settings.Global.getInt(mContext.getContentResolver(),
+                Settings.Global.AIRPLANE_MODE_ON, 0);
+
+        // Do not update default Voice subId when SIM is pwdn due to APM
+        if ((isAPMOn == 1) && (!isApmSimNotPwrDown)) {
+            Log.d(this, "isRadioInValidState, isApmSimNotPwrDown = " + isApmSimNotPwrDown
+                    + ", isAPMOn:" + isAPMOn);
+            return false;
+        }
+
+        //Do not update default Voice subId when when device Shutdown is in progress
+        int  numPhones = mTelephonyManager.getPhoneCount();
+        for (int i = 0; i < numPhones; i++) {
+            if (phones[i] != null && phones[i].isShuttingDown()) {
+                Log.d(this, " isRadioInValidState: device shutdown in progress ");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private PhoneAccountHandle subscriptionIdToPhoneAccountHandle(final int subId) {
+        final Iterator<PhoneAccountHandle> phoneAccounts =
+                mTelecomManager.getCallCapablePhoneAccounts().listIterator();
+        List<PhoneAccountHandle> phoneAccountsList =
+                mTelecomManager.getCallCapablePhoneAccounts();
+        while (phoneAccounts.hasNext()) {
+            final PhoneAccountHandle phoneAccountHandle = phoneAccounts.next();
+            final PhoneAccount phoneAccount = mTelecomManager.getPhoneAccount(phoneAccountHandle);
+            if (subId == mTelephonyManager.getSubIdForPhoneAccount(phoneAccount)) {
+                return phoneAccountHandle;
+            }
+        }
+        return null;
     }
 
     private void tearDownAccounts() {
