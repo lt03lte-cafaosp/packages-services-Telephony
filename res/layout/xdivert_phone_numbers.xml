@@ -50,7 +50,7 @@
                 android:layout_height="wrap_content"
                 android:paddingLeft="10dip"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="@string/sub1LineNumber" />
+                android:text="@string/sim1LineNumber" />
 
             <EditText android:id="@+id/sub1_number"
                 android:layout_width="match_parent"
@@ -76,7 +76,7 @@
                 android:layout_height="wrap_content"
                 android:paddingLeft="10dip"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="@string/sub2LineNumber" />
+                android:text="@string/sim2LineNumber" />
             <EditText android:id="@+id/sub2_number"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

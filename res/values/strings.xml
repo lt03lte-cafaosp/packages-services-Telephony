@@ -1324,6 +1324,8 @@
     <string name="phone_numbers">Enter Phone Numbers</string>
     <string name="sub1LineNumber">Sub1 Number :</string>
     <string name="sub2LineNumber">Sub2 Number :</string>
+    <string name="sim1LineNumber">SIM 1 Number: </string>
+    <string name="sim2LineNumber">SIM 2 Number: </string>
     <string name="proceed">Proceed</string>
     <string name="xdivert_button">X-Divert Setting</string>
     <string name="xdivert_setting">X-Divert Setting</string>
@@ -1336,6 +1338,8 @@
     <string name="xdivert_status">X-Divert Status</string>
     <string name="xdivert_active">Active</string>
     <string name="xdivert_not_active">Not Active</string>
+    <string name="xdivert_status_active">X-Divert active</string>
+    <string name="xdivert_status_not_active">X-Divert not active</string>
     <string name="xdivert_imsi_not_read">Sim Initialization happening.Please try after some time.</string>
 
     <!-- Title for the dialog used to display CDMA DisplayInfo -->
