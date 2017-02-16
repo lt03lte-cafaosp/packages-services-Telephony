@@ -38,6 +38,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.database.ContentObserver;
 import android.net.Uri;
 import android.os.AsyncResult;
 import android.os.Bundle;
@@ -120,6 +121,9 @@ public class MobileNetworkSettings extends PreferenceActivity
     // value for subsidy lock resticted state
     private static final int SUBSIDYLOCK_RESTRICTED = 103;
     private static final String SUBSIDY_STATUS = "subsidy_status";
+    private SubsidySettingsObserver mSubsidySettingsObserver;
+    private static final String SUBSIDY_LOCK_SYSTEM_PROPERY
+            = "ro.radio.subsidylock";
 
     private int preferredNetworkMode = Phone.PREFERRED_NT_MODE;
 
@@ -608,6 +612,35 @@ public class MobileNetworkSettings extends PreferenceActivity
         intentFilter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);
         registerReceiver(mPhoneChangeReceiver, intentFilter);
         if (DBG) log("onCreate:-");
+        if (isSubSidyLockFeatureEnabled()) {
+            mSubsidySettingsObserver = new SubsidySettingsObserver();
+            getContentResolver().registerContentObserver(
+                    Settings.Secure.getUriFor(SUBSIDY_STATUS),
+                    false, mSubsidySettingsObserver);
+        }
+    }
+
+    private class SubsidySettingsObserver extends ContentObserver {
+
+        public SubsidySettingsObserver() {
+            super(null);
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            mSubsidySettingsHandler.sendEmptyMessage(0);
+        }
+    }
+
+    private Handler mSubsidySettingsHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            updateBody();
+        }
+    };
+
+    public static boolean isSubSidyLockFeatureEnabled() {
+        int propVal = SystemProperties.getInt(SUBSIDY_LOCK_SYSTEM_PROPERY, 0);
+        return (propVal == 1);
     }
 
     private boolean checkForCtCard(String iccId) {
@@ -708,6 +741,9 @@ public class MobileNetworkSettings extends PreferenceActivity
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(mPhoneChangeReceiver);
+        if (mSubsidySettingsObserver != null) {
+            getContentResolver().unregisterContentObserver(mSubsidySettingsObserver);
+        }
     }
 
     @Override
@@ -751,7 +787,6 @@ public class MobileNetworkSettings extends PreferenceActivity
         mSubscriptionManager.addOnSubscriptionsChangedListener(mOnSubscriptionsChangeListener);
 
         if (DBG) log("onResume:-");
-
     }
 
     private boolean isSubsidyRestricted() {
