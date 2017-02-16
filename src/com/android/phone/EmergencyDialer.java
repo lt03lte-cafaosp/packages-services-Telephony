@@ -29,7 +29,6 @@ import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.SystemProperties;
 import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
 import android.text.Editable;
@@ -99,9 +98,6 @@ public class EmergencyDialer extends Activity implements View.OnClickListener,
     private static final int BAD_EMERGENCY_NUMBER_DIALOG = 0;
 
     // private static final int USER_ACTIVITY_TIMEOUT_WHEN_NO_PROX_SENSOR = 15000; // millis
-
-    private static final String PROPERTY_RADIO_ATEL_CARRIER = "persist.radio.atel.carrier";
-    private static final String CARRIER_ONE_DEFAULT_MCC_MNC = "405854";
 
     EditText mDigits;
     private View mDialButton;
@@ -480,7 +476,9 @@ public class EmergencyDialer extends Activity implements View.OnClickListener,
                 return true;
             }
             default: {
-                if (isCarrieroneSupported()) {
+                boolean panicButtonEnabled = getResources().getBoolean(
+                         R.bool.panic_button_enabled);
+                if (panicButtonEnabled) {
                     int emergencyCallKey = getResources().getInteger(
                             R.integer.speed_dial_emergency_number_assigned_key);
                     if (getNumberfromId(id) == emergencyCallKey) {
@@ -651,11 +649,6 @@ public class EmergencyDialer extends Activity implements View.OnClickListener,
 
         mDialButton.setEnabled(notEmpty);
         mDelete.setEnabled(notEmpty);
-    }
-
-    private boolean isCarrieroneSupported() {
-        String property = SystemProperties.get(PROPERTY_RADIO_ATEL_CARRIER);
-        return CARRIER_ONE_DEFAULT_MCC_MNC.equals(property);
     }
 
     private int getNumberfromId(int id) {
