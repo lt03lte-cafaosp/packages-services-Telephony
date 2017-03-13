@@ -76,7 +76,8 @@ import org.codeaurora.ims.QtiCallConstants;
 /**
  * Base class for CDMA and GSM connections.
  */
-abstract class TelephonyConnection extends Connection {
+abstract class TelephonyConnection extends Connection
+        implements TelephonyConnectionService.ConnectionRemovedListener {
     private static final int MSG_PRECISE_CALL_STATE_CHANGED = 1;
     private static final int MSG_RINGBACK_TONE = 2;
     private static final int MSG_HANDOVER_STATE_CHANGED = 3;
@@ -100,6 +101,7 @@ abstract class TelephonyConnection extends Connection {
     private static final int MSG_ON_HOLD_TONE = 14;
     private static final int MSG_CDMA_VOICE_PRIVACY_ON = 15;
     private static final int MSG_CDMA_VOICE_PRIVACY_OFF = 16;
+    private static final int MSG_CONNECTION_REMOVED = 17;
 
     private boolean[] mIsPermDiscCauseReceived = new
             boolean[TelephonyManager.getDefault().getPhoneCount()];
@@ -134,8 +136,12 @@ abstract class TelephonyConnection extends Connection {
                             Log.d(TelephonyConnection.this,
                                     "SettingOriginalConnection " + mOriginalConnection.toString()
                                             + " with " + connection.toString());
-                            boolean isShowToast = getPhone().getContext().getResources()
-                                    .getBoolean(R.bool.config_show_srvcc_toast);
+
+                            boolean isShowToast = (getPhone() != null) ?
+                                    getPhone().getContext().getResources()
+                                    .getBoolean(R.bool.config_show_srvcc_toast)
+                                    : false;
+
                             if (isShowToast && !shouldTreatAsEmergencyCall()) {
                                 int srvccMessageRes = VideoProfile.isVideo(
                                         mOriginalConnection.getVideoState()) ?
@@ -239,6 +245,9 @@ abstract class TelephonyConnection extends Connection {
                    break;
 
                 case MSG_SUPP_SERVICE_NOTIFY:
+                    if (getPhone() == null) {
+                        break;
+                    }
                     int phoneId = getPhone().getPhoneId();
                     Log.v(TelephonyConnection.this, "MSG_SUPP_SERVICE_NOTIFY on phoneId : "
                             +phoneId);
@@ -289,6 +298,11 @@ abstract class TelephonyConnection extends Connection {
                     Log.d(this, "MSG_CDMA_VOICE_PRIVACY_OFF received");
                     setCdmaVoicePrivacy(false);
                     break;
+                case MSG_CONNECTION_REMOVED:
+                    Log.d(this, "MSG_CONNECTION_REMOVED");
+                    // Some connection has disconnected. Re fresh disable add call property.
+                    refreshDisableAddCall();
+                    break;
             }
         }
     };
@@ -321,6 +335,10 @@ abstract class TelephonyConnection extends Connection {
 
     private String getMtSsNotificationText(int code, int phoneId) {
         String callForwardTxt = "";
+        if (getPhone() == null) {
+            return callForwardTxt;
+        }
+
         Context context = getPhone().getContext();
         switch (code) {
             case SuppServiceNotification.MT_CODE_FORWARDED_CALL:
@@ -399,6 +417,11 @@ abstract class TelephonyConnection extends Connection {
 
     private String getMoSsNotificationText(int code, int phoneId) {
         String callForwardTxt = "";
+
+        if (getPhone() == null) {
+            return callForwardTxt;
+        }
+
         Context context = getPhone().getContext();
         switch (code) {
             case SuppServiceNotification.MO_CODE_UNCONDITIONAL_CF_ACTIVE:
@@ -841,6 +864,13 @@ abstract class TelephonyConnection extends Connection {
         }
     }
 
+    @Override
+    public void onConnectionRemoved(TelephonyConnection conn) {
+        if (conn != this) {
+            mHandler.obtainMessage(MSG_CONNECTION_REMOVED).sendToTarget();
+        }
+    }
+
     public void performHold() {
         Log.v(this, "performHold");
         // TODO: Can dialing calls be put on hold as well since they take up the
@@ -1064,16 +1094,24 @@ abstract class TelephonyConnection extends Connection {
         mOriginalConnectionExtras.clear();
         mOriginalConnection = originalConnection;
         mOriginalConnection.setTelecomCallId(getTelecomCallId());
-        getPhone().registerForPreciseCallStateChanged(
-                mHandler, MSG_PRECISE_CALL_STATE_CHANGED, null);
-        getPhone().registerForHandoverStateChanged(
-                mHandler, MSG_HANDOVER_STATE_CHANGED, null);
-        getPhone().registerForRingbackTone(mHandler, MSG_RINGBACK_TONE, null);
-        getPhone().registerForDisconnect(mHandler, MSG_DISCONNECT, null);
-        getPhone().registerForSuppServiceNotification(mHandler, MSG_SUPP_SERVICE_NOTIFY, null);
-        getPhone().registerForOnHoldTone(mHandler, MSG_ON_HOLD_TONE, null);
-        getPhone().registerForInCallVoicePrivacyOn(mHandler, MSG_CDMA_VOICE_PRIVACY_ON, null);
-        getPhone().registerForInCallVoicePrivacyOff(mHandler, MSG_CDMA_VOICE_PRIVACY_OFF, null);
+
+        if (getPhone() != null) {
+            getPhone().registerForPreciseCallStateChanged(mHandler,
+                    MSG_PRECISE_CALL_STATE_CHANGED, null);
+            getPhone().registerForHandoverStateChanged(mHandler,
+                    MSG_HANDOVER_STATE_CHANGED, null);
+            getPhone().registerForRingbackTone(mHandler, MSG_RINGBACK_TONE,
+                    null);
+            getPhone().registerForDisconnect(mHandler, MSG_DISCONNECT, null);
+            getPhone().registerForSuppServiceNotification(mHandler,
+                    MSG_SUPP_SERVICE_NOTIFY, null);
+            getPhone().registerForOnHoldTone(mHandler, MSG_ON_HOLD_TONE, null);
+            getPhone().registerForInCallVoicePrivacyOn(mHandler,
+                    MSG_CDMA_VOICE_PRIVACY_ON, null);
+            getPhone().registerForInCallVoicePrivacyOff(mHandler,
+                    MSG_CDMA_VOICE_PRIVACY_OFF, null);
+        }
+
         mOriginalConnection.addPostDialListener(mPostDialListener);
         mOriginalConnection.addListener(mOriginalConnectionListener);
 
@@ -1196,9 +1234,18 @@ abstract class TelephonyConnection extends Connection {
         boolean isVowifiEnabled = false;
         if (phone instanceof ImsPhone) {
             ImsPhone imsPhone = (ImsPhone) phone;
+            ImsCall call = null;
             if (imsPhone.getForegroundCall() != null
                     && imsPhone.getForegroundCall().getImsCall() != null) {
-                ImsCall call = imsPhone.getForegroundCall().getImsCall();
+                call = imsPhone.getForegroundCall().getImsCall();
+            } else if (imsPhone.getBackgroundCall() != null
+                    && imsPhone.getBackgroundCall().getImsCall() != null) {
+                call = imsPhone.getBackgroundCall().getImsCall();
+            } else if (imsPhone.getRingingCall() != null
+                    && imsPhone.getRingingCall().getImsCall() != null) {
+                call = imsPhone.getRingingCall().getImsCall();
+            }
+            if (call != null) {
                 isCurrentVideoCall = call.isVideoCall();
                 wasVideoCall = call.wasVideoCall();
             }
@@ -1673,8 +1720,9 @@ abstract class TelephonyConnection extends Connection {
             close();
         } else {
             Log.d(this,"Redial emergency call on subscription " + PhoneIdToCall);
-            TelecomManager telecommMgr = (TelecomManager)
-            getPhone().getContext().getSystemService(Context.TELECOM_SERVICE);
+            TelecomManager telecommMgr = (getPhone() != null) ? (TelecomManager)
+                    getPhone().getContext().getSystemService(Context.
+                            TELECOM_SERVICE) : null;
             if (telecommMgr != null) {
                 List<PhoneAccountHandle> phoneAccountHandles =
                         telecommMgr.getCallCapablePhoneAccounts();
@@ -2018,7 +2066,8 @@ abstract class TelephonyConnection extends Connection {
 
     private void updateStatusHints() {
         boolean isIncoming = isValidRingingCall();
-        if (mIsWifi && (isIncoming || getState() == STATE_ACTIVE)) {
+        if (mIsWifi && (isIncoming || getState() == STATE_ACTIVE) &&
+                (getPhone() != null)) {
             int labelId = isIncoming
                     ? R.string.status_hint_label_incoming_wifi_call
                     : R.string.status_hint_label_wifi_call;
