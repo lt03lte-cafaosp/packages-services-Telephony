@@ -110,12 +110,6 @@ public class EmergencyDialer extends Activity implements View.OnClickListener,
     private static final String PROPERTY_RADIO_ATEL_CARRIER = "persist.radio.atel.carrier";
     private static final String CARRIER_ONE_DEFAULT_MCC_MNC = "405854";
 
-    // value for subsidy lock resticted state
-    private static final int DEVICE_LOCKED = 101;
-    private static final int AP_LOCKED = 102;
-    private static final String SUBSIDY_STATUS = "subsidy_status";
-    private static final String SUBSIDY_LOCK_SYSTEM_PROPERY = "ro.radio.subsidylock";
-
     EditText mDigits;
     private View mDialButton;
     private View mDelete;
@@ -270,20 +264,6 @@ public class EmergencyDialer extends Activity implements View.OnClickListener,
         mEmergencyActionGroup = (EmergencyActionGroup) findViewById(R.id.emergency_action_group);
     }
 
-    private boolean isSubsidyRestricted() {
-        int subsidyStatus = Settings.Secure.getInt(
-                getContentResolver(), SUBSIDY_STATUS, AP_LOCKED);
-        // In modem locked or AP locked states
-        boolean subsidyLocked = (subsidyStatus == DEVICE_LOCKED)
-                || (subsidyStatus == AP_LOCKED);
-        return isSubSidyLockFeatureEnabled() && subsidyLocked;
-    }
-
-    private static boolean isSubSidyLockFeatureEnabled() {
-        int prop = SystemProperties.getInt(SUBSIDY_LOCK_SYSTEM_PROPERY, 0);
-        return prop == 1;
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -357,10 +337,6 @@ public class EmergencyDialer extends Activity implements View.OnClickListener,
                 }
                 return true;
             }
-            case KeyEvent.KEYCODE_HOME:
-            case KeyEvent.KEYCODE_BACK:
-                mStatusBarManager.disable(StatusBarManager.DISABLE_NONE);
-                break;
         }
         return super.onKeyDown(keyCode, event);
     }
@@ -553,9 +529,7 @@ public class EmergencyDialer extends Activity implements View.OnClickListener,
         // Reenable the status bar and set the poke lock timeout to default.
         // There is no need to do anything with the wake lock.
         if (DBG) Log.d(LOG_TAG, "reenabling status bar and closing the dialer");
-        if (!isSubsidyRestricted()) {
-            mStatusBarManager.disable(StatusBarManager.DISABLE_NONE);
-        }
+        mStatusBarManager.disable(StatusBarManager.DISABLE_NONE);
 
         super.onPause();
 
