@@ -25,6 +25,9 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -67,7 +70,6 @@ import com.android.internal.telephony.TelephonyCapabilities;
 import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.sip.SipPhone;
 import com.android.phone.CallGatewayManager.RawGatewayInfo;
-import com.android.services.telephony.TelephonyConnectionService;
 
 import java.util.Arrays;
 import java.util.List;
@@ -2456,7 +2458,7 @@ public class PhoneUtils {
         return SubscriptionManager.INVALID_SUBSCRIPTION_ID;
     }
 
-    static Phone getPhoneForPhoneAccountHandle(PhoneAccountHandle handle) {
+    public static Phone getPhoneForPhoneAccountHandle(PhoneAccountHandle handle) {
         if (handle != null && handle.getComponentName().equals(getPstnConnectionServiceName())
                 && handle.getId() != null) {
             try {
@@ -2573,6 +2575,26 @@ public class PhoneUtils {
             Log.e("TelephonyConnectionService", "Exception : " + ex);
         }
         return result;
+    }
+
+    /**
+     * check whether NetworkSetting apk exist in system, if yes, return true, else
+     * return false.
+     */
+    public static boolean isNetworkSettingsApkAvailable(Context context) {
+        // check whether the target handler exist in system
+        Intent intent = new Intent("org.codeaurora.settings.NETWORK_OPERATOR_SETTINGS_ASYNC");
+        PackageManager pm = context.getPackageManager();
+        List<ResolveInfo> list = pm.queryIntentActivities(intent, 0);
+        for (ResolveInfo resolveInfo : list) {
+            // check is it installed in system.img, exclude the application
+            // installed by user
+            if ((resolveInfo.activityInfo.applicationInfo.flags &
+                    ApplicationInfo.FLAG_SYSTEM) != 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static int getPhoneIdForECall() {
